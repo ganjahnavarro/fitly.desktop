@@ -1,0 +1,46 @@
+{
+  "name": "Fitly",
+  "version": "1.0.0",
+  "description": "Gym membership system",
+  "main": "src/desktop.js",
+  "scripts": {
+    "build": "webpack",
+    "start": "webpack-dev-server --port 3000 --inline --content-base src/public/ --history-api-fallback --host 0.0.0.0",
+    "package": "npm run build && electron-packager . --overwrite --asar --electronVersion=2.0.7 --icon=app.ico --out=dist",
+    "build-semantic": "cd src/semantic && gulp build-css build-assets",
+    "watch-semantic": "npm run build-semantic && gulp watch"
+  },
+  "author": "ganjahnavarro",
+  "license": "MIT",
+  "dependencies": {
+    "classnames": "^2.2.5",
+    "compression": "^1.6.2",
+    "express": "^4.14.0",
+    "jquery": "^3.2.1",
+    "js-base64": "^2.1.9",
+    "lodash": "^4.17.4",
+    "react": "^15.4.2",
+    "react-addons-update": "^15.5.2",
+    "react-data-grid": "^2.0.27",
+    "react-data-grid-addons": "^2.0.27",
+    "react-dom": "^15.4.2",
+    "react-router": "^2.0.0",
+    "react-select": "^1.0.0-rc.3",
+    "store": "^2.0.4"
+  },
+  "devDependencies": {
+    "babel-core": "^6.5.1",
+    "babel-loader": "^6.2.2",
+    "babel-polyfill": "^6.13.0",
+    "babel-preset-es2015": "^6.5.0",
+    "babel-preset-react": "^6.5.0",
+    "css-loader": "^1.0.0",
+    "electron-packager": "^12.1.0",
+    "file-loader": "^1.1.11",
+    "gulp": "^3.9.1",
+    "http-server": "^0.11.1",
+    "url-loader": "^1.1.0",
+    "webpack": "^1.12.13",
+    "webpack-dev-server": "^1.14.1"
+  }
+}
