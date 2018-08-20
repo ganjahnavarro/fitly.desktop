@@ -3,7 +3,7 @@ import View from './View'
 
 import Fetch from '../../core/Fetch'
 
-class Temp extends View {
+class ListView extends View {
 
     constructor(props) {
         super(props);
@@ -81,4 +81,4 @@ class Temp extends View {
 
 }
 
-export default Temp;
+export default ListView;

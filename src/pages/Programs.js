@@ -26,7 +26,7 @@ class Units extends ListView {
 				}
 
 		    return <div>
-						<Header />
+						<Header location={this.props.location} />
 						<div className="ui grid">
 								<div className="five wide column ui form">
 										<Input label="Search" value={this.state.filter} name="filter"

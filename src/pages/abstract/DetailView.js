@@ -4,7 +4,7 @@ import View from './View'
 import Fetch from '../../core/Fetch'
 import Button from '../../components/Button'
 
-class Detail extends View {
+class DetailView extends View {
 
     constructor(props) {
         super(props);
@@ -99,4 +99,4 @@ class Detail extends View {
 
 }
 
-export default Detail;
+export default DetailView;

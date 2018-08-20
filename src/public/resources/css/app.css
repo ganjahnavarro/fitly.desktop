@@ -110,7 +110,7 @@ span.transaction-placeholder {
 }
 
 .app > .navigation {
-    width: 22.5%;
+    width: 125px;
     height: 100%;
     position: fixed;
     background: #f1f1f1;
@@ -118,9 +118,13 @@ span.transaction-placeholder {
 }
 
 .app > .content {
-    width: 77.5%;
+    width: calc(100% - 125px);
     height: auto;
     position: absolute;
-    padding: 0 3rem;
+    padding: 0 2.5rem;
     right: 0;
+}
+
+.header-component {
+    padding-top: 2rem;
 }
