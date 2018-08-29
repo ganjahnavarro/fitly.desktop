@@ -4,7 +4,7 @@ import {Route, IndexRoute} from 'react-router'
 import App from '../App'
 import Login from '../Login'
 
-import Trainers from '../Trainers'
+import Coaches from '../Coaches'
 import Members from '../Members'
 import Programs from '../Programs'
 import Packages from '../Packages'
@@ -25,7 +25,7 @@ module.exports = (
         <IndexRoute component={Todo}/>
         <Route path="/login" component={Login} />
 
-        <Route path="/trainers" component={Trainers} onEnter={requireAuth}/>
+        <Route path="/coaches" component={Coaches} onEnter={requireAuth}/>
         <Route path="/members" component={Members} onEnter={requireAuth}/>
         <Route path="/programs" component={Programs} onEnter={requireAuth}/>
         <Route path="/packages" component={Packages} onEnter={requireAuth}/>

@@ -29,7 +29,7 @@ class ListView extends View {
 
 		onFetch(extraParameters) {
 				let defaultParameters = {
-						orderedBy: "name",
+						orderedBy: this.orderBy || "name",
 						pageSize: 100,
 						pageOffset: 0
 				};

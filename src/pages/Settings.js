@@ -7,14 +7,15 @@ import DetailView from './abstract/DetailView'
 
 import Input from '../components/Input'
 import Audit from '../components/Audit'
+import Button from '../components/Button'
 import Header from '../components/Header'
 
 
-class Units extends ListView {
+class Configs extends ListView {
 
 		constructor(props) {
 		    super(props);
-        this.endpoint = "unit/";
+        this.endpoint = "config/";
 		}
 
 		render() {
@@ -39,39 +40,54 @@ class Units extends ListView {
 								</div>
 
 								<div className="eleven wide column">
-										<Unit value={selectedItem} onFetch={this.onFetch}/>
+										<Config value={selectedItem} onFetch={this.onFetch}/>
 								</div>
 				    </div>
 				</div>;
 		}
 }
 
-class Unit extends DetailView {
+class Config extends DetailView {
 
 		constructor(props) {
 		    super(props);
-        this.endpoint = "unit/";
+        this.endpoint = "config/";
+    }
+
+		getActions() {
+
     }
 
 		render() {
-				let value = this.state.value;
+				let { value, updateMode } = this.state;
+
+        let viewingActions = <div>
+            {value && value.id ? <Button className="ui blue button" icon="write" onClick={() => this.onEdit()}>Edit</Button> : null}
+        </div>;
+
+        let editingActions = <div>
+            <Button className="ui green button" icon="save" onClick={() => this.onSave()}>Save</Button>
+            <Button className="ui button" icon="ban" onClick={() => this.onCancel()}>Cancel</Button>
+        </div>;
 
 		    return <div>
 						<div className="ui form">
-								<Input ref={(input) => {this.initialInput = input}} autoFocus="true" label="Name"
-										name="name" value={this.state.value.name} disabled={!this.state.updateMode}
-										onChange={super.onChange.bind(this)} />
-
-								<Input name="pluralName" label="Plural Name" value={this.state.value.pluralName} disabled={!this.state.updateMode}
+								<Input label="Name" name="name" value={value.name} disabled={true} />
+								<Input ref={(input) => {this.initialInput = input}} autoFocus="true" label="Value"
+										name="value" value={value.value} disabled={!updateMode}
 										onChange={super.onChange.bind(this)} />
 						</div>
 
 						<div>
 								<Audit value={value} />
-								{super.getActions()}
+								{this.getActions()}
+
+								<div className="actions">
+				            {updateMode ? editingActions : viewingActions}
+				        </div>
 						</div>
 		    </div>
 		}
 }
 
-export default Units;
+export default Configs;
