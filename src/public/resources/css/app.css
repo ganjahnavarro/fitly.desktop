@@ -19,6 +19,10 @@
     clear: both;
 }
 
+.clickable {
+    cursor: pointer;
+}
+
 tr {
     height: 2.7em;
 }
@@ -139,4 +143,8 @@ span.transaction-placeholder {
 
 .membership .ui.label:last-child {
     margin-right: 0em;
+}
+
+.navigation .ui.avatar.image {
+    border-radius: 0;
 }

@@ -20,6 +20,10 @@ function requireAuth(nextState, replaceState) {
     */
 }
 
+/*
+    <Route path="/users" component={Users} onEnter={requireAuth}/>
+*/
+
 module.exports = (
     <Route path="/" component={App}>
         <IndexRoute component={Todo}/>
@@ -30,7 +34,6 @@ module.exports = (
         <Route path="/programs" component={Programs} onEnter={requireAuth}/>
         <Route path="/packages" component={Packages} onEnter={requireAuth}/>
         <Route path="/training-sessions" component={TrainingSessions} onEnter={requireAuth}/>
-        <Route path="/users" component={Users} onEnter={requireAuth}/>
         <Route path="/settings" component={Settings} onEnter={requireAuth}/>
 
         <Route path="/todo" component={Todo} onEnter={requireAuth}/>

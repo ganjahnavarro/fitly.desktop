@@ -4,92 +4,24 @@ let Provider = {
     filteredItems: {}
 };
 
-Provider.loadAgents = function(callback) {
+Provider.loadPrograms = function(callback) {
     let parameters = {
         orderedBy: "name"
     };
 
-    Fetch.get("agent/", parameters, (items) => {
+    Fetch.get("program/", parameters, (items) => {
         if (callback) {
             callback(items);
         }
     });
 };
 
-Provider.loadUnits = function(callback) {
+Provider.loadPackages = function(callback) {
     let parameters = {
         orderedBy: "name"
     };
 
-    Fetch.get("unit/", parameters, (items) => {
-        if (callback) {
-            callback(items);
-        }
-    });
-};
-
-Provider.loadCategories = function(callback) {
-    let parameters = {
-        orderedBy: "name"
-    };
-
-    Fetch.get("category/", parameters, (items) => {
-        if (callback) {
-            callback(items);
-        }
-    });
-};
-
-Provider.loadSuppliers = function(callback) {
-    let parameters = {
-        orderedBy: "name"
-    };
-
-    Fetch.get("supplier/", parameters, (items) => {
-        if (callback) {
-            callback(items);
-        }
-    });
-};
-
-Provider.loadStocks = function(callback) {
-    let parameters = {
-        orderedBy: "name"
-    };
-
-    Fetch.get("stock/", parameters, (items) => {
-        if (callback) {
-            callback(items);
-        }
-    });
-};
-
-Provider.loadBrands = function(callback) {
-    let parameters = {
-        orderedBy: "name"
-    };
-
-    Fetch.get("brand/", parameters, (items) => {
-        if (callback) {
-            callback(items);
-        }
-    });
-};
-
-Provider.loadCustomers = function(callback) {
-    let parameters = {
-        orderedBy: "name"
-    };
-
-    Fetch.get("customer/", parameters, (items) => {
-        if (callback) {
-            callback(items);
-        }
-    });
-};
-
-Provider.loadCustomerDiscounts = function(customerId, callback) {
-    Fetch.get(`customerDiscount/${customerId}`, null, (items) => {
+    Fetch.get("package/", parameters, (items) => {
         if (callback) {
             callback(items);
         }

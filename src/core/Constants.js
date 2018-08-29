@@ -7,12 +7,12 @@ export const PDFS_DIRECTORY = "pdfs/";
 export const DEFAULT_DISPLAYED_ITEM_COUNT = 20;
 
 export const DASHBOARD_ITEMS = [
+    { to: "/", label: "Home", icon: "icon_home_page" },
     { to: "/coaches", label: "Coaches", icon: "icon_coaches" },
     { to: "/members", label: "Members", icon: "icon_members" },
     { to: "/programs", label: "Programs", icon: "icon_programs" },
     { to: "/packages", label: "Packages", icon: "icon_packages" },
     { to: "/training-sessions", label: "Training Sessions", icon: "icon_training_sessions" },
-    { to: "/users", label: "Users", icon: "icon_users" },
     { to: "/settings", label: "Settings", icon: "icon_settings" },
 ];
 

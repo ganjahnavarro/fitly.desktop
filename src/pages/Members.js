@@ -13,6 +13,8 @@ import Dropdown from '../components/Dropdown'
 import Textarea from '../components/Textarea'
 
 import { GENDERS } from '../core/Constants'
+import Provider from '../core/Provider'
+import Fetch from '../core/Fetch'
 
 
 class Members extends ListView {
@@ -21,12 +23,143 @@ class Members extends ListView {
 		    super(props);
         this.endpoint = "member/";
 				this.orderBy = "firstName";
+
+				this.state.enrollingProgram = false;
+				this.state.enrollingPackage = false;
+				this.state.addingAccessCard = false;
+		}
+
+		componentDidMount() {
+				super.componentDidMount();
+
+				Provider.loadPrograms((programs) => this.setState({programs}));
+				Provider.loadPackages((packages) => this.setState({packages}));
+		}
+
+		getInformationPage() {
+				let { selectedItem } = this.state;
+				return <Member value={selectedItem} onFetch={this.onFetch}
+						onEnrollProgram={() => this.onEnrollProgram()}
+						onEnrollPackage={() => this.onEnrollPackage()}
+						onAddAccessCard={() => this.onAddAccessCard()} />;
+		}
+
+		getCancelEnrollmentAction() {
+				return <div className="ui label clickable" onClick={() => this.onCancelEnrollment()}>
+						<i className="angle left icon"></i> Back
+				</div>;
+		}
+
+		onProgramChange(program) {
+		    let nextState = this.state.program || {};
+		    nextState.program = { id: program.value };
+		    this.setState(nextState);
+
+				console.warn("onProgramChange. nextState", nextState);
+		}
+
+		getAddAccessCardPage() {
+				let { membership } = this.state;
+				return <div>
+						{this.getCancelEnrollmentAction()}
+
+						<h4 className="ui center aligned icon header">
+								<img src={"resources/images/icon_access_card.png"} className="ui circular image" />
+								Add Access Card
+						</h4>
+
+						<div className="ui form">
+								<Input name="accessCardNo" label="Access Card No." value={membership.accessCardNo}
+										onChange={super.onChange.bind(this)} />
+						</div>
+				</div>;
+		}
+
+		getEnrollProgramPage() {
+				let { program, programs } = this.state;
+
+				let programOptions = [];
+				let programId = program ? program.id : null;
+
+				if (programs) {
+						programOptions = programs.map((item, index) => {
+								return { value: item.id, label: item.name };
+						});
+				}
+
+				return <div>
+						{this.getCancelEnrollmentAction()}
+
+						<h4 className="ui center aligned icon header">
+								<img src={"resources/images/icon_programs.png"} className="ui circular image" />
+								Program Enrollment
+						</h4>
+
+						<div className="ui form">
+								<Dropdown name="program" label="Program" value={programId}
+										options={programOptions} onChange={this.onProgramChange.bind(this)} />
+						</div>
+				</div>;
+		}
+
+		getEnrollPackagePage() {
+				return <div>
+						{this.getCancelEnrollmentAction()}
+						<p>p a c ka g e s</p>
+				</div>;
+		}
+
+		onCancelMemberAction() {
+				this.setState({
+						enrollingProgram: false,
+						enrollingPackage: false,
+						addingAccessCard: false,
+				});
+		}
+
+		onAddAccessCard() {
+				const membership = this.state.membership;
+				membership.accessCardNo = undefined;
+				this.setState({ membership, addingAccessCard: true });
+		}
+
+		onEnrollProgram() {
+				this.setState({ program: {}, enrollingProgram: true });
+		}
+
+		onEnrollPackage() {
+				this.setState({ package: {}, enrollingPackage: true });
+		}
+
+		getDetailPage() {
+				let { enrollingProgram, enrollingPackage, addingAccessCard } = this.state;
+
+				let detailComponent = this.getInformationPage();
+				if (enrollingProgram) {
+						detailComponent = this.getEnrollProgramPage();
+				} else if (enrollingPackage) {
+						detailComponent = this.getEnrollPackagePage();
+				} else if (addingAccessCard) {
+						detailComponent = this.getAddAccessCardPage();
+				}
+				return detailComponent;
+		}
+
+		onItemClick(index) {
+        super.onItemClick(index);
+
+				if (this.state.items) {
+						let item = this.state.items[index];
+						console.warn("item", item);
+						Fetch.get(`membership/member/${item.id}`, undefined, (membership) => {
+								console.warn("membership", membership);
+								this.setState({ membership });
+						});
+				}
 		}
 
 		render() {
 				let items = [];
-				let selectedItem = this.state.selectedItem;
-
 				if (this.state.items) {
 						items = this.state.items.map((item, index) => {
 								const { firstName, middleName, lastName } = item;
@@ -50,7 +183,7 @@ class Members extends ListView {
 								</div>
 
 								<div className="eleven wide column">
-										<Member value={selectedItem} onFetch={this.onFetch}/>
+										{this.getDetailPage()}
 								</div>
 				    </div>
 				</div>;
@@ -71,6 +204,7 @@ class Member extends DetailView {
 		}
 
 		getMembership() {
+				const { onAddAccessCard } = this.props;
 				return <div className="membership">
 						<div className="ui basic orange label" data-variation="mini"
 								data-inverted="" data-tooltip="Member Since" data-position="bottom left">
@@ -82,7 +216,7 @@ class Member extends DetailView {
 								<i className="ban icon"></i> 08/30/2019
 						</div>
 
-						<div className="ui basic orange label"
+						<div className="ui basic orange label" onClick={() => onAddAccessCard()}
 								data-inverted="" data-tooltip="Access Card No." data-position="bottom left">
 								<i className="barcode icon"></i> 0000166151
 						</div>
@@ -92,14 +226,21 @@ class Member extends DetailView {
 		}
 
 		getEnrollments() {
+				const { onEnrollProgram, onEnrollPackage } = this.props;
 				return <div>
 						<div className="clearfix" /> <br />
 						<div className="ui horizontal divider">Enrolled Program/Packages</div>
 
 						<div>
 								<br />
-								<Button className="ui green basic button" icon="rocket">Enroll to a Program</Button>
-								<Button className="ui blue basic button" icon="tag">Enroll to a Package</Button>
+								<Button className="ui green basic button" icon="rocket"
+										onClick={() => onEnrollProgram()}>
+										Enroll to a Program
+								</Button>
+								<Button className="ui blue basic button" icon="tag"
+										onClick={() => onEnrollPackage()}>
+										Enroll to a Package
+								</Button>
 						</div>
 				</div>;
 		}

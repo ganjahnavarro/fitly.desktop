@@ -12,7 +12,7 @@ class Header extends React.Component {
 
 				if (item) {
 						return <h3 className="ui header">
-								<img src={"resources/images/" + item.icon + ".png"} className="ui circular image" />
+								<img src={"resources/images/" + item.icon + ".png"} className="ui image" />
 								{item.label}
 						</h3>;
 				}
