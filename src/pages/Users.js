@@ -5,41 +5,37 @@ import View from './abstract/View'
 import ListView from './abstract/ListView'
 import DetailView from './abstract/DetailView'
 
-import Provider from '../core/Provider'
-
 import Input from '../components/Input'
 import Audit from '../components/Audit'
 import Header from '../components/Header'
 import Dropdown from '../components/Dropdown'
 import Textarea from '../components/Textarea'
-import Button from '../components/Button'
 
-import BasicTable from '../components/BasicTable'
+import { GENDERS, USER_TYPES } from '../core/Constants'
 
 
 class Users extends ListView {
 
 		constructor(props) {
 		    super(props);
-				this.endpoint = "user/";
-		}
-
-		onItemClick(index) {
-				super.onItemClick(index);
-
-				let item = this.state.items[index];
-				Provider.loadTrainerDiscounts(item.id, (discounts) => this.setState({discounts}));
+        this.endpoint = "user/";
+				this.orderBy = "firstName";
 		}
 
 		render() {
 				let items = [];
-				let { selectedItem, discounts } = this.state;
+				let selectedItem = this.state.selectedItem;
 
 				if (this.state.items) {
-						items = this.state.items.map(this.renderItem.bind(this));
+						items = this.state.items.map((item, index) => {
+								const { firstName, middleName, lastName } = item;
+								return <li key={index} onClick={this.onItemClick.bind(this, index)}>
+										{`${firstName} ${middleName ? middleName + " " : ""}${lastName}`}
+								</li>;
+						});
 				}
 
-				return <div>
+		    return <div>
 						<Header location={this.props.location} />
 						<div className="ui grid">
 								<div className="five wide column ui form">
@@ -48,118 +44,111 @@ class Users extends ListView {
 
 										<div className="ui divider"></div>
 										<div className="files">
-												<ul className="ui list">{items}</ul>
+													<ul className="ui list">{items}</ul>
 										</div>
 								</div>
 
 								<div className="eleven wide column">
-										<Trainer value={selectedItem} onFetch={this.onFetch} discounts={discounts} />
+										<User value={selectedItem} onFetch={this.onFetch}/>
 								</div>
-						</div>
-		    </div>;
+				    </div>
+				</div>;
 		}
 }
 
-class Trainer extends DetailView {
+class User extends DetailView {
 
 		constructor(props) {
 		    super(props);
-				this.endpoint = "user/";
-				this.state.activeTab = "information";
+        this.endpoint = "user/";
     }
 
-    componentDidMount() {
-				// TODO
-        // Provider.loadAgents((agents) => this.setState({agents}));
-    }
-
-		onAgentChange(agent) {
+		onGenderChange(gender) {
 		    let nextState = this.state.value || {};
-		    nextState.agent = {id: agent.value};
+		    nextState.gender = gender.value;
 		    this.setState(nextState);
 		}
 
-		setActiveTab(tab) {
-				this.setState({ activeTab: tab });
-		}
-
-		renderDiscounts() {
-				const columns = [
-						{ key: "supplier.name", name: "Supplier" },
-						{ key: "discount1", name: "Discount 1" },
-						{ key: "discount2", name: "Discount 2" },
-				];
-				return (<div>
-						<h3 className="ui header">Supplier Discounts</h3>
-						<BasicTable columns={columns} rows={this.props.discounts} allowedDelete />
-
-						<div className="actions">
-								<Button className="ui green button" icon="add" onClick={() => console.log("Add supplier discount..")}>Add</Button>
-						</div>
-						<div className="clearfix" />
-				</div>);
+		onTypeChange(type) {
+		    let nextState = this.state.value || {};
+		    nextState.type = type.value;
+		    this.setState(nextState);
 		}
 
 		render() {
-				let { value, updateMode, activeTab } = this.state;
-				let agentId = value && value.agent ? value.agent.id : null;
+				let { value, updateMode } = this.state;
 
-				let agents = [];
-        if (this.state.agents) {
-						agents = this.state.agents.map((agent, index) => {
-								return {value: agent.id, label: agent.name};
-						});
-        }
+				const passwordComponent = <div className="fields">
+						<Input name="password" label="Password" type="password" value={value.password}
+								onChange={super.onChange.bind(this)}
+								fieldClassName="eight" />
 
-				return <div>
+						<Input name="passwordConfirmation" label="Password Confirmation" type="password"
+								value={value.passwordConfirmation} onChange={super.onChange.bind(this)}
+								fieldClassName="eight" />
+				</div>;
+
+		    return <div>
 						<div className="ui form">
-								<Input ref={(input) => {this.initialInput = input}} autoFocus="true" label="Name"
-										name="name" value={value.name} disabled={!updateMode}
-										onChange={super.onChange.bind(this)} />
-
-								<Dropdown name="agent" label="Agent" value={agentId} disabled={!updateMode}
-										options={agents} onChange={this.onAgentChange.bind(this)} />
-
-								<Textarea name="address" label="Office Address" value={value.address} disabled={!updateMode}
-										onChange={super.onChange.bind(this)} rows={2} />
-
-								<Textarea name="homeAddress" label="Home Address" value={value.homeAddress} disabled={!updateMode}
-										onChange={super.onChange.bind(this)} rows={2} />
-
 								<div className="fields">
-										<Input name="contact" label="Contact" value={value.contact} disabled={!updateMode}
-												onChange={super.onChange.bind(this)} fieldClassName="six" />
+										<Input name="userName" label="Username" value={value.userName} disabled={!updateMode}
+												onChange={super.onChange.bind(this)}
+												fieldClassName="eight" />
 
-										<Input name="fax" label="Fax" value={value.fax} disabled={!updateMode}
-												onChange={super.onChange.bind(this)} fieldClassName="six"  />
+										<Dropdown name="type" label="Type" value={value.type} disabled={!updateMode}
+												options={USER_TYPES} onChange={this.onTypeChange.bind(this)}
+												fieldClassName="eight" />
+								</div>
+								{updateMode === "CREATE" ? passwordComponent : undefined}
 
-										<Input name="commission" label="Commission" value={value.commission} disabled={!updateMode}
-												onChange={super.onChange.bind(this)} fieldClassName="four" />
+								<div className="ui horizontal divider">~</div>
+
+								<div className="three fields">
+										<Input ref={(input) => {this.initialInput = input}} autoFocus="true"
+												name="firstName" label="First Name" value={value.firstName} disabled={!updateMode}
+												onChange={super.onChange.bind(this)} />
+
+										<Input name="middleName" label="Middle Name" value={value.middleName} disabled={!updateMode}
+												onChange={super.onChange.bind(this)} />
+
+										<Input name="lastName" label="Last Name" value={value.lastName} disabled={!updateMode}
+												onChange={super.onChange.bind(this)} />
 								</div>
 
 								<div className="fields">
-										<Input name="tin" label="TIN" value={value.tin} disabled={!updateMode}
-												onChange={super.onChange.bind(this)} fieldClassName="eight" />
+										<Input name="contactNo" label="Contact No." value={value.contactNo} disabled={!updateMode}
+												onChange={super.onChange.bind(this)}
+												fieldClassName="eleven" />
 
-										<Input name="terms" label="Terms" value={value.terms} disabled={!updateMode}
-												onChange={super.onChange.bind(this)} fieldClassName="eight" />
+										<Dropdown name="gender" label="Gender" value={value.gender} disabled={!updateMode}
+												options={GENDERS} onChange={this.onGenderChange.bind(this)}
+												fieldClassName="five" />
 								</div>
 
 								<div className="fields">
-										<Input name="ownersName" label="Owner's Name" value={value.ownersName} disabled={!updateMode}
-											onChange={super.onChange.bind(this)} fieldClassName="eight" />
+										<Input name="email" label="Email" value={value.email} disabled={!updateMode}
+												onChange={super.onChange.bind(this)}
+												fieldClassName="eleven" />
 
-										<Input name="accountNumber" label="Account Number" value={value.accountNumber} disabled={!updateMode}
-												onChange={super.onChange.bind(this)} fieldClassName="eight" />
+										<Input name="birthDate" label="Birth Date" value={value.birthDate} disabled={!updateMode}
+												onChange={super.onChange.bind(this)} placeholder="MM/dd/yyyy"
+												fieldClassName="five" />
 								</div>
+
+								<div className="fields">
+										<Textarea name="address" label="Address" value={value.address} disabled={!updateMode}
+												onChange={super.onChange.bind(this)}
+												fieldClassName="eleven" />
+								</div>
+
+
 						</div>
 
 						<div>
 								<Audit value={value} />
 								{super.getActions()}
-								<div className="clearfix" />
 						</div>
-				</div>;
+		    </div>
 		}
 }
 

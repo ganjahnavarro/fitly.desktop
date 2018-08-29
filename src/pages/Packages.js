@@ -8,13 +8,16 @@ import DetailView from './abstract/DetailView'
 import Input from '../components/Input'
 import Audit from '../components/Audit'
 import Header from '../components/Header'
+import Textarea from '../components/Textarea'
+import Dropdown from '../components/Dropdown'
 
+import { PACKAGE_DURATIONS } from '../core/Constants'
 
-class Units extends ListView {
+class Packages extends ListView {
 
 		constructor(props) {
 		    super(props);
-        this.endpoint = "unit/";
+        this.endpoint = "package/";
 		}
 
 		render() {
@@ -39,31 +42,63 @@ class Units extends ListView {
 								</div>
 
 								<div className="eleven wide column">
-										<Unit value={selectedItem} onFetch={this.onFetch}/>
+										<Package value={selectedItem} onFetch={this.onFetch}/>
 								</div>
 				    </div>
 				</div>;
 		}
 }
 
-class Unit extends DetailView {
+class Package extends DetailView {
 
 		constructor(props) {
 		    super(props);
-        this.endpoint = "unit/";
+        this.endpoint = "package/";
     }
 
+		onDurationChange(duration) {
+		    let nextState = this.state.value || {};
+		    nextState.duration = duration.value;
+		    this.setState(nextState);
+		}
+
 		render() {
-				let value = this.state.value;
+				let { value, updateMode } = this.state;
+				value.duration = value.duration || PACKAGE_DURATIONS[0].value;
+
+				const durationItem = PACKAGE_DURATIONS.find(item => item.value === value.duration);
+				const isEndless = value.duration === "ENDLESS";
+
+				const durationCountComponent = <Input name="durationCount" label={`No. of ${durationItem.label.toLowerCase()} valid`}
+						value={value.durationCount} disabled={!updateMode} onChange={super.onChange.bind(this)}
+						fieldClassName="four" />
 
 		    return <div>
 						<div className="ui form">
 								<Input ref={(input) => {this.initialInput = input}} autoFocus="true" label="Name"
-										name="name" value={this.state.value.name} disabled={!this.state.updateMode}
+										name="name" value={value.name} disabled={!updateMode}
 										onChange={super.onChange.bind(this)} />
 
-								<Input name="pluralName" label="Plural Name" value={this.state.value.pluralName} disabled={!this.state.updateMode}
+								<Textarea name="description" label="Description" value={value.description} disabled={!updateMode}
 										onChange={super.onChange.bind(this)} />
+
+								<div className="fields">
+										<Dropdown name="duration" label="Unit" value={value.duration} disabled={!updateMode}
+												options={PACKAGE_DURATIONS} onChange={this.onDurationChange.bind(this)}
+												fieldClassName="eight" />
+
+										{isEndless ? undefined : durationCountComponent}
+
+										<Input name="sessionsCount" label="No. of Sessions" value={value.sessionsCount} disabled={!updateMode}
+												onChange={super.onChange.bind(this)}
+												fieldClassName="four" />
+								</div>
+
+								<div className="fields">
+										<Input name="price" label="Price" value={value.price} disabled={!updateMode}
+												onChange={super.onChange.bind(this)}
+												fieldClassName="eight" />
+								</div>
 						</div>
 
 						<div>
@@ -74,4 +109,4 @@ class Unit extends DetailView {
 		}
 }
 
-export default Units;
+export default Packages;

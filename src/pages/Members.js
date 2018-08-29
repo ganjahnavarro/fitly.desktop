@@ -8,13 +8,18 @@ import DetailView from './abstract/DetailView'
 import Input from '../components/Input'
 import Audit from '../components/Audit'
 import Header from '../components/Header'
+import Dropdown from '../components/Dropdown'
+import Textarea from '../components/Textarea'
+
+import { GENDERS } from '../core/Constants'
 
 
-class Units extends ListView {
+class Members extends ListView {
 
 		constructor(props) {
 		    super(props);
-        this.endpoint = "unit/";
+        this.endpoint = "member/";
+				this.orderBy = "firstName";
 		}
 
 		render() {
@@ -22,7 +27,12 @@ class Units extends ListView {
 				let selectedItem = this.state.selectedItem;
 
 				if (this.state.items) {
-						items = this.state.items.map(this.renderItem.bind(this));
+						items = this.state.items.map((item, index) => {
+								const { firstName, middleName, lastName } = item;
+								return <li key={index} onClick={this.onItemClick.bind(this, index)}>
+										{`${firstName} ${middleName ? middleName + " " : ""}${lastName}`}
+								</li>;
+						});
 				}
 
 		    return <div>
@@ -39,31 +49,68 @@ class Units extends ListView {
 								</div>
 
 								<div className="eleven wide column">
-										<Unit value={selectedItem} onFetch={this.onFetch}/>
+										<Member value={selectedItem} onFetch={this.onFetch}/>
 								</div>
 				    </div>
 				</div>;
 		}
 }
 
-class Unit extends DetailView {
+class Member extends DetailView {
 
 		constructor(props) {
 		    super(props);
-        this.endpoint = "unit/";
+        this.endpoint = "member/";
     }
 
+		onGenderChange(gender) {
+		    let nextState = this.state.value || {};
+		    nextState.gender = gender.value;
+		    this.setState(nextState);
+		}
+
 		render() {
-				let value = this.state.value;
+				let { value, updateMode } = this.state;
 
 		    return <div>
 						<div className="ui form">
-								<Input ref={(input) => {this.initialInput = input}} autoFocus="true" label="Name"
-										name="name" value={this.state.value.name} disabled={!this.state.updateMode}
-										onChange={super.onChange.bind(this)} />
+								<div className="three fields">
+										<Input ref={(input) => {this.initialInput = input}} autoFocus="true"
+												name="firstName" label="First Name" value={value.firstName} disabled={!updateMode}
+												onChange={super.onChange.bind(this)} />
 
-								<Input name="pluralName" label="Plural Name" value={this.state.value.pluralName} disabled={!this.state.updateMode}
-										onChange={super.onChange.bind(this)} />
+										<Input name="middleName" label="Middle Name" value={value.middleName} disabled={!updateMode}
+												onChange={super.onChange.bind(this)} />
+
+										<Input name="lastName" label="Last Name" value={value.lastName} disabled={!updateMode}
+												onChange={super.onChange.bind(this)} />
+								</div>
+
+								<div className="fields">
+										<Input name="contactNo" label="Contact No." value={value.contactNo} disabled={!updateMode}
+												onChange={super.onChange.bind(this)}
+												fieldClassName="eleven" />
+
+										<Dropdown name="gender" label="Gender" value={value.gender} disabled={!updateMode}
+												options={GENDERS} onChange={this.onGenderChange.bind(this)}
+												fieldClassName="five" />
+								</div>
+
+								<div className="fields">
+										<Input name="email" label="Email" value={value.email} disabled={!updateMode}
+												onChange={super.onChange.bind(this)}
+												fieldClassName="eleven" />
+
+										<Input name="birthDate" label="Birth Date" value={value.birthDate} disabled={!updateMode}
+												onChange={super.onChange.bind(this)} placeholder="MM/dd/yyyy"
+												fieldClassName="five" />
+								</div>
+
+								<div className="fields">
+										<Textarea name="address" label="Address" value={value.address} disabled={!updateMode}
+												onChange={super.onChange.bind(this)}
+												fieldClassName="eleven" />
+								</div>
 						</div>
 
 						<div>
@@ -74,4 +121,4 @@ class Unit extends DetailView {
 		}
 }
 
-export default Units;
+export default Members;

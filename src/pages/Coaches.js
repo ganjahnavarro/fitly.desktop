@@ -102,7 +102,7 @@ class Coach extends DetailView {
 												fieldClassName="eleven" />
 
 										<Input name="birthDate" label="Birth Date" value={value.birthDate} disabled={!updateMode}
-												onChange={super.onChange.bind(this)}
+												onChange={super.onChange.bind(this)} placeholder="MM/dd/yyyy"
 												fieldClassName="five" />
 								</div>
 

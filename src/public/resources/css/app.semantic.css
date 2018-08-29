@@ -82,6 +82,11 @@
     padding: 0.25rem;
 }
 
+.ui.horizontal.divider {
+    color: #ccc;
+    font-weight: normal;
+}
+
 .login.ui.grid > .column:only-child, .ui.grid > .row > .column:only-child {
     width: 500px;
 }

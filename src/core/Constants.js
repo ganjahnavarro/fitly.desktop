@@ -20,3 +20,15 @@ export const GENDERS = [
     { value: "MALE", label: "Male" },
     { value: "FEMALE", label: "Female" }
 ];
+
+export const PACKAGE_DURATIONS = [
+    { value: "ENDLESS", label: "No duration" },
+    { value: "DAYS", label: "Days" },
+    { value: "WEEKS", label: "Weeks" },
+    { value: "MONTHS", label: "Months" },
+];
+
+export const USER_TYPES = [
+    { value: "DEFAULT", label: "Default" },
+    { value: "ADMIN", label: "Admin" }
+];
