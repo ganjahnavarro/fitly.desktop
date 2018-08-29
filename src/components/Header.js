@@ -23,12 +23,6 @@ class Header extends React.Component {
 				return <div className="header-component">
 						<div className="ui secondary menu">
 								{this.getPageTitle()}
-
-								<div className="right menu">
-										<Link to="/" className="ui item">
-												Logout
-										</Link>
-								</div>
 						</div>
         </div>
 		}

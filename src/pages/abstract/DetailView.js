@@ -48,6 +48,12 @@ class DetailView extends View {
 		    this.setState(nextState);
 		}
 
+    onChecked(event) {
+        let nextState = this.state.value || {};
+		    nextState[event.target.name] = event.target.checked;
+		    this.setState(nextState);
+		}
+
     onAdd() {
         this.setState({
             updateMode: "CREATE",

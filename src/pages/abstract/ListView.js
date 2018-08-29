@@ -11,7 +11,7 @@ class ListView extends View {
     }
 
     componentDidMount() {
-				// this.onFetch(null);
+				this.onFetch(null);
 		}
 
     onDelete() {

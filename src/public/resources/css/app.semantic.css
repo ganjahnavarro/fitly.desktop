@@ -102,3 +102,8 @@
 .ui.celled.table tr td.amount {
     text-align: right;
 }
+
+.files ul.ui.list li {
+    cursor: pointer;
+    line-height: inherit;
+}

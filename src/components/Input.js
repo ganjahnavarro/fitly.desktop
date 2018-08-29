@@ -48,7 +48,7 @@ class Input extends React.Component {
 		    return <div className={fieldClassName}>
 						{label ? <label>{label}</label> : null}
 						{component}
-				</div>
+				</div>;
 		}
 
 }

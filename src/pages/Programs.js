@@ -8,13 +8,15 @@ import DetailView from './abstract/DetailView'
 import Input from '../components/Input'
 import Audit from '../components/Audit'
 import Header from '../components/Header'
+import Textarea from '../components/Textarea'
+import Checkbox from '../components/Checkbox'
 
 
-class Units extends ListView {
+class Programs extends ListView {
 
 		constructor(props) {
 		    super(props);
-        this.endpoint = "unit/";
+        this.endpoint = "program/";
 		}
 
 		render() {
@@ -39,31 +41,56 @@ class Units extends ListView {
 								</div>
 
 								<div className="eleven wide column">
-										<Unit value={selectedItem} onFetch={this.onFetch}/>
+										<Program value={selectedItem} onFetch={this.onFetch}/>
 								</div>
 				    </div>
 				</div>;
 		}
 }
 
-class Unit extends DetailView {
+class Program extends DetailView {
 
 		constructor(props) {
 		    super(props);
-        this.endpoint = "unit/";
+        this.endpoint = "program/";
     }
 
 		render() {
-				let value = this.state.value;
+				let { value, updateMode } = this.state;
+
+				const coachPriceComponent = <Input name="coachPrice" label="Coach Price"
+						value={value.coachPrice} disabled={!updateMode} onChange={super.onChange.bind(this)}
+						fieldClassName="eight" />;
 
 		    return <div>
 						<div className="ui form">
 								<Input ref={(input) => {this.initialInput = input}} autoFocus="true" label="Name"
-										name="name" value={this.state.value.name} disabled={!this.state.updateMode}
+										name="name" value={value.name} disabled={!updateMode}
 										onChange={super.onChange.bind(this)} />
 
-								<Input name="pluralName" label="Plural Name" value={this.state.value.pluralName} disabled={!this.state.updateMode}
+								<Textarea name="description" label="Description" value={value.description} disabled={!updateMode}
 										onChange={super.onChange.bind(this)} />
+
+								<Checkbox name="hasCoach" label="Coach allowed?" value={value.hasCoach} disabled={!updateMode}
+										onChange={super.onChecked.bind(this)} />
+
+								<div className="fields">
+										<Input name="guestPrice" label="Guest Price" value={value.guestPrice} disabled={!updateMode}
+												onChange={super.onChange.bind(this)}
+												fieldClassName="eight" />
+
+										<Input name="memberPrice" label="Member Price" value={value.memberPrice} disabled={!updateMode}
+												onChange={super.onChange.bind(this)}
+												fieldClassName="eight" />
+								</div>
+
+								<div className="fields">
+										<Input name="monthlyPrice" label="Unlimited Price" value={value.monthlyPrice} disabled={!updateMode}
+												onChange={super.onChange.bind(this)}
+												fieldClassName="eight" />
+
+										{value.hasCoach ? coachPriceComponent : undefined}
+								</div>
 						</div>
 
 						<div>
@@ -74,4 +101,4 @@ class Unit extends DetailView {
 		}
 }
 
-export default Units;
+export default Programs;
