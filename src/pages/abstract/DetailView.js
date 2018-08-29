@@ -16,18 +16,14 @@ class DetailView extends View {
 		}
 
     onDelete() {
-				console.log("on delete id: " + this.props.value.id);
 				Fetch.delete(this.endpoint, this.props.value.id, () => this.props.onFetch());
 		}
 
 		onSave() {
-				console.log("Saving", "Update Mode:", this.state.updateMode);
 				this.state.updateMode == "CREATE" ? this.onCreate() :  this.onUpdate();
 		}
 
 		onCreate() {
-				console.log("creating..");
-
 				Fetch.post(this.endpoint, this.getRequestValue(), () => {
 						this.setState({updateMode : null});
 						this.props.onFetch();
@@ -35,7 +31,6 @@ class DetailView extends View {
 		}
 
 		onUpdate() {
-        console.log("updating..");
 				Fetch.patch(this.endpoint, this.getRequestValue(), () => {
 						this.setState({updateMode : null});
 						this.props.onFetch();

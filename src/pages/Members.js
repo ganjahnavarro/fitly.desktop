@@ -8,6 +8,7 @@ import DetailView from './abstract/DetailView'
 import Input from '../components/Input'
 import Audit from '../components/Audit'
 import Header from '../components/Header'
+import Button from '../components/Button'
 import Dropdown from '../components/Dropdown'
 import Textarea from '../components/Textarea'
 
@@ -69,10 +70,49 @@ class Member extends DetailView {
 		    this.setState(nextState);
 		}
 
+		getMembership() {
+				return <div className="membership">
+						<div className="ui basic orange label" data-variation="mini"
+								data-inverted="" data-tooltip="Member Since" data-position="bottom left">
+								<i className="calendar icon"></i> 08/30/2018
+						</div>
+
+						<div className="ui basic orange label"
+								data-inverted="" data-tooltip="Membership Expiry" data-position="bottom left">
+								<i className="ban icon"></i> 08/30/2019
+						</div>
+
+						<div className="ui basic orange label"
+								data-inverted="" data-tooltip="Access Card No." data-position="bottom left">
+								<i className="barcode icon"></i> 0000166151
+						</div>
+
+						<div className="clearfix" /> <br />
+				</div>;
+		}
+
+		getEnrollments() {
+				return <div>
+						<div className="clearfix" /> <br />
+						<div className="ui horizontal divider">Enrolled Program/Packages</div>
+
+						<div>
+								<br />
+								<Button className="ui green basic button" icon="rocket">Enroll to a Program</Button>
+								<Button className="ui blue basic button" icon="tag">Enroll to a Package</Button>
+						</div>
+				</div>;
+		}
+
 		render() {
-				let { value, updateMode } = this.state;
+				let { value, membership, updateMode } = this.state;
+				membership = membership || {};
+
+				const showOtherPanels = !updateMode && value && value.id;
 
 		    return <div>
+						{showOtherPanels  ? this.getMembership() : undefined}
+
 						<div className="ui form">
 								<div className="three fields">
 										<Input ref={(input) => {this.initialInput = input}} autoFocus="true"
@@ -117,6 +157,9 @@ class Member extends DetailView {
 								<Audit value={value} />
 								{super.getActions()}
 						</div>
+
+						{showOtherPanels  ? this.getEnrollments() : undefined}
+
 		    </div>
 		}
 }

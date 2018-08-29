@@ -112,3 +112,12 @@
     cursor: pointer;
     line-height: inherit;
 }
+
+button.ui.button {
+    margin-right: 0.5rem;
+}
+
+.ui.label > .detail,
+[data-tooltip]:after {
+    font-size: inherit;
+}

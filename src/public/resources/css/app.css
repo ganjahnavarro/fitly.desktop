@@ -128,3 +128,15 @@ span.transaction-placeholder {
 .header-component {
     padding-top: 2rem;
 }
+
+.membership .ui.label {
+    margin: 0 0.35rem;
+}
+
+.membership .ui.label:first-child {
+    margin-left: 0em;
+}
+
+.membership .ui.label:last-child {
+    margin-right: 0em;
+}
