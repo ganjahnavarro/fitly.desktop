@@ -13,6 +13,7 @@
   "author": "ganjahnavarro",
   "license": "MIT",
   "dependencies": {
+    "chart.js": "^2.7.2",
     "classnames": "^2.2.5",
     "compression": "^1.6.2",
     "express": "^4.14.0",

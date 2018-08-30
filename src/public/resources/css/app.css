@@ -148,3 +148,12 @@ span.transaction-placeholder {
 .navigation .ui.avatar.image {
     border-radius: 0;
 }
+
+.home {
+    margin-top: 10rem;
+}
+
+.home .ui.card > .content > .description {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
