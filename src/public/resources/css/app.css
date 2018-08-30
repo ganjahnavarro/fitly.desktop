@@ -114,15 +114,15 @@ span.transaction-placeholder {
 }
 
 .app > .navigation {
-    width: 125px;
+    width: 100px;
     height: 100%;
     position: fixed;
     background: #f1f1f1;
-    padding-top: 5rem;
+    padding: 4rem 0.5rem;
 }
 
 .app > .content {
-    width: calc(100% - 125px);
+    width: calc(100% - 100px);
     height: auto;
     position: absolute;
     padding: 0 2.5rem;
@@ -156,4 +156,10 @@ span.transaction-placeholder {
 .home .ui.card > .content > .description {
     margin-top: 1rem;
     margin-bottom: 1rem;
+}
+
+.app .ui.header > .image:not(.icon),
+.app .ui.header > img {
+    margin-top: 0.25rem;
+    width: 2rem;
 }

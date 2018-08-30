@@ -8,11 +8,10 @@ class Navigation extends React.Component {
     createLink(item) {
         const { to, label, icon } = item;
         return  <Link key={label.toLowerCase()} to={to} className="item">
-            <img className="ui avatar image" src={"resources/images/" + icon + ".png"} />
-            <div className="content">
-                <div className="header">{label}</div>
-                <div className="description">-</div>
-            </div>
+            <h5 className="ui icon header">
+								<img src={"resources/images/" + icon + ".png"} className="ui image" /> <br />
+								{label}
+						</h5>
         </Link>;
     }
 

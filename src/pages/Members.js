@@ -37,15 +37,16 @@ class Members extends ListView {
 		}
 
 		getInformationPage() {
-				let { selectedItem } = this.state;
-				return <Member value={selectedItem} onFetch={this.onFetch}
+				let { selectedItem, membership } = this.state;
+				return <Member value={selectedItem} membership={membership}
 						onEnrollProgram={() => this.onEnrollProgram()}
 						onEnrollPackage={() => this.onEnrollPackage()}
-						onAddAccessCard={() => this.onAddAccessCard()} />;
+						onAddAccessCard={() => this.onAddAccessCard()}
+						onFetch={this.onFetch} />;
 		}
 
-		getCancelEnrollmentAction() {
-				return <div className="ui label clickable" onClick={() => this.onCancelEnrollment()}>
+		getCancelMemberAction() {
+				return <div className="ui label clickable" onClick={() => this.onCancelMemberAction()}>
 						<i className="angle left icon"></i> Back
 				</div>;
 		}
@@ -54,14 +55,18 @@ class Members extends ListView {
 		    let nextState = this.state.program || {};
 		    nextState.program = { id: program.value };
 		    this.setState(nextState);
+		}
 
-				console.warn("onProgramChange. nextState", nextState);
+		onSubmit(e) {
+				if (e.keyCode === 13) {
+						console.warn("submitting", this.state.membership);
+				}
 		}
 
 		getAddAccessCardPage() {
 				let { membership } = this.state;
 				return <div>
-						{this.getCancelEnrollmentAction()}
+						{this.getCancelMemberAction()}
 
 						<h4 className="ui center aligned icon header">
 								<img src={"resources/images/icon_access_card.png"} className="ui circular image" />
@@ -69,8 +74,9 @@ class Members extends ListView {
 						</h4>
 
 						<div className="ui form">
-								<Input name="accessCardNo" label="Access Card No." value={membership.accessCardNo}
-										onChange={super.onChange.bind(this)} />
+								<Input name="membership.accessCardNo" label="Access Card No."
+										value={membership.accessCardNo} onChange={super.onChange.bind(this)}
+										onKeyDown={(e) => this.onSubmit(e)} />
 						</div>
 				</div>;
 		}
@@ -88,7 +94,7 @@ class Members extends ListView {
 				}
 
 				return <div>
-						{this.getCancelEnrollmentAction()}
+						{this.getCancelMemberAction()}
 
 						<h4 className="ui center aligned icon header">
 								<img src={"resources/images/icon_programs.png"} className="ui circular image" />
@@ -104,8 +110,15 @@ class Members extends ListView {
 
 		getEnrollPackagePage() {
 				return <div>
-						{this.getCancelEnrollmentAction()}
-						<p>p a c ka g e s</p>
+						{this.getCancelMemberAction()}
+
+						<h4 className="ui center aligned icon header">
+								<img src={"resources/images/icon_packages.png"} className="ui circular image" /> <br />
+								Package Enrollment
+						</h4>
+
+						<div className="ui form">
+						</div>
 				</div>;
 		}
 
@@ -150,9 +163,7 @@ class Members extends ListView {
 
 				if (this.state.items) {
 						let item = this.state.items[index];
-						console.warn("item", item);
 						Fetch.get(`membership/member/${item.id}`, undefined, (membership) => {
-								console.warn("membership", membership);
 								this.setState({ membership });
 						});
 				}
@@ -204,25 +215,27 @@ class Member extends DetailView {
 		}
 
 		getMembership() {
-				const { onAddAccessCard } = this.props;
-				return <div className="membership">
-						<div className="ui basic orange label" data-variation="mini"
-								data-inverted="" data-tooltip="Member Since" data-position="bottom left">
-								<i className="calendar icon"></i> 08/30/2018
-						</div>
+				const { onAddAccessCard, membership } = this.props;
 
-						<div className="ui basic orange label"
-								data-inverted="" data-tooltip="Membership Expiry" data-position="bottom left">
-								<i className="ban icon"></i> 08/30/2019
-						</div>
+				if (membership) {
+						const renderMembershipInfo = (label, value, icon) => <div className="ui basic orange label"
+								data-variation="mini" data-inverted="" data-tooltip={label} data-position="bottom left">
+								<i className={`${icon} icon`}></i> {value}
+						</div>;
 
-						<div className="ui basic orange label" onClick={() => onAddAccessCard()}
-								data-inverted="" data-tooltip="Access Card No." data-position="bottom left">
-								<i className="barcode icon"></i> 0000166151
-						</div>
+						const viewAccessCardComponent = renderMembershipInfo("Access Card No.", membership.accessCardNo, "barcode");
+						const addAccessCardComponent = <div className="ui orange label" onClick={() => onAddAccessCard()}>
+								<i className="plus icon"></i> Add Access Card
+						</div>;
 
-						<div className="clearfix" /> <br />
-				</div>;
+						return <div className="membership">
+								{renderMembershipInfo("Member Since", membership.startDate, "calendar")}
+								{renderMembershipInfo("Membership Expiry", membership.endDate, "ban")}
+								{membership.accessCardNo ? viewAccessCardComponent : addAccessCardComponent}
+								<div className="clearfix" /> <br />
+						</div>;
+				}
+				return undefined;
 		}
 
 		getEnrollments() {
@@ -246,13 +259,11 @@ class Member extends DetailView {
 		}
 
 		render() {
-				let { value, membership, updateMode } = this.state;
-				membership = membership || {};
-
+				const { value, updateMode } = this.state;
 				const showOtherPanels = !updateMode && value && value.id;
 
 		    return <div>
-						{showOtherPanels  ? this.getMembership() : undefined}
+						{showOtherPanels ? this.getMembership() : undefined}
 
 						<div className="ui form">
 								<div className="three fields">
@@ -300,7 +311,6 @@ class Member extends DetailView {
 						</div>
 
 						{showOtherPanels  ? this.getEnrollments() : undefined}
-
 		    </div>
 		}
 }
