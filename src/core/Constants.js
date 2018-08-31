@@ -17,6 +17,11 @@ export const DASHBOARD_ITEMS = [
     { to: "/settings", label: "Settings", icon: "icon_settings" },
 ];
 
+export const MEMBER_AVAILMENT_TYPES = [
+    { value: "REGULAR", label: "Regular" },
+    { value: "UNLIMITED", label: "Unlimited for 1 Month" }
+];
+
 export const GENDERS = [
     { value: "MALE", label: "Male" },
     { value: "FEMALE", label: "Female" }

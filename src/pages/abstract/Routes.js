@@ -13,6 +13,7 @@ import TrainingSessions from '../TrainingSessions'
 import Users from '../Users'
 import Settings from '../Settings'
 import Home from '../Home'
+import Todo from '../Todo'
 
 function requireAuth(nextState, replaceState) {
     /*
@@ -34,7 +35,7 @@ module.exports = (
         <Route path="/members" component={Members} onEnter={requireAuth}/>
         <Route path="/programs" component={Programs} onEnter={requireAuth}/>
         <Route path="/packages" component={Packages} onEnter={requireAuth}/>
-        <Route path="/training-sessions" component={TrainingSessions} onEnter={requireAuth}/>
+        <Route path="/training-sessions" component={Todo} onEnter={requireAuth}/>
         <Route path="/settings" component={Settings} onEnter={requireAuth}/>
     </Route>
 

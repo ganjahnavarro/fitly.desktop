@@ -15,7 +15,7 @@ class Todo extends View {
 				return <div>
 						<Header location={this.props.location} />
 						<div className="ui grey image">
-								<p className="message">This page is under construction.</p>
+								<p className="message">~</p>
 						</div>
 				</div>;
 		}

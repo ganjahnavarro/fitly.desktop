@@ -93,14 +93,14 @@ class Members extends ListView {
 												options={programOptions} onChange={this.onProgramChange.bind(this)}
 												fieldClassName="eight" />
 
-										<Input name="price" label="Walk-in Price" value={Formatter.formatAmount(program.guestPrice)}
-												disabled={true} fieldClassName="eight" />
-								</div>
-
-								<div className="fields">
 										<Input name="programAvailment.date" label="Date" value={programAvailment.date}
 												onChange={super.onChange.bind(this)} placeholder="MM/dd/yyyy"
 												fieldClassName="eight" />
+								</div>
+
+								<div className="fields">
+										<Input name="price" label="Walk-in Price" value={Formatter.formatAmount(program.guestPrice)}
+												disabled={true} fieldClassName="eight" />
 								</div>
 						</div>
 
@@ -248,21 +248,29 @@ class Member extends DetailView {
 								<div className="fields">
 										<Input name="contactNo" label="Contact No." value={value.contactNo} disabled={!updateMode}
 												onChange={super.onChange.bind(this)}
-												fieldClassName="eleven" />
+												fieldClassName="six" />
+
+										<Input name="birthDate" label="Birth Date" value={value.birthDate} disabled={!updateMode}
+												onChange={super.onChange.bind(this)} placeholder="MM/dd/yyyy"
+												fieldClassName="six" />
 
 										<Dropdown name="gender" label="Gender" value={value.gender} disabled={!updateMode}
 												options={GENDERS} onChange={this.onGenderChange.bind(this)}
-												fieldClassName="five" />
+												fieldClassName="four" />
 								</div>
 
 								<div className="fields">
 										<Input name="email" label="Email" value={value.email} disabled={!updateMode}
 												onChange={super.onChange.bind(this)}
-												fieldClassName="eleven" />
+												fieldClassName="eight" />
 
-										<Input name="birthDate" label="Birth Date" value={value.birthDate} disabled={!updateMode}
-												onChange={super.onChange.bind(this)} placeholder="MM/dd/yyyy"
-												fieldClassName="five" />
+										<Input name="width" label="Width (kg)" value={value.width} disabled={!updateMode}
+												onChange={super.onChange.bind(this)}
+												fieldClassName="four" />
+
+										<Input name="height" label="Height (cm)" value={value.height} disabled={!updateMode}
+												onChange={super.onChange.bind(this)}
+												fieldClassName="four" />
 								</div>
 
 								<div className="fields">

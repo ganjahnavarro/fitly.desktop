@@ -110,6 +110,9 @@ class Coach extends DetailView {
 										<Textarea name="address" label="Address" value={value.address} disabled={!updateMode}
 												onChange={super.onChange.bind(this)}
 												fieldClassName="eleven" />
+
+										<Input name="commissionPercent" label="Commission (%)" value={value.commissionPercent} disabled={!updateMode}
+												onChange={super.onChange.bind(this)} fieldClassName="five" />
 								</div>
 						</div>
 

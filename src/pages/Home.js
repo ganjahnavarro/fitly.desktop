@@ -11,10 +11,10 @@ class Home extends View {
 				const salesChart = new Chart(salesChartContext, {
 				    type: 'bar',
 				    data: {
-				        labels: ["Red", "Blue", "Yellow", "Green"],
+				        labels: ["Boxing", "Muay Thai", "Gym", "BJJ"],
 				        datasets: [{
 				            label: '# of Votes',
-				            data: [12, 19, 3, 3, 3, 3, 31],
+				            data: [13, 11, 29, 8],
 				            backgroundColor: [
 				                'rgba(255, 99, 132, 0.2)',
 				                'rgba(54, 162, 235, 0.2)',
@@ -40,19 +40,15 @@ class Home extends View {
 				const enrolleesChart = new Chart(enrolleesChartContext, {
 				    type: 'bar',
 				    data: {
-				        labels: ["Red", "Blue", "Yellow", "Green"],
+				        labels: ["Walk-Ins", "Memberships"],
 				        datasets: [{
 				            label: '# of Votes',
-				            data: [12, 19, 3, 3, 3, 3, 31],
+				            data: [21, 13],
 				            backgroundColor: [
-				                'rgba(255, 99, 132, 0.2)',
-				                'rgba(54, 162, 235, 0.2)',
 				                'rgba(255, 206, 86, 0.2)',
 				                'rgba(75, 192, 192, 0.2)'
 				            ],
 				            borderColor: [
-				                'rgba(255,99,132,1)',
-				                'rgba(54, 162, 235, 1)',
 				                'rgba(255, 206, 86, 1)',
 				                'rgba(75, 192, 192, 1)'
 				            ],
@@ -69,10 +65,10 @@ class Home extends View {
 				const traineesChart = new Chart(traineesContext, {
 				    type: 'bar',
 				    data: {
-				        labels: ["Red", "Blue", "Yellow", "Green"],
+				        labels: ["Mark", "John", "Justin", "Zeke"],
 				        datasets: [{
-				            label: '# of Votes',
-				            data: [12, 19, 3, 3, 3, 3, 31],
+				            label: 'No. of Trainees',
+				            data: [2, 8, 3, 14],
 				            backgroundColor: [
 				                'rgba(255, 99, 132, 0.2)',
 				                'rgba(54, 162, 235, 0.2)',
