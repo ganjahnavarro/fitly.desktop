@@ -11,7 +11,7 @@ class ListView extends View {
     }
 
     componentDidMount() {
-				this.onFetch(null);
+				this.onFetch();
 		}
 
     onDelete() {
@@ -27,14 +27,14 @@ class ListView extends View {
 				this.onFetch({filter: event.target.value});
 		}
 
-		onFetch(extraParameters) {
+		onFetch() {
 				let defaultParameters = {
 						orderedBy: this.orderBy || "name",
 						pageSize: 100,
 						pageOffset: 0
 				};
 
-				let parameters = Object.assign({}, defaultParameters, extraParameters);
+				let parameters = Object.assign({}, defaultParameters, this.extraParameters);
 
 				Fetch.get(this.endpoint, parameters, (items) => {
 						this.setState({items});

@@ -6,6 +6,7 @@ import Login from '../Login'
 
 import Coaches from '../Coaches'
 import Members from '../Members'
+import Walkins from '../Walkins'
 import Programs from '../Programs'
 import Packages from '../Packages'
 import TrainingSessions from '../TrainingSessions'
@@ -29,6 +30,7 @@ module.exports = (
         <Route path="/login" component={Login} />
 
         <Route path="/coaches" component={Coaches} onEnter={requireAuth}/>
+        <Route path="/walkins" component={Walkins} onEnter={requireAuth}/>
         <Route path="/members" component={Members} onEnter={requireAuth}/>
         <Route path="/programs" component={Programs} onEnter={requireAuth}/>
         <Route path="/packages" component={Packages} onEnter={requireAuth}/>
