@@ -93,7 +93,8 @@ class User extends DetailView {
 		    return <div>
 						<div className="ui form">
 								<div className="fields">
-										<Input name="userName" label="Username" value={value.userName} disabled={!updateMode}
+										<Input ref={(input) => {this.initialInput = input}} autoFocus="true"
+												name="userName" label="Username" value={value.userName} disabled={!updateMode}
 												onChange={super.onChange.bind(this)}
 												fieldClassName="eight" />
 
@@ -107,8 +108,7 @@ class User extends DetailView {
 								<div className="ui horizontal divider">~</div>
 
 								<div className="three fields">
-										<Input ref={(input) => {this.initialInput = input}} autoFocus="true"
-												name="firstName" label="First Name" value={value.firstName} disabled={!updateMode}
+										<Input name="firstName" label="First Name" value={value.firstName} disabled={!updateMode}
 												onChange={super.onChange.bind(this)} />
 
 										<Input name="middleName" label="Middle Name" value={value.middleName} disabled={!updateMode}

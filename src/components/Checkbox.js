@@ -5,9 +5,10 @@ class Checkbox extends React.Component {
 		render() {
         let { value, label, fieldClassName } = this.props;
         fieldClassName = fieldClassName ? fieldClassName + " wide field" : "field";
+				value = value ? value : false;
 
         let checkboxClassName = "ui toggle checkbox";
-        let props = Object.assign({}, this.props, { type: "checkbox", checked: value });
+        let props = Object.assign({}, this.props, { type: "checkbox", checked: value, value });
 				delete props.label;
 				delete props.fieldClassName;
 

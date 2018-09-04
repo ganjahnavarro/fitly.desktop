@@ -1,6 +1,7 @@
 import React from 'react'
 import View from './View'
 
+import Auth from '../../core/Auth'
 import Fetch from '../../core/Fetch'
 import Button from '../../components/Button'
 
@@ -75,13 +76,18 @@ class DetailView extends View {
         });
     }
 
-    getActions() {
+    getAdminOnlyActions() {
+        const nonAdmin = !Auth.isAdmin();
+        return this.getActions(nonAdmin, nonAdmin, nonAdmin);
+    }
+
+    getActions(hideAdd, hideEdit, hideDelete) {
         let value = this.state.value;
 
         let viewingActions = <div>
-            <Button className="ui green button" icon="add" onClick={() => this.onAdd()}>Add</Button>
-            {value && value.id ? <Button className="ui blue button" icon="write" onClick={() => this.onEdit()}>Edit</Button> : null}
-            {value && value.id ? <Button className="ui button" icon="trash" onClick={() => this.onDelete()}>Delete</Button> : null}
+            {!hideAdd ? <Button className="ui green button" icon="add" onClick={() => this.onAdd()}>Add</Button> : null}
+            {!hideEdit && value && value.id ? <Button className="ui blue button" icon="write" onClick={() => this.onEdit()}>Edit</Button> : null}
+            {!hideDelete && value && value.id ? <Button className="ui button" icon="trash" onClick={() => this.onDelete()}>Delete</Button> : null}
         </div>;
 
         let editingActions = <div>

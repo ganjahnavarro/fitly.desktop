@@ -24,17 +24,17 @@ class ListView extends View {
 
     onFilter(event) {
 				super.onChange(event);
-				this.onFetch({filter: event.target.value});
+				this.onFetch({ filter: event.target.value });
 		}
 
-		onFetch() {
+		onFetch(filterParameters) {
 				let defaultParameters = {
 						orderedBy: this.orderBy || "name",
 						pageSize: 100,
 						pageOffset: 0
 				};
 
-				let parameters = Object.assign({}, defaultParameters, this.extraParameters);
+				let parameters = Object.assign({}, defaultParameters, filterParameters, this.extraParameters);
 
 				Fetch.get(this.endpoint, parameters, (items) => {
 						this.setState({items});

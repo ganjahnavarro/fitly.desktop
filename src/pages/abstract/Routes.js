@@ -14,9 +14,12 @@ import Settings from '../Settings'
 import Home from '../Home'
 import Todo from '../Todo'
 
-import Fetch from '../../core/Fetch'
+import Auth from '../../core/Auth'
 
-function onLogout() {}
+function onLogout() {
+    Auth.logout();
+}
+
 function requireAuth(nextState, replaceState) {
     /*
         if not logged on, call replaceState("/login");

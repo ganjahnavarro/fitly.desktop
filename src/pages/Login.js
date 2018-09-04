@@ -1,10 +1,7 @@
 import React from 'react'
-import { hashHistory } from 'react-router'
 import View from './abstract/View'
 
-import Fetch from '../core/Fetch'
-import Alert from '../core/Alert'
-import Utils from '../core/Utils'
+import Auth from '../core/Auth'
 
 import Input from '../components/Input'
 import Button from '../components/Button'
@@ -15,19 +12,7 @@ class Login extends View {
 
 		login() {
 				let { userName, password } = this.state;
-				let data = { userName, password };
-
-				if (userName && password) {
-						Fetch.post("login", data, (success) => {
-								if (success) {
-										hashHistory.push("/home");
-								} else {
-										Alert.error("Invalid username and/or password.");
-								}
-						});
-				} else {
-						Alert.error("Username and password is required.");
-				}
+				Auth.login(userName, password);
 		}
 
 		render() {

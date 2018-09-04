@@ -103,7 +103,7 @@ class Package extends DetailView {
 
 						<div>
 								<Audit value={value} />
-								{super.getActions()}
+								{super.getAdminOnlyActions()}
 						</div>
 		    </div>
 		}
