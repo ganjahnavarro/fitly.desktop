@@ -1,3 +1,6 @@
+export const COMPANY_NAME = "VALIANT";
+export const COMPANY_DESCRIPTION = "MMA & Fitness Gym";
+
 export const SERVER_URL = "http://localhost:8080/";
 export const DEPLOYMENT_URL = SERVER_URL + "fitly/";
 
@@ -7,14 +10,16 @@ export const PDFS_DIRECTORY = "pdfs/";
 export const DEFAULT_DISPLAYED_ITEM_COUNT = 20;
 
 export const DASHBOARD_ITEMS = [
-    { to: "/", label: "Home", icon: "icon_home_page" },
+    { to: "/home", label: "Home", icon: "icon_home_page" },
     { to: "/coaches", label: "Coaches", icon: "icon_coaches" },
     { to: "/walkins", label: "Walk-Ins", icon: "icon_walk_ins" },
     { to: "/members", label: "Members", icon: "icon_members" },
     { to: "/programs", label: "Programs", icon: "icon_programs" },
     { to: "/packages", label: "Packages", icon: "icon_packages" },
     { to: "/training-sessions", label: "Training Sessions", icon: "icon_training_sessions" },
+    { to: "/users", label: "Users", icon: "icon_users" },
     { to: "/settings", label: "Settings", icon: "icon_settings" },
+    { to: "/logout", label: "Logout", icon: "icon_logout" }
 ];
 
 export const MEMBER_AVAILMENT_TYPES = [

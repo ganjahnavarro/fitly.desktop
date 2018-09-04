@@ -36508,7 +36508,7 @@
 
 	var _Members2 = _interopRequireDefault(_Members);
 
-	var _Walkins = __webpack_require__(631);
+	var _Walkins = __webpack_require__(632);
 
 	var _Walkins2 = _interopRequireDefault(_Walkins);
 
@@ -36536,6 +36536,10 @@
 
 	var _Home2 = _interopRequireDefault(_Home);
 
+	var _Todo = __webpack_require__(822);
+
+	var _Todo2 = _interopRequireDefault(_Todo);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function requireAuth(nextState, replaceState) {}
@@ -36558,7 +36562,7 @@
 	    _react2.default.createElement(_reactRouter.Route, { path: '/members', component: _Members2.default, onEnter: requireAuth }),
 	    _react2.default.createElement(_reactRouter.Route, { path: '/programs', component: _Programs2.default, onEnter: requireAuth }),
 	    _react2.default.createElement(_reactRouter.Route, { path: '/packages', component: _Packages2.default, onEnter: requireAuth }),
-	    _react2.default.createElement(_reactRouter.Route, { path: '/training-sessions', component: _TrainingSessions2.default, onEnter: requireAuth }),
+	    _react2.default.createElement(_reactRouter.Route, { path: '/training-sessions', component: _Todo2.default, onEnter: requireAuth }),
 	    _react2.default.createElement(_reactRouter.Route, { path: '/settings', component: _Settings2.default, onEnter: requireAuth })
 	);
 
@@ -55211,6 +55215,8 @@
 
 	var DASHBOARD_ITEMS = exports.DASHBOARD_ITEMS = [{ to: "/", label: "Home", icon: "icon_home_page" }, { to: "/coaches", label: "Coaches", icon: "icon_coaches" }, { to: "/walkins", label: "Walk-Ins", icon: "icon_walk_ins" }, { to: "/members", label: "Members", icon: "icon_members" }, { to: "/programs", label: "Programs", icon: "icon_programs" }, { to: "/packages", label: "Packages", icon: "icon_packages" }, { to: "/training-sessions", label: "Training Sessions", icon: "icon_training_sessions" }, { to: "/settings", label: "Settings", icon: "icon_settings" }];
 
+	var MEMBER_AVAILMENT_TYPES = exports.MEMBER_AVAILMENT_TYPES = [{ value: "REGULAR", label: "Regular" }, { value: "UNLIMITED", label: "Unlimited for 1 Month" }];
+
 	var GENDERS = exports.GENDERS = [{ value: "MALE", label: "Male" }, { value: "FEMALE", label: "Female" }];
 
 	var PACKAGE_DURATIONS = exports.PACKAGE_DURATIONS = [{ value: "ENDLESS", label: "No duration" }, { value: "DAYS", label: "Days" }, { value: "WEEKS", label: "Weeks" }, { value: "MONTHS", label: "Months" }];
@@ -68549,7 +68555,9 @@
 													{ className: 'fields' },
 													_react2.default.createElement(_Textarea2.default, { name: 'address', label: 'Address', value: value.address, disabled: !updateMode,
 															onChange: _get(Coach.prototype.__proto__ || Object.getPrototypeOf(Coach.prototype), 'onChange', this).bind(this),
-															fieldClassName: 'eleven' })
+															fieldClassName: 'eleven' }),
+													_react2.default.createElement(_Input2.default, { name: 'commissionPercent', label: 'Commission (%)', value: value.commissionPercent, disabled: !updateMode,
+															onChange: _get(Coach.prototype.__proto__ || Object.getPrototypeOf(Coach.prototype), 'onChange', this).bind(this), fieldClassName: 'five' })
 											)
 									),
 									_react2.default.createElement(
@@ -72653,7 +72661,11 @@
 
 	var _Constants = __webpack_require__(591);
 
-	var _Provider = __webpack_require__(630);
+	var _Formatter = __webpack_require__(630);
+
+	var _Formatter2 = _interopRequireDefault(_Formatter);
+
+	var _Provider = __webpack_require__(631);
 
 	var _Provider2 = _interopRequireDefault(_Provider);
 
@@ -72684,6 +72696,7 @@
 					_this.state.enrollingProgram = false;
 					_this.state.enrollingPackage = false;
 					_this.state.addingAccessCard = false;
+					_this.state.memberAvailmentTypes = _Constants.MEMBER_AVAILMENT_TYPES;
 					return _this;
 			}
 
@@ -72708,9 +72721,12 @@
 
 							var _state = this.state,
 							    selectedItem = _state.selectedItem,
-							    membership = _state.membership;
+							    membership = _state.membership,
+							    availedPrograms = _state.availedPrograms,
+							    availedPackages = _state.availedPackages;
 
 							return _react2.default.createElement(Member, { value: selectedItem, membership: membership,
+									availedPrograms: availedPrograms, availedPackages: availedPackages,
 									onEnrollProgram: function onEnrollProgram() {
 											return _this3.onEnrollProgram();
 									},
@@ -72737,23 +72753,80 @@
 							);
 					}
 			}, {
+					key: 'onPackageChange',
+					value: function onPackageChange(pkg) {
+							var _state2 = this.state,
+							    packages = _state2.packages,
+							    packageAvailment = _state2.packageAvailment;
+
+							packageAvailment = packageAvailment || {};
+
+							if (packages) {
+									packageAvailment.availedPackage = packages.find(function (item) {
+											return item.id === pkg.value;
+									});
+							}
+							this.setState({ packageAvailment: packageAvailment });
+					}
+			}, {
 					key: 'onProgramChange',
 					value: function onProgramChange(program) {
-							var nextState = this.state.program || {};
-							nextState.program = { id: program.value };
-							this.setState(nextState);
+							var _state3 = this.state,
+							    programs = _state3.programs,
+							    programAvailment = _state3.programAvailment;
+
+							programAvailment = programAvailment || {};
+
+							if (programs) {
+									var selectedProgram = programs.find(function (item) {
+											return item.id === program.value;
+									});
+									programAvailment.availedProgram = selectedProgram;
+									programAvailment.type = selectedProgram.monthlyPrice ? programAvailment.type : "REGULAR";
+
+									var regularAvailmentType = { value: "REGULAR", label: "Regular" };
+									var memberAvailmentTypes = selectedProgram.monthlyPrice ? _Constants.MEMBER_AVAILMENT_TYPES : [regularAvailmentType];
+
+									this.setState({ memberAvailmentTypes: memberAvailmentTypes });
+							}
+							this.setState({ programAvailment: programAvailment });
+					}
+			}, {
+					key: 'onSavePackageAvailment',
+					value: function onSavePackageAvailment() {
+							var _this5 = this;
+
+							_Fetch2.default.post("package/availment/", this.state.packageAvailment, function () {
+									_this5.setState({ enrollingPackage: false });
+									_this5.onFetch();
+							});
+					}
+			}, {
+					key: 'onSaveProgramAvailment',
+					value: function onSaveProgramAvailment() {
+							var _this6 = this;
+
+							_Fetch2.default.post("program/availment/", this.state.programAvailment, function () {
+									_this6.setState({ enrollingProgram: false });
+									_this6.onFetch();
+							});
 					}
 			}, {
 					key: 'onSubmit',
 					value: function onSubmit(e) {
+							var _this7 = this;
+
 							if (e.keyCode === 13) {
-									console.warn("submitting", this.state.membership);
+									_Fetch2.default.patch("membership/", this.state.membership, function () {
+											_this7.setState({ addingAccessCard: false });
+											_this7.onFetch();
+									});
 							}
 					}
 			}, {
 					key: 'getAddAccessCardPage',
 					value: function getAddAccessCardPage() {
-							var _this5 = this;
+							var _this8 = this;
 
 							var membership = this.state.membership;
 
@@ -72770,30 +72843,54 @@
 									_react2.default.createElement(
 											'div',
 											{ className: 'ui form' },
-											_react2.default.createElement(_Input2.default, { name: 'membership.accessCardNo', label: 'Access Card No.',
+											_react2.default.createElement(_Input2.default, { ref: function ref(input) {
+															_this8.initialInput = input;
+													}, autoFocus: 'true',
+													name: 'membership.accessCardNo', label: 'Access Card No.',
 													value: membership.accessCardNo, onChange: _get(Members.prototype.__proto__ || Object.getPrototypeOf(Members.prototype), 'onChange', this).bind(this),
 													onKeyDown: function onKeyDown(e) {
-															return _this5.onSubmit(e);
-													} })
+															return _this8.onSubmit(e);
+													} }),
+											_react2.default.createElement(
+													'div',
+													{ className: 'ui basic blue label' },
+													_react2.default.createElement('i', { className: 'barcode icon' }),
+													' Scan access card using RFID reader or manually type and then press enter'
+											)
 									)
 							);
 					}
 			}, {
+					key: 'onAvailmentTypeChange',
+					value: function onAvailmentTypeChange(availmentType) {
+							var programAvailment = this.state.programAvailment;
+
+							programAvailment = programAvailment || {};
+							programAvailment.type = availmentType.value;
+							this.setState({ programAvailment: programAvailment });
+					}
+			}, {
 					key: 'getEnrollProgramPage',
 					value: function getEnrollProgramPage() {
-							var _state2 = this.state,
-							    program = _state2.program,
-							    programs = _state2.programs;
+							var _this9 = this;
 
+							var _state4 = this.state,
+							    programs = _state4.programs,
+							    programAvailment = _state4.programAvailment,
+							    memberAvailmentTypes = _state4.memberAvailmentTypes;
+
+							var program = programAvailment.availedProgram || {};
 
 							var programOptions = [];
-							var programId = program ? program.id : null;
 
 							if (programs) {
 									programOptions = programs.map(function (item, index) {
 											return { value: item.id, label: item.name };
 									});
 							}
+
+							var price = programAvailment.type === "REGULAR" ? program.memberPrice : program.monthlyPrice;
+							var allowTypeSelection = memberAvailmentTypes && memberAvailmentTypes.length > 1;
 
 							return _react2.default.createElement(
 									'div',
@@ -72808,14 +72905,65 @@
 									_react2.default.createElement(
 											'div',
 											{ className: 'ui form' },
-											_react2.default.createElement(_Dropdown2.default, { name: 'program', label: 'Program', value: programId,
-													options: programOptions, onChange: this.onProgramChange.bind(this) })
+											_react2.default.createElement(
+													'div',
+													{ className: 'fields' },
+													_react2.default.createElement(_Dropdown2.default, { name: 'program', label: 'Program', value: program.id,
+															options: programOptions, onChange: this.onProgramChange.bind(this),
+															fieldClassName: 'eight' }),
+													_react2.default.createElement(_Input2.default, { name: 'programAvailment.date', label: 'Date', value: programAvailment.date,
+															onChange: _get(Members.prototype.__proto__ || Object.getPrototypeOf(Members.prototype), 'onChange', this).bind(this), placeholder: 'MM/dd/yyyy',
+															fieldClassName: 'eight' })
+											),
+											_react2.default.createElement(
+													'div',
+													{ className: 'fields' },
+													_react2.default.createElement(_Dropdown2.default, { name: 'programAvailment.type', label: 'Type', value: programAvailment.type,
+															options: memberAvailmentTypes, onChange: this.onAvailmentTypeChange.bind(this),
+															disabled: !allowTypeSelection, fieldClassName: 'eight' }),
+													_react2.default.createElement(_Input2.default, { name: 'price', label: 'Price', value: _Formatter2.default.formatAmount(price),
+															disabled: true, fieldClassName: 'eight' })
+											)
+									),
+									_react2.default.createElement(
+											'div',
+											{ className: 'actions' },
+											_react2.default.createElement(
+													_Button2.default,
+													{ className: 'ui green button', icon: 'save', onClick: function onClick() {
+																	return _this9.onSaveProgramAvailment();
+															} },
+													'Save'
+											),
+											_react2.default.createElement(
+													_Button2.default,
+													{ className: 'ui button', icon: 'ban', onClick: function onClick() {
+																	return _this9.onCancelMemberAction();
+															} },
+													'Cancel'
+											)
 									)
 							);
 					}
 			}, {
 					key: 'getEnrollPackagePage',
 					value: function getEnrollPackagePage() {
+							var _this10 = this;
+
+							var _state5 = this.state,
+							    packages = _state5.packages,
+							    packageAvailment = _state5.packageAvailment;
+
+							var availedPackage = packageAvailment.availedPackage || {};
+
+							var packageOptions = [];
+
+							if (packages) {
+									packageOptions = packages.map(function (item, index) {
+											return { value: item.id, label: item.name };
+									});
+							}
+
 							return _react2.default.createElement(
 									'div',
 									null,
@@ -72824,11 +72972,46 @@
 											'h4',
 											{ className: 'ui center aligned icon header' },
 											_react2.default.createElement('img', { src: "resources/images/icon_packages.png", className: 'ui circular image' }),
-											' ',
-											_react2.default.createElement('br', null),
 											'Package Enrollment'
 									),
-									_react2.default.createElement('div', { className: 'ui form' })
+									_react2.default.createElement(
+											'div',
+											{ className: 'ui form' },
+											_react2.default.createElement(
+													'div',
+													{ className: 'fields' },
+													_react2.default.createElement(_Dropdown2.default, { name: 'package', label: 'Package', value: availedPackage.id,
+															options: packageOptions, onChange: this.onPackageChange.bind(this),
+															fieldClassName: 'eight' }),
+													_react2.default.createElement(_Input2.default, { name: 'packageAvailment.date', label: 'Date', value: packageAvailment.date,
+															onChange: _get(Members.prototype.__proto__ || Object.getPrototypeOf(Members.prototype), 'onChange', this).bind(this), placeholder: 'MM/dd/yyyy',
+															fieldClassName: 'eight' })
+											),
+											_react2.default.createElement(
+													'div',
+													{ className: 'fields' },
+													_react2.default.createElement(_Input2.default, { name: 'price', label: 'Price', value: _Formatter2.default.formatAmount(availedPackage.price),
+															disabled: true, fieldClassName: 'eight' })
+											)
+									),
+									_react2.default.createElement(
+											'div',
+											{ className: 'actions' },
+											_react2.default.createElement(
+													_Button2.default,
+													{ className: 'ui green button', icon: 'save', onClick: function onClick() {
+																	return _this10.onSavePackageAvailment();
+															} },
+													'Save'
+											),
+											_react2.default.createElement(
+													_Button2.default,
+													{ className: 'ui button', icon: 'ban', onClick: function onClick() {
+																	return _this10.onCancelMemberAction();
+															} },
+													'Cancel'
+											)
+									)
 							);
 					}
 			}, {
@@ -72850,20 +73033,33 @@
 			}, {
 					key: 'onEnrollProgram',
 					value: function onEnrollProgram() {
-							this.setState({ program: {}, enrollingProgram: true });
+							var selectedItem = this.state.selectedItem;
+
+							var programAvailment = {
+									member: selectedItem,
+									date: new Date().toLocaleDateString(),
+									type: "REGULAR"
+							};
+							this.setState({ programAvailment: programAvailment, enrollingProgram: true });
 					}
 			}, {
 					key: 'onEnrollPackage',
 					value: function onEnrollPackage() {
-							this.setState({ package: {}, enrollingPackage: true });
+							var selectedItem = this.state.selectedItem;
+
+							var packageAvailment = {
+									member: selectedItem,
+									date: new Date().toLocaleDateString()
+							};
+							this.setState({ packageAvailment: packageAvailment, enrollingPackage: true });
 					}
 			}, {
 					key: 'getDetailPage',
 					value: function getDetailPage() {
-							var _state3 = this.state,
-							    enrollingProgram = _state3.enrollingProgram,
-							    enrollingPackage = _state3.enrollingPackage,
-							    addingAccessCard = _state3.addingAccessCard;
+							var _state6 = this.state,
+							    enrollingProgram = _state6.enrollingProgram,
+							    enrollingPackage = _state6.enrollingPackage,
+							    addingAccessCard = _state6.addingAccessCard;
 
 
 							var detailComponent = this.getInformationPage();
@@ -72879,21 +73075,30 @@
 			}, {
 					key: 'onItemClick',
 					value: function onItemClick(index) {
-							var _this6 = this;
+							var _this11 = this;
 
 							_get(Members.prototype.__proto__ || Object.getPrototypeOf(Members.prototype), 'onItemClick', this).call(this, index);
 
 							if (this.state.items) {
 									var item = this.state.items[index];
+
 									_Fetch2.default.get('membership/member/' + item.id, undefined, function (membership) {
-											_this6.setState({ membership: membership });
+											_this11.setState({ membership: membership });
+									});
+
+									_Fetch2.default.get('program/availment/' + item.id, undefined, function (availedPrograms) {
+											_this11.setState({ availedPrograms: availedPrograms });
+									});
+
+									_Fetch2.default.get('package/availment/' + item.id, undefined, function (availedPackages) {
+											_this11.setState({ availedPackages: availedPackages });
 									});
 							}
 					}
 			}, {
 					key: 'render',
 					value: function render() {
-							var _this7 = this;
+							var _this12 = this;
 
 							var items = [];
 							if (this.state.items) {
@@ -72904,7 +73109,7 @@
 
 											return _react2.default.createElement(
 													'li',
-													{ key: index, onClick: _this7.onItemClick.bind(_this7, index) },
+													{ key: index, onClick: _this12.onItemClick.bind(_this12, index) },
 													firstName + ' ' + (middleName ? middleName + " " : "") + lastName
 											);
 									});
@@ -72952,10 +73157,10 @@
 			function Member(props) {
 					_classCallCheck(this, Member);
 
-					var _this8 = _possibleConstructorReturn(this, (Member.__proto__ || Object.getPrototypeOf(Member)).call(this, props));
+					var _this13 = _possibleConstructorReturn(this, (Member.__proto__ || Object.getPrototypeOf(Member)).call(this, props));
 
-					_this8.endpoint = "member/";
-					return _this8;
+					_this13.endpoint = "member/";
+					return _this13;
 			}
 
 			_createClass(Member, [{
@@ -73021,7 +73226,42 @@
 					value: function getEnrollments() {
 							var _props2 = this.props,
 							    onEnrollProgram = _props2.onEnrollProgram,
-							    onEnrollPackage = _props2.onEnrollPackage;
+							    onEnrollPackage = _props2.onEnrollPackage,
+							    availedPrograms = _props2.availedPrograms,
+							    availedPackages = _props2.availedPackages;
+
+
+							var viewComponent = _react2.default.createElement(
+									'div',
+									null,
+									_react2.default.createElement('br', null),
+									availedPrograms && availedPrograms.map(function (item) {
+											return _react2.default.createElement(
+													'div',
+													{ key: item.id, className: 'ui label',
+															'data-variation': 'mini', 'data-inverted': '', 'data-tooltip': 'Program' },
+													item.availedProgram.name,
+													_react2.default.createElement(
+															'div',
+															{ className: 'detail' },
+															item.date
+													)
+											);
+									}),
+									availedPackages && availedPackages.map(function (item) {
+											return _react2.default.createElement(
+													'div',
+													{ key: item.id, className: 'ui label',
+															'data-variation': 'mini', 'data-inverted': '', 'data-tooltip': 'Package' },
+													item.availedPackage.name,
+													_react2.default.createElement(
+															'div',
+															{ className: 'detail' },
+															item.date
+													)
+											);
+									})
+							);
 
 							return _react2.default.createElement(
 									'div',
@@ -73054,17 +73294,18 @@
 															} },
 													'Enroll to a Package'
 											)
-									)
+									),
+									viewComponent
 							);
 					}
 			}, {
 					key: 'render',
 					value: function render() {
-							var _this9 = this;
+							var _this14 = this;
 
-							var _state4 = this.state,
-							    value = _state4.value,
-							    updateMode = _state4.updateMode;
+							var _state7 = this.state,
+							    value = _state7.value,
+							    updateMode = _state7.updateMode;
 
 							var showOtherPanels = !updateMode && value && value.id;
 
@@ -73079,7 +73320,7 @@
 													'div',
 													{ className: 'three fields' },
 													_react2.default.createElement(_Input2.default, { ref: function ref(input) {
-																	_this9.initialInput = input;
+																	_this14.initialInput = input;
 															}, autoFocus: 'true',
 															name: 'firstName', label: 'First Name', value: value.firstName, disabled: !updateMode,
 															onChange: _get(Member.prototype.__proto__ || Object.getPrototypeOf(Member.prototype), 'onChange', this).bind(this) }),
@@ -73093,20 +73334,26 @@
 													{ className: 'fields' },
 													_react2.default.createElement(_Input2.default, { name: 'contactNo', label: 'Contact No.', value: value.contactNo, disabled: !updateMode,
 															onChange: _get(Member.prototype.__proto__ || Object.getPrototypeOf(Member.prototype), 'onChange', this).bind(this),
-															fieldClassName: 'eleven' }),
+															fieldClassName: 'six' }),
+													_react2.default.createElement(_Input2.default, { name: 'birthDate', label: 'Birth Date', value: value.birthDate, disabled: !updateMode,
+															onChange: _get(Member.prototype.__proto__ || Object.getPrototypeOf(Member.prototype), 'onChange', this).bind(this), placeholder: 'MM/dd/yyyy',
+															fieldClassName: 'six' }),
 													_react2.default.createElement(_Dropdown2.default, { name: 'gender', label: 'Gender', value: value.gender, disabled: !updateMode,
 															options: _Constants.GENDERS, onChange: this.onGenderChange.bind(this),
-															fieldClassName: 'five' })
+															fieldClassName: 'four' })
 											),
 											_react2.default.createElement(
 													'div',
 													{ className: 'fields' },
 													_react2.default.createElement(_Input2.default, { name: 'email', label: 'Email', value: value.email, disabled: !updateMode,
 															onChange: _get(Member.prototype.__proto__ || Object.getPrototypeOf(Member.prototype), 'onChange', this).bind(this),
-															fieldClassName: 'eleven' }),
-													_react2.default.createElement(_Input2.default, { name: 'birthDate', label: 'Birth Date', value: value.birthDate, disabled: !updateMode,
-															onChange: _get(Member.prototype.__proto__ || Object.getPrototypeOf(Member.prototype), 'onChange', this).bind(this), placeholder: 'MM/dd/yyyy',
-															fieldClassName: 'five' })
+															fieldClassName: 'eight' }),
+													_react2.default.createElement(_Input2.default, { name: 'width', label: 'Width (kg)', value: value.width, disabled: !updateMode,
+															onChange: _get(Member.prototype.__proto__ || Object.getPrototypeOf(Member.prototype), 'onChange', this).bind(this),
+															fieldClassName: 'four' }),
+													_react2.default.createElement(_Input2.default, { name: 'height', label: 'Height (cm)', value: value.height, disabled: !updateMode,
+															onChange: _get(Member.prototype.__proto__ || Object.getPrototypeOf(Member.prototype), 'onChange', this).bind(this),
+															fieldClassName: 'four' })
 											),
 											_react2.default.createElement(
 													'div',
@@ -73134,6 +73381,41 @@
 
 /***/ }),
 /* 630 */
+/***/ (function(module, exports) {
+
+	"use strict";
+
+	var Formatter = {};
+
+	Formatter.format = function (type, value) {
+	    var mapping = [{ "type": "date", "func": Formatter.formatDate }, { "type": "number", "func": Formatter.formatNumber }, { "type": "amount", "func": Formatter.formatAmount }];
+
+	    var func = mapping.find(function (item) {
+	        return item.type == type;
+	    }).func;
+	    return func(value);
+	};
+
+	Formatter.formatDate = function (value) {
+	    return value;
+	};
+
+	Formatter.formatNumber = function (value) {
+	    if (!value || isNaN(value)) return value;
+	    var amount = parseFloat(value);
+	    return amount.toFixed();
+	};
+
+	Formatter.formatAmount = function (value) {
+	    if (!value || isNaN(value)) return value;
+	    var amount = parseFloat(value);
+	    return amount.toFixed(2);
+	};
+
+	module.exports = Formatter;
+
+/***/ }),
+/* 631 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -73194,7 +73476,7 @@
 	module.exports = Provider;
 
 /***/ }),
-/* 631 */
+/* 632 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -73251,11 +73533,11 @@
 
 	var _Constants = __webpack_require__(591);
 
-	var _Formatter = __webpack_require__(632);
+	var _Formatter = __webpack_require__(630);
 
 	var _Formatter2 = _interopRequireDefault(_Formatter);
 
-	var _Provider = __webpack_require__(630);
+	var _Provider = __webpack_require__(631);
 
 	var _Provider2 = _interopRequireDefault(_Provider);
 
@@ -73395,15 +73677,15 @@
 													_react2.default.createElement(_Dropdown2.default, { name: 'program', label: 'Program', value: program.id,
 															options: programOptions, onChange: this.onProgramChange.bind(this),
 															fieldClassName: 'eight' }),
-													_react2.default.createElement(_Input2.default, { name: 'price', label: 'Walk-in Price', value: _Formatter2.default.formatAmount(program.guestPrice),
-															disabled: true, fieldClassName: 'eight' })
+													_react2.default.createElement(_Input2.default, { name: 'programAvailment.date', label: 'Date', value: programAvailment.date,
+															onChange: _get(Members.prototype.__proto__ || Object.getPrototypeOf(Members.prototype), 'onChange', this).bind(this), placeholder: 'MM/dd/yyyy',
+															fieldClassName: 'eight' })
 											),
 											_react2.default.createElement(
 													'div',
 													{ className: 'fields' },
-													_react2.default.createElement(_Input2.default, { name: 'programAvailment.date', label: 'Date', value: programAvailment.date,
-															onChange: _get(Members.prototype.__proto__ || Object.getPrototypeOf(Members.prototype), 'onChange', this).bind(this), placeholder: 'MM/dd/yyyy',
-															fieldClassName: 'eight' })
+													_react2.default.createElement(_Input2.default, { name: 'price', label: 'Walk-in Price', value: _Formatter2.default.formatAmount(program.guestPrice),
+															disabled: true, fieldClassName: 'eight' })
 											)
 									),
 									_react2.default.createElement(
@@ -73650,20 +73932,26 @@
 													{ className: 'fields' },
 													_react2.default.createElement(_Input2.default, { name: 'contactNo', label: 'Contact No.', value: value.contactNo, disabled: !updateMode,
 															onChange: _get(Member.prototype.__proto__ || Object.getPrototypeOf(Member.prototype), 'onChange', this).bind(this),
-															fieldClassName: 'eleven' }),
+															fieldClassName: 'six' }),
+													_react2.default.createElement(_Input2.default, { name: 'birthDate', label: 'Birth Date', value: value.birthDate, disabled: !updateMode,
+															onChange: _get(Member.prototype.__proto__ || Object.getPrototypeOf(Member.prototype), 'onChange', this).bind(this), placeholder: 'MM/dd/yyyy',
+															fieldClassName: 'six' }),
 													_react2.default.createElement(_Dropdown2.default, { name: 'gender', label: 'Gender', value: value.gender, disabled: !updateMode,
 															options: _Constants.GENDERS, onChange: this.onGenderChange.bind(this),
-															fieldClassName: 'five' })
+															fieldClassName: 'four' })
 											),
 											_react2.default.createElement(
 													'div',
 													{ className: 'fields' },
 													_react2.default.createElement(_Input2.default, { name: 'email', label: 'Email', value: value.email, disabled: !updateMode,
 															onChange: _get(Member.prototype.__proto__ || Object.getPrototypeOf(Member.prototype), 'onChange', this).bind(this),
-															fieldClassName: 'eleven' }),
-													_react2.default.createElement(_Input2.default, { name: 'birthDate', label: 'Birth Date', value: value.birthDate, disabled: !updateMode,
-															onChange: _get(Member.prototype.__proto__ || Object.getPrototypeOf(Member.prototype), 'onChange', this).bind(this), placeholder: 'MM/dd/yyyy',
-															fieldClassName: 'five' })
+															fieldClassName: 'eight' }),
+													_react2.default.createElement(_Input2.default, { name: 'width', label: 'Width (kg)', value: value.width, disabled: !updateMode,
+															onChange: _get(Member.prototype.__proto__ || Object.getPrototypeOf(Member.prototype), 'onChange', this).bind(this),
+															fieldClassName: 'four' }),
+													_react2.default.createElement(_Input2.default, { name: 'height', label: 'Height (cm)', value: value.height, disabled: !updateMode,
+															onChange: _get(Member.prototype.__proto__ || Object.getPrototypeOf(Member.prototype), 'onChange', this).bind(this),
+															fieldClassName: 'four' })
 											),
 											_react2.default.createElement(
 													'div',
@@ -73688,41 +73976,6 @@
 	}(_DetailView3.default);
 
 	exports.default = Members;
-
-/***/ }),
-/* 632 */
-/***/ (function(module, exports) {
-
-	"use strict";
-
-	var Formatter = {};
-
-	Formatter.format = function (type, value) {
-	    var mapping = [{ "type": "date", "func": Formatter.formatDate }, { "type": "number", "func": Formatter.formatNumber }, { "type": "amount", "func": Formatter.formatAmount }];
-
-	    var func = mapping.find(function (item) {
-	        return item.type == type;
-	    }).func;
-	    return func(value);
-	};
-
-	Formatter.formatDate = function (value) {
-	    return value;
-	};
-
-	Formatter.formatNumber = function (value) {
-	    if (!value || isNaN(value)) return value;
-	    var amount = parseFloat(value);
-	    return amount.toFixed();
-	};
-
-	Formatter.formatAmount = function (value) {
-	    if (!value || isNaN(value)) return value;
-	    var amount = parseFloat(value);
-	    return amount.toFixed(2);
-	};
-
-	module.exports = Formatter;
 
 /***/ }),
 /* 633 */
@@ -74868,10 +75121,10 @@
 							var salesChart = new _chart2.default(salesChartContext, {
 									type: 'bar',
 									data: {
-											labels: ["Red", "Blue", "Yellow", "Green"],
+											labels: ["Boxing", "Muay Thai", "Gym", "BJJ"],
 											datasets: [{
 													label: '# of Votes',
-													data: [12, 19, 3, 3, 3, 3, 31],
+													data: [13, 11, 29, 8],
 													backgroundColor: ['rgba(255, 99, 132, 0.2)', 'rgba(54, 162, 235, 0.2)', 'rgba(255, 206, 86, 0.2)', 'rgba(75, 192, 192, 0.2)'],
 													borderColor: ['rgba(255,99,132,1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)'],
 													borderWidth: 1
@@ -74887,12 +75140,12 @@
 							var enrolleesChart = new _chart2.default(enrolleesChartContext, {
 									type: 'bar',
 									data: {
-											labels: ["Red", "Blue", "Yellow", "Green"],
+											labels: ["Walk-Ins", "Memberships"],
 											datasets: [{
 													label: '# of Votes',
-													data: [12, 19, 3, 3, 3, 3, 31],
-													backgroundColor: ['rgba(255, 99, 132, 0.2)', 'rgba(54, 162, 235, 0.2)', 'rgba(255, 206, 86, 0.2)', 'rgba(75, 192, 192, 0.2)'],
-													borderColor: ['rgba(255,99,132,1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)'],
+													data: [21, 13],
+													backgroundColor: ['rgba(255, 206, 86, 0.2)', 'rgba(75, 192, 192, 0.2)'],
+													borderColor: ['rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)'],
 													borderWidth: 1
 											}]
 									},
@@ -74906,10 +75159,10 @@
 							var traineesChart = new _chart2.default(traineesContext, {
 									type: 'bar',
 									data: {
-											labels: ["Red", "Blue", "Yellow", "Green"],
+											labels: ["Mark", "John", "Justin", "Zeke"],
 											datasets: [{
-													label: '# of Votes',
-													data: [12, 19, 3, 3, 3, 3, 31],
+													label: 'No. of Trainees',
+													data: [2, 8, 3, 14],
 													backgroundColor: ['rgba(255, 99, 132, 0.2)', 'rgba(54, 162, 235, 0.2)', 'rgba(255, 206, 86, 0.2)', 'rgba(75, 192, 192, 0.2)'],
 													borderColor: ['rgba(255,99,132,1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)'],
 													borderWidth: 1
@@ -106297,6 +106550,90 @@
 		}
 	};
 
+
+/***/ }),
+/* 822 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+			value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(327);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _reactRouter = __webpack_require__(510);
+
+	var _View2 = __webpack_require__(587);
+
+	var _View3 = _interopRequireDefault(_View2);
+
+	var _Fetch = __webpack_require__(593);
+
+	var _Fetch2 = _interopRequireDefault(_Fetch);
+
+	var _Alert = __webpack_require__(600);
+
+	var _Alert2 = _interopRequireDefault(_Alert);
+
+	var _Input = __webpack_require__(602);
+
+	var _Input2 = _interopRequireDefault(_Input);
+
+	var _Button = __webpack_require__(603);
+
+	var _Button2 = _interopRequireDefault(_Button);
+
+	var _Header = __webpack_require__(608);
+
+	var _Header2 = _interopRequireDefault(_Header);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var Todo = function (_View) {
+			_inherits(Todo, _View);
+
+			function Todo() {
+					_classCallCheck(this, Todo);
+
+					return _possibleConstructorReturn(this, (Todo.__proto__ || Object.getPrototypeOf(Todo)).apply(this, arguments));
+			}
+
+			_createClass(Todo, [{
+					key: 'render',
+					value: function render() {
+							return _react2.default.createElement(
+									'div',
+									null,
+									_react2.default.createElement(_Header2.default, { location: this.props.location }),
+									_react2.default.createElement(
+											'div',
+											{ className: 'ui grey image' },
+											_react2.default.createElement(
+													'p',
+													{ className: 'message' },
+													'~'
+											)
+									)
+							);
+					}
+			}]);
+
+			return Todo;
+	}(_View3.default);
+
+	exports.default = Todo;
 
 /***/ })
 /******/ ]);

@@ -87,18 +87,6 @@
     font-weight: normal;
 }
 
-.login.ui.grid > .column:only-child, .ui.grid > .row > .column:only-child {
-    width: 500px;
-}
-
-.login #brand {
-    width: 10em;
-}
-
-.login p.message {
-    margin: 0.5em 0;
-}
-
 .app .ui.button:not(.icon) > .icon.angle:not(.button):not(.dropdown),
 .table button.ui.icon.button.mini {
     margin: 0;
@@ -120,4 +108,8 @@ button.ui.button {
 .ui.label > .detail,
 [data-tooltip]:after {
     font-size: inherit;
+}
+
+.padtop .ui.checkbox {
+    margin-top: 1.75rem;
 }

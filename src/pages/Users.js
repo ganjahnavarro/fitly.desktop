@@ -10,6 +10,7 @@ import Audit from '../components/Audit'
 import Header from '../components/Header'
 import Dropdown from '../components/Dropdown'
 import Textarea from '../components/Textarea'
+import Checkbox from '../components/Checkbox'
 
 import { GENDERS, USER_TYPES } from '../core/Constants'
 
@@ -78,13 +79,14 @@ class User extends DetailView {
 		render() {
 				let { value, updateMode } = this.state;
 
+				const passwordConfirmationValue = updateMode ? value.passwordConfirmation : value.password;
 				const passwordComponent = <div className="fields">
 						<Input name="password" label="Password" type="password" value={value.password}
-								onChange={super.onChange.bind(this)}
+								onChange={super.onChange.bind(this)} disabled={!updateMode}
 								fieldClassName="eight" />
 
 						<Input name="passwordConfirmation" label="Password Confirmation" type="password"
-								value={value.passwordConfirmation} onChange={super.onChange.bind(this)}
+								value={passwordConfirmationValue} onChange={super.onChange.bind(this)} disabled={!updateMode}
 								fieldClassName="eight" />
 				</div>;
 
@@ -99,7 +101,8 @@ class User extends DetailView {
 												options={USER_TYPES} onChange={this.onTypeChange.bind(this)}
 												fieldClassName="eight" />
 								</div>
-								{updateMode === "CREATE" ? passwordComponent : undefined}
+
+								{passwordComponent}
 
 								<div className="ui horizontal divider">~</div>
 
@@ -139,9 +142,12 @@ class User extends DetailView {
 										<Textarea name="address" label="Address" value={value.address} disabled={!updateMode}
 												onChange={super.onChange.bind(this)}
 												fieldClassName="eleven" />
+
+										<div className="five wide field padtop">
+												<Checkbox name="active" label="Active" value={value.active} disabled={!updateMode}
+														onChange={super.onChecked.bind(this)} />
+										</div>
 								</div>
-
-
 						</div>
 
 						<div>

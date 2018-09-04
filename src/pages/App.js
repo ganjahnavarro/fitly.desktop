@@ -12,7 +12,7 @@ class App extends View {
 
     render() {
         return <div className="app">
-            <Navigation />
+            <Navigation location={this.props.location} />
             <div className="content">
                 {this.props.children}
             </div>

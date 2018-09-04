@@ -118,7 +118,7 @@ span.transaction-placeholder {
     height: 100%;
     position: fixed;
     background: #f1f1f1;
-    padding: 4rem 0.5rem;
+    padding: 2rem 0.5rem;
 }
 
 .app > .content {
@@ -162,4 +162,28 @@ span.transaction-placeholder {
 .app .ui.header > img {
     margin-top: 0.25rem;
     width: 2rem;
+}
+
+.login {
+    width: 500px;
+    height: auto;
+    text-align: center;
+
+    position: fixed;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.login .title {
+    font-size: 3rem;
+    margin-top: 2rem;
+    letter-spacing: 1rem;
+}
+
+.login .description {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 2rem;
+    letter-spacing: 0.5rem;
 }

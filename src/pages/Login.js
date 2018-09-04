@@ -9,6 +9,8 @@ import Utils from '../core/Utils'
 import Input from '../components/Input'
 import Button from '../components/Button'
 
+import { COMPANY_NAME, COMPANY_DESCRIPTION } from '../core/Constants'
+
 class Login extends View {
 
 		login() {
@@ -16,9 +18,9 @@ class Login extends View {
 				let data = { userName, password };
 
 				if (userName && password) {
-						Fetch.post("/login", data, (success) => {
+						Fetch.post("login", data, (success) => {
 								if (success) {
-										hashHistory.push("/dashboard");
+										hashHistory.push("/home");
 								} else {
 										Alert.error("Invalid username and/or password.");
 								}
@@ -29,24 +31,25 @@ class Login extends View {
 		}
 
 		render() {
-				return <div className="login ui middle aligned center aligned grid">
-						<div className="column">
-								<div className="ui grey image">
-										<img id="brand" src="resources/images/logo.png" className="image" />
-										<p className="message">Log-in to your account</p>
-								</div>
+				const onEnter = (event) => {
+						event.preventDefault();
+						this.login();
+				};
 
-								<div className="ui large form stacked segment">
-										<Input ref={(input) => {this.initialInput = input}} autoFocus="true" placeholder="Username"
-												name="userName" value={this.state.userName} icon="user"
-												onChange={super.onChange.bind(this)} />
+				return <div className="login">
+						<form className="ui large form stacked segment" onSubmit={onEnter}>
+								<div className="title">{COMPANY_NAME}</div>
+								<div className="description">{COMPANY_DESCRIPTION}</div>
 
-										<Input placeholder="Password" name="password" value={this.state.password}
-												onChange={super.onChange.bind(this)} icon="lock" type="password" />
+								<Input ref={(input) => {this.initialInput = input}} autoFocus="true" placeholder="Username"
+										name="userName" value={this.state.userName} icon="user"
+										onChange={super.onChange.bind(this)} />
 
-										<Button className="ui fluid large basic purple submit button" onClick={() => this.login()}>Login</Button>
-								</div>
-						</div>
+								<Input placeholder="Password" name="password" value={this.state.password}
+										onChange={super.onChange.bind(this)} icon="lock" type="password" />
+
+								<Button className="ui fluid large blue submit button" onClick={() => this.login()}>Login</Button>
+						</form>
 				</div>;
 		}
 }

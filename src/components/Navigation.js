@@ -16,11 +16,14 @@ class Navigation extends React.Component {
     }
 
     render() {
-        return <div className="navigation">
+        const { pathname } = this.props.location;
+        const hideNavigation = ["/", "/logout"].includes(pathname);
+        const navigationComponent = <div className="navigation">
             <div className="ui aligned animated selection list">
                 {DASHBOARD_ITEMS.map((item) => this.createLink(item))}
             </div>
         </div>;
+        return hideNavigation ? null : navigationComponent;
     }
 
 }

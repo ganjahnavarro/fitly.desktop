@@ -6,7 +6,7 @@ class Checkbox extends React.Component {
         let { value, label, fieldClassName } = this.props;
         fieldClassName = fieldClassName ? fieldClassName + " wide field" : "field";
 
-        let checkboxClassName = "ui checkbox";
+        let checkboxClassName = "ui toggle checkbox";
         let props = Object.assign({}, this.props, { type: "checkbox", checked: value });
 				delete props.label;
 				delete props.fieldClassName;
