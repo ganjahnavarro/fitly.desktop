@@ -9,6 +9,7 @@ import Members from '../Members'
 import Walkins from '../Walkins'
 import Programs from '../Programs'
 import Packages from '../Packages'
+import TimeEntries from '../TimeEntries'
 import Users from '../Users'
 import Settings from '../Settings'
 import Home from '../Home'
@@ -34,9 +35,11 @@ module.exports = (
 
         <Route path="/home" component={Home} onEnter={requireAuth} />
 
-        <Route path="/coaches" component={Coaches} onEnter={requireAuth} />
         <Route path="/walkins" component={Walkins} onEnter={requireAuth} />
         <Route path="/members" component={Members} onEnter={requireAuth} />
+        <Route path="/timeentries" component={TimeEntries} onEnter={requireAuth} />
+        <Route path="/coaches" component={Coaches} onEnter={requireAuth} />
+
         <Route path="/programs" component={Programs} onEnter={requireAuth} />
         <Route path="/packages" component={Packages} onEnter={requireAuth} />
 
