@@ -40,21 +40,25 @@ Provider.loadCoaches = function(callback) {
     });
 };
 
-Provider.getStocks = (input, callback) => {
+Provider.getCoaches = (input, callback) => {
     let parameters = {
         filter: input,
-        orderedBy: "name",
+        orderedBy: "firstName",
         pageSize: 10
     };
 
-    Fetch.get("stock/", parameters, (items) => {
-        Provider.filteredItems.stock = items;
+    Fetch.get("coach/", parameters, (items) => {
+        Provider.filteredItems.coaches = items;
 
         if (items) {
-            let filteredStocks = items.map((item) => {
-                return {value: item.id, label: item.name}
+            let filteredCoaches = items.map((item) => {
+                const { firstName, middleName, lastName } = item;
+                return {
+                    value: item.id,
+                    label:  `${firstName} ${middleName ? middleName + " " : ""}${lastName}`
+                };
             });
-            callback(null, { options: filteredStocks, cache: false });
+            callback(null, { options: filteredCoaches, cache: false });
         }
     });
 };

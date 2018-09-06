@@ -222,7 +222,7 @@ class Members extends ListView {
 												options={packageOptions} onChange={this.onPackageChange.bind(this)}
 												fieldClassName="eight" />
 
-										<Input name="packageAvailment.date" label="Date" value={packageAvailment.date}
+										<Input name="packageAvailment.startDate" label="Start Date" value={packageAvailment.startDate}
 												onChange={super.onChange.bind(this)} placeholder="MM/dd/yyyy"
 												fieldClassName="eight" />
 								</div>
@@ -388,16 +388,9 @@ class Member extends DetailView {
 		getEnrollments() {
 				const { onEnrollProgram, onEnrollPackage, availedPrograms, availedPackages } = this.props;
 
-				/*
-				{availedPackages && availedPackages.map(item => <div key={item.id} className="ui label"
-						data-variation="mini" data-inverted="" data-tooltip="Package">
-						{item.availedPackage.name}
-						<div className="detail">{item.date}</div>
-				</div>)}
-				*/
-
-				let viewComponent = <div>
-						<table className="ui green small table">
+				let availedProgramsComponent = null;
+				if (availedPrograms) {
+						availedProgramsComponent = <table className="ui green small table">
 								<thead>
 										<tr>
 												<th>Date</th>
@@ -407,16 +400,46 @@ class Member extends DetailView {
 										</tr>
 								</thead>
 								<tbody>
-										{availedPrograms && availedPrograms.map(item => <tr key={item.id}>
+										{availedPrograms.map(item => <tr key={item.id}>
 												<td>{item.startDate}</td>
 												<td>{item.availedProgram.name}</td>
 												<td>{getAvailmentTypeLabel(item.type)}</td>
 												<td>{Formatter.formatAmount(item.price)}</td>
 										</tr>)}
 								</tbody>
-						</table>
-				</div>;
+						</table>;
+				}
 
+				let availedPackagesComponent = null;
+				if (availedPackages) {
+						availedPackagesComponent = <table className="ui blue small table">
+								<thead>
+										<tr>
+												<th>Start Date</th>
+												<th>End Date</th>
+												<th>Package</th>
+												<th>No. of Sessions</th>
+												<th>Remaining Sessions</th>
+												<th>Price</th>
+										</tr>
+								</thead>
+								<tbody>
+										{availedPackages.map(item => <tr key={item.id}>
+												<td>{item.startDate}</td>
+												<td>{item.endDate}</td>
+												<td>{item.availedPackage.name}</td>
+												<td>{item.sessionsCount}</td>
+												<td>{item.sessionsRemaining}</td>
+												<td>{Formatter.formatAmount(item.price)}</td>
+										</tr>)}
+								</tbody>
+						</table>;
+				}
+
+				let viewComponent = <div>
+						{availedProgramsComponent}
+						{availedPackagesComponent}
+				</div>;
 
 				return <div>
 						<div className="clearfix" /> <br />
@@ -527,7 +550,8 @@ class Member extends DetailView {
 						</div>
 
 						{showOtherPanels  ? this.getEnrollments() : undefined}
-		    </div>
+						<br />
+				</div>
 		}
 }
 

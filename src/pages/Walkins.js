@@ -93,7 +93,7 @@ class Members extends ListView {
 												options={programOptions} onChange={this.onProgramChange.bind(this)}
 												fieldClassName="eight" />
 
-										<Input name="programAvailment.date" label="Date" value={programAvailment.date}
+										<Input name="programAvailment.startDate" label="Start Date" value={programAvailment.startDate}
 												onChange={super.onChange.bind(this)} placeholder="MM/dd/yyyy"
 												fieldClassName="eight" />
 								</div>
