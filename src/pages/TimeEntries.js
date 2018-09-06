@@ -43,10 +43,11 @@ class TimeEntries extends View {
         console.warn(e.keyCode, e);
 		}
 
-		render() {
-        const { isAdding } = this.state;
-        const addOverlay = <div ref={(overlay) => {this.overlay = overlay}}
+    getAddComponent() {
+        return <div ref={(overlay) => {this.overlay = overlay}}
             className="basic-overlay" tabIndex={-1} onKeyDown={(e) => this.onOverlayKeydown(e)}>
+            <div className="ui label clickable close" onClick={() => this.onCancelAdd()}>Close</div>
+
             <div className="content">
                 <img src="resources/images/icon_access_card.png" className="ui image" />
                 <div className="ui blue label">
@@ -54,14 +55,17 @@ class TimeEntries extends View {
                 </div>
             </div>
         </div>;
+    }
+
+		render() {
+        const { isAdding } = this.state;
 
 				return <div className="time-entry">
 						<Header location={this.props.location} />
             <div className="ui orange label clickable" onClick={() => this.onAdd()}>
 								<i className="plus icon"></i> Add Time Entry
 						</div>
-
-            {isAdding ? addOverlay : undefined}
+            {isAdding ? this.getAddComponent() : undefined}
 				</div>;
 		}
 }

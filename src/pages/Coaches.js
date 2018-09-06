@@ -24,12 +24,13 @@ class Coaches extends ListView {
 
 		render() {
 				let items = [];
-				let selectedItem = this.state.selectedItem;
+				let { selectedItem, selectedIndex } = this.state;
 
 				if (this.state.items) {
 						items = this.state.items.map((item, index) => {
 								const { firstName, middleName, lastName } = item;
-								return <li key={index} onClick={this.onItemClick.bind(this, index)}>
+								const className = selectedIndex === index ? "selected" : undefined;
+								return <li key={index} onClick={this.onItemClick.bind(this, index)} className={className}>
 										{`${firstName} ${middleName ? middleName + " " : ""}${lastName}`}
 								</li>;
 						});
@@ -110,9 +111,6 @@ class Coach extends DetailView {
 										<Textarea name="address" label="Address" value={value.address} disabled={!updateMode}
 												onChange={super.onChange.bind(this)}
 												fieldClassName="eleven" />
-
-										<Input name="commissionPercent" label="Commission (%)" value={value.commissionPercent} disabled={!updateMode}
-												onChange={super.onChange.bind(this)} fieldClassName="five" />
 								</div>
 						</div>
 

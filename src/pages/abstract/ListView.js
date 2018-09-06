@@ -37,13 +37,19 @@ class ListView extends View {
 				let parameters = Object.assign({}, defaultParameters, filterParameters, this.extraParameters);
 
 				Fetch.get(this.endpoint, parameters, (items) => {
-						this.setState({items});
-						if (items) this.onItemClick(0);
+						this.setState({ items });
+
+            if (items) {
+                const { selectedItem } = this.state;
+                const indexToSelect = selectedItem ? Math.max(items.findIndex(item => item.id === selectedItem.id), 0) : 0;
+                this.onItemClick(indexToSelect);
+            }
 				});
 		}
 
     renderItem(item, index) {
-				return <li key={index} onClick={this.onItemClick.bind(this, index)}>
+        const className = this.state.selectedIndex === index ? "selected" : undefined;
+				return <li key={index} onClick={this.onItemClick.bind(this, index)} className={className}>
 						{item.name}
 				</li>;
 		}

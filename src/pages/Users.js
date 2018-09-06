@@ -25,12 +25,13 @@ class Users extends ListView {
 
 		render() {
 				let items = [];
-				let selectedItem = this.state.selectedItem;
+				let { selectedItem, selectedIndex } = this.state;
 
 				if (this.state.items) {
 						items = this.state.items.map((item, index) => {
 								const { firstName, middleName, lastName } = item;
-								return <li key={index} onClick={this.onItemClick.bind(this, index)}>
+								const className = selectedIndex === index ? "selected" : undefined;
+								return <li key={index} onClick={this.onItemClick.bind(this, index)} className={className}>
 										{`${firstName} ${middleName ? middleName + " " : ""}${lastName}`}
 								</li>;
 						});

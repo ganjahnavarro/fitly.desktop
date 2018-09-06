@@ -28,6 +28,18 @@ Provider.loadPackages = function(callback) {
     });
 };
 
+Provider.loadCoaches = function(callback) {
+    let parameters = {
+        orderedBy: "firstName"
+    };
+
+    Fetch.get("coach/", parameters, (items) => {
+        if (callback) {
+            callback(items);
+        }
+    });
+};
+
 Provider.getStocks = (input, callback) => {
     let parameters = {
         filter: input,

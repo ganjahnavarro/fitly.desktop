@@ -12,7 +12,7 @@ import Button from '../components/Button'
 import Dropdown from '../components/Dropdown'
 import Textarea from '../components/Textarea'
 
-import { GENDERS, MEMBER_AVAILMENT_TYPES } from '../core/Constants'
+import { GENDERS, MEMBER_AVAILMENT_TYPES, getAvailmentTypeLabel } from '../core/Constants'
 import Formatter from '../core/Formatter'
 import Provider from '../core/Provider'
 import Fetch from '../core/Fetch'
@@ -35,13 +35,14 @@ class Members extends ListView {
 		componentDidMount() {
 				super.componentDidMount();
 
-				Provider.loadPrograms((programs) => this.setState({programs}));
-				Provider.loadPackages((packages) => this.setState({packages}));
+				Provider.loadPrograms((programs) => this.setState({ programs }));
+				Provider.loadPackages((packages) => this.setState({ packages }));
+				Provider.loadCoaches((coaches) => this.setState({ coaches }));
 		}
 
 		getInformationPage() {
-				let { selectedItem, membership, availedPrograms, availedPackages } = this.state;
-				return <Member value={selectedItem} membership={membership}
+				let { selectedItem, membership, availedPrograms, availedPackages, coaches } = this.state;
+				return <Member value={selectedItem} membership={membership} coaches={coaches}
 						availedPrograms={availedPrograms} availedPackages={availedPackages}
 						onEnrollProgram={() => this.onEnrollProgram()}
 						onEnrollPackage={() => this.onEnrollPackage()}
@@ -72,10 +73,19 @@ class Members extends ListView {
 				if (programs) {
 						const selectedProgram = programs.find(item => item.id === program.value);
 						programAvailment.availedProgram = selectedProgram;
-						programAvailment.type = selectedProgram.monthlyPrice ? programAvailment.type : "REGULAR";
 
-						const regularAvailmentType = { value: "REGULAR", label: "Regular" };
-						const memberAvailmentTypes = selectedProgram.monthlyPrice ? MEMBER_AVAILMENT_TYPES : [regularAvailmentType];
+						programAvailment.type = programAvailment.type === "UNLIMITED" && !selectedProgram.monthlyPrice ?
+								"REGULAR" : programAvailment.type;
+						programAvailment.type = programAvailment.type === "REGULAR_WITH_COACH" && !selectedProgram.coachPrice ?
+								"REGULAR" : programAvailment.type;
+
+						const regularAvailmentType = MEMBER_AVAILMENT_TYPES.find(item => item.value === "REGULAR");
+						const withCoachAvailmentType = MEMBER_AVAILMENT_TYPES.find(item => item.value === "REGULAR_WITH_COACH");
+						const monthlyAvailmentType = MEMBER_AVAILMENT_TYPES.find(item => item.value === "UNLIMITED");
+
+						let memberAvailmentTypes = [regularAvailmentType];
+						memberAvailmentTypes = selectedProgram.monthlyPrice ? [...memberAvailmentTypes, monthlyAvailmentType] : memberAvailmentTypes;
+						memberAvailmentTypes = selectedProgram.coachPrice ? [...memberAvailmentTypes, withCoachAvailmentType] : memberAvailmentTypes;
 
 						this.setState({ memberAvailmentTypes });
 				}
@@ -120,7 +130,7 @@ class Members extends ListView {
 										name="membership.accessCardNo" label="Access Card No."
 										value={membership.accessCardNo} onChange={super.onChange.bind(this)}
 										onKeyDown={(e) => this.onSubmit(e)} />
-								
+
 								<div className="ui basic blue label">
 										<i className="barcode icon"></i> Scan access card using RFID reader or manually type and then press enter
 								</div>
@@ -164,7 +174,7 @@ class Members extends ListView {
 												options={programOptions} onChange={this.onProgramChange.bind(this)}
 												fieldClassName="eight" />
 
-										<Input name="programAvailment.date" label="Date" value={programAvailment.date}
+										<Input name="programAvailment.startDate" label="Start Date" value={programAvailment.startDate}
 												onChange={super.onChange.bind(this)} placeholder="MM/dd/yyyy"
 												fieldClassName="eight" />
 								</div>
@@ -299,10 +309,13 @@ class Members extends ListView {
 
 		render() {
 				let items = [];
+				let { selectedIndex } = this.state;
+
 				if (this.state.items) {
 						items = this.state.items.map((item, index) => {
 								const { firstName, middleName, lastName } = item;
-								return <li key={index} onClick={this.onItemClick.bind(this, index)}>
+								const className = selectedIndex === index ? "selected" : undefined;
+								return <li key={index} onClick={this.onItemClick.bind(this, index)} className={className}>
 										{`${firstName} ${middleName ? middleName + " " : ""}${lastName}`}
 								</li>;
 						});
@@ -375,19 +388,33 @@ class Member extends DetailView {
 		getEnrollments() {
 				const { onEnrollProgram, onEnrollPackage, availedPrograms, availedPackages } = this.props;
 
-				let viewComponent = <div>
-						<br />
-						{availedPrograms && availedPrograms.map(item => <div key={item.id} className="ui label"
-								data-variation="mini" data-inverted="" data-tooltip="Program">
-								{item.availedProgram.name}
-								<div className="detail">{item.date}</div>
-						</div>)}
+				/*
+				{availedPackages && availedPackages.map(item => <div key={item.id} className="ui label"
+						data-variation="mini" data-inverted="" data-tooltip="Package">
+						{item.availedPackage.name}
+						<div className="detail">{item.date}</div>
+				</div>)}
+				*/
 
-						{availedPackages && availedPackages.map(item => <div key={item.id} className="ui label"
-								data-variation="mini" data-inverted="" data-tooltip="Package">
-								{item.availedPackage.name}
-								<div className="detail">{item.date}</div>
-						</div>)}
+				let viewComponent = <div>
+						<table className="ui green small table">
+								<thead>
+										<tr>
+												<th>Date</th>
+												<th>Program</th>
+												<th>Availment Type</th>
+												<th>Price</th>
+										</tr>
+								</thead>
+								<tbody>
+										{availedPrograms && availedPrograms.map(item => <tr key={item.id}>
+												<td>{item.startDate}</td>
+												<td>{item.availedProgram.name}</td>
+												<td>{getAvailmentTypeLabel(item.type)}</td>
+												<td>{Formatter.formatAmount(item.price)}</td>
+										</tr>)}
+								</tbody>
+						</table>
 				</div>;
 
 
@@ -406,14 +433,38 @@ class Member extends DetailView {
 										Enroll to a Package
 								</Button>
 						</div>
+						<br />
 
 						{viewComponent}
 				</div>;
 		}
 
+		onDefaultCoachChange(coach) {
+				let { coaches } = this.props;
+				let { value } = this.state;
+
+				if (coaches) {
+						const selectedCoach = coaches.find(item => item.id === coach.value);
+						value.defaultCoach = selectedCoach;
+				}
+		    this.setState({ value });
+		}
+
 		render() {
 				const { value, updateMode } = this.state;
 				const showOtherPanels = !updateMode && value && value.id;
+
+				let { coaches } = this.props;
+				let coachOptions = [];
+				let defaultCoach = value.defaultCoach || {};
+
+				if (coaches) {
+						coachOptions = coaches.map((item, index) => {
+								const { firstName, middleName, lastName } = item;
+								const name = `${firstName} ${middleName ? middleName + " " : ""}${lastName}`;
+								return { value: item.id, label: name };
+						});
+				}
 
 		    return <div>
 						{showOtherPanels ? this.getMembership() : undefined}
@@ -463,6 +514,10 @@ class Member extends DetailView {
 										<Textarea name="address" label="Address" value={value.address} disabled={!updateMode}
 												onChange={super.onChange.bind(this)}
 												fieldClassName="eleven" />
+
+										<Dropdown name="defaultCoach" label="Default Coach" value={defaultCoach.id}
+												options={coachOptions} onChange={this.onDefaultCoachChange.bind(this)} disabled={!updateMode}
+												fieldClassName="eight" />
 								</div>
 						</div>
 

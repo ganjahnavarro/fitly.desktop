@@ -24,8 +24,14 @@ export const DASHBOARD_ITEMS = [
 
 export const MEMBER_AVAILMENT_TYPES = [
     { value: "REGULAR", label: "Regular" },
+    { value: "REGULAR_WITH_COACH", label: "Regular (With Coach)" },
     { value: "UNLIMITED", label: "Unlimited for 1 Month" }
 ];
+
+export const getAvailmentTypeLabel = (type) => {
+    const item = MEMBER_AVAILMENT_TYPES.find(i => i.value === type);
+    return item ? item.label : undefined;
+};
 
 export const GENDERS = [
     { value: "MALE", label: "Male" },

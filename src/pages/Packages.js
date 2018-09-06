@@ -98,6 +98,10 @@ class Package extends DetailView {
 										<Input name="price" label="Price" value={value.price} disabled={!updateMode}
 												onChange={super.onChange.bind(this)}
 												fieldClassName="eight" />
+
+										<Input name="commission" label="Commission" value={value.commission} disabled={!updateMode}
+												onChange={super.onChange.bind(this)}
+												fieldClassName="eight" />
 								</div>
 						</div>
 

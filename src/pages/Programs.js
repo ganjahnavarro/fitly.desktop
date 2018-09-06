@@ -58,10 +58,6 @@ class Program extends DetailView {
 		render() {
 				let { value, updateMode } = this.state;
 
-				const coachPriceComponent = <Input name="coachPrice" label="Coach Price"
-						value={value.coachPrice} disabled={!updateMode} onChange={super.onChange.bind(this)}
-						fieldClassName="eight" />;
-
 		    return <div>
 						<div className="ui form">
 								<Input ref={(input) => {this.initialInput = input}} autoFocus="true" label="Name"
@@ -70,9 +66,6 @@ class Program extends DetailView {
 
 								<Textarea name="description" label="Description" value={value.description} disabled={!updateMode}
 										onChange={super.onChange.bind(this)} />
-
-								<Checkbox name="hasCoach" label="Coach allowed?" value={value.hasCoach} disabled={!updateMode}
-										onChange={super.onChecked.bind(this)} />
 
 								<div className="fields">
 										<Input name="guestPrice" label="Guest Price" value={value.guestPrice} disabled={!updateMode}
@@ -89,7 +82,15 @@ class Program extends DetailView {
 												onChange={super.onChange.bind(this)}
 												fieldClassName="eight" />
 
-										{value.hasCoach ? coachPriceComponent : undefined}
+										<Input name="coachPrice" label="Coach Price"
+												value={value.coachPrice} disabled={!updateMode} onChange={super.onChange.bind(this)}
+												fieldClassName="eight" />
+								</div>
+
+								<div className="fields">
+										<Input name="commission" label="Commission" value={value.commission} disabled={!updateMode}
+												onChange={super.onChange.bind(this)}
+												fieldClassName="eight" />
 								</div>
 						</div>
 
