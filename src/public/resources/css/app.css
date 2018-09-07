@@ -213,6 +213,8 @@ span.transaction-placeholder {
 
 .time-entry .basic-overlay .content img {
     display: inline-block;
+    margin-bottom: 1rem;
+    width: 5rem;
 }
 
 .time-entry .basic-overlay .content .ui.label {
@@ -225,4 +227,17 @@ span.transaction-placeholder {
     position: fixed;
     top: 1rem;
     right: 1rem;
+}
+
+.padbot,
+.ui.label.padbot {
+    margin-bottom: 1rem;
+}
+
+.ui.table .full-width.footer-total {
+    text-align: right;
+}
+
+.ui.label.back-to-dashboard {
+    margin-top: 2rem;
 }

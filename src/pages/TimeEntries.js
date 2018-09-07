@@ -60,9 +60,10 @@ class TimeEntries extends View {
         const timeEntryData = { accessCardNoUsed };
 
         Fetch.post("timeentry/", timeEntryData, (response) => {
-            this.onCancelAdd();
             this.onFetch();
         });
+
+        this.onCancelAdd();
     }
 
     getAddComponent() {
@@ -71,7 +72,7 @@ class TimeEntries extends View {
             <div className="ui label clickable close" onClick={() => this.onCancelAdd()}>Close</div>
 
             <div className="content">
-                <img src="resources/images/icon_access_card.png" className="ui image" />
+                <img src="resources/images/icon_scan.png" className="ui image" />
 
                 <div className="ui form">
                     <Input ref={(input) => {this.initialInput = input}} autoFocus="true"
@@ -164,6 +165,8 @@ class TimeEntries extends View {
 
             {itemsComponent}
             {isAdding ? this.getAddComponent() : undefined}
+
+            <br />
 				</div>;
 		}
 }

@@ -12,7 +12,9 @@ import Dropdown from '../components/Dropdown'
 import Textarea from '../components/Textarea'
 
 import { GENDERS } from '../core/Constants'
-
+import Formatter from '../core/Formatter'
+import Provider from '../core/Provider'
+import Fetch from '../core/Fetch'
 
 class Coaches extends ListView {
 
@@ -70,10 +72,106 @@ class Coach extends DetailView {
 		    this.setState(nextState);
 		}
 
-		render() {
-				let { value, updateMode } = this.state;
+		loadCommissions() {
+				let { value } = this.state;
+				let defaultParameters = {
+						coachId: value.id,
+						pageSize: 100,
+						pageOffset: 0,
+				};
 
-		    return <div>
+				let parameters = Object.assign({}, defaultParameters);
+
+				Fetch.get("timeentry/", parameters, (timeEntries) => {
+						this.setState({ timeEntries });
+				});
+		}
+
+		onViewCommissionsPage() {
+				this.loadCommissions();
+				this.setState({ viewCommissions: true });
+		}
+
+		onViewDetailPage() {
+				this.setState({ viewCommissions: false });
+		}
+
+		getCommissionsPage() {
+				const { timeEntries } = this.state;
+
+				const getMember = (item) => {
+						const { firstName, middleName, lastName } = item.member;
+						return `${firstName} ${middleName ? middleName + " " : ""}${lastName}`;
+				};
+
+				const getAvailedProduct = (item) => {
+						if (item.programAvailment) {
+								return `${item.programAvailment.availedProgram.name} (Program)`;
+						} else if (item.packageAvailment) {
+								return `${item.packageAvailment.availedPackage.name} (Package)`;
+						}
+				};
+
+				const renderRow = (item, index) => {
+						return <tr key={item.id}>
+								<td>{item.date}</td>
+								<td>{getMember(item)}</td>
+								<td>{getAvailedProduct(item)}</td>
+								<td>{Formatter.formatAmount(item.commission)}</td>
+						</tr>;
+				};
+
+				let timeEntriesComponent = <div>
+						<h4>No commissions.</h4>
+				</div>;
+
+				if (timeEntries && timeEntries.length) {
+						let totalCommissions = 0;
+						timeEntries.forEach(item => {
+								if (item.commission) {
+										totalCommissions += item.commission;
+								}
+						});
+
+						timeEntriesComponent = <div>
+								<h4>Commissions</h4>
+								<table className="ui orange small table">
+										<thead>
+												<tr>
+														<th>Date</th>
+														<th>Member</th>
+														<th>Availed Program/Package</th>
+														<th>Commission</th>
+												</tr>
+										</thead>
+										<tbody>
+												{timeEntries.map(renderRow)}
+										</tbody>
+
+										<tfoot className="full-width footer-total">
+												<tr>
+														<th colSpan="4">
+																<div className="ui blue basic label">
+																		<i className="check icon"></i> Total Commissions: {Formatter.formatAmount(totalCommissions)}
+																</div>
+														</th>
+												</tr>
+										</tfoot>
+								</table>
+						</div>;
+				}
+
+				return <div>
+						<div className="ui label clickable padbot" onClick={() => this.onViewDetailPage()}>
+								<i className="angle left icon"></i> Back
+						</div>
+						{timeEntriesComponent}
+				</div>;
+		}
+
+		getDetailPage() {
+				let { value, updateMode } = this.state;
+				return <div>
 						<div className="ui form">
 								<div className="three fields">
 										<Input ref={(input) => {this.initialInput = input}} autoFocus="true"
@@ -118,6 +216,20 @@ class Coach extends DetailView {
 								<Audit value={value} />
 								{super.getActions()}
 						</div>
+				</div>;
+		}
+
+		render() {
+				let { value, updateMode, viewCommissions } = this.state;
+				const showOtherPanels = !updateMode && value && value.id;
+
+				const viewCommissionsAction = <div className="ui orange label clickable padbot" onClick={() => this.onViewCommissionsPage()}>
+						<i className="eye icon"></i> View Commissions
+				</div>;
+
+		    return <div>
+						{showOtherPanels && !viewCommissions ? viewCommissionsAction : undefined}
+						{showOtherPanels && viewCommissions ? this.getCommissionsPage() : this.getDetailPage()}
 		    </div>
 		}
 }

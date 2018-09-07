@@ -389,7 +389,7 @@ class Member extends DetailView {
 				const { onEnrollProgram, onEnrollPackage, availedPrograms, availedPackages } = this.props;
 
 				let availedProgramsComponent = null;
-				if (availedPrograms) {
+				if (availedPrograms && availedPrograms.length) {
 						availedProgramsComponent = <table className="ui green small table">
 								<thead>
 										<tr>
@@ -411,7 +411,7 @@ class Member extends DetailView {
 				}
 
 				let availedPackagesComponent = null;
-				if (availedPackages) {
+				if (availedPackages && availedPackages.length) {
 						availedPackagesComponent = <table className="ui blue small table">
 								<thead>
 										<tr>
