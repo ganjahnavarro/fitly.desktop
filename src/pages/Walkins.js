@@ -1,5 +1,4 @@
 import React from 'react'
-import { Link } from 'react-router'
 
 import View from './abstract/View'
 import ListView from './abstract/ListView'
@@ -27,7 +26,6 @@ class Members extends ListView {
 				this.extraParameters = { type: "WALKIN" };
 
 				this.state.enrollingProgram = false;
-				this.state.enrollingPackage = false;
 		}
 
 		componentDidMount() {
@@ -40,7 +38,6 @@ class Members extends ListView {
 				return <Member value={selectedItem}
 						availedPrograms={availedPrograms}
 						onEnrollProgram={() => this.onEnrollProgram()}
-						onEnrollPackage={() => this.onEnrollPackage()}
 						onFetch={this.onFetch} />;
 		}
 
@@ -140,7 +137,7 @@ class Members extends ListView {
 		onItemClick(index) {
         super.onItemClick(index);
 
-				if (this.state.items) {
+				if (this.state.items && this.state.items.length) {
 						let item = this.state.items[index];
 						Fetch.get(`program/availment/${item.id}`, undefined, (availedPrograms) => {
 								this.setState({ availedPrograms })
@@ -203,29 +200,45 @@ class Member extends DetailView {
 		}
 
 		getEnrollments() {
-				const { onEnrollProgram, onEnrollPackage, availedPrograms } = this.props;
+				const { onEnrollProgram, availedPrograms } = this.props;
 
-				const addComponent = <Button className="ui green basic button" icon="rocket"
-						onClick={() => onEnrollProgram()}>
-						Avail Program
-				</Button>;
-
-				let viewComponent = undefined;
+				let availedProgramsComponent = null;
 				if (availedPrograms && availedPrograms.length) {
-						viewComponent = <div>
-								<br />
-								{availedPrograms.map(item => <div key={item.id} className="ui label">
-										{item.availedProgram.name}
-										<div className="detail">{item.date}</div>
-								</div>)}
-						</div>;
+						availedProgramsComponent = <table className="ui green small table">
+								<thead>
+										<tr>
+												<th>Date</th>
+												<th>Program</th>
+												<th>Price</th>
+										</tr>
+								</thead>
+								<tbody>
+										{availedPrograms.map(item => <tr key={item.id}>
+												<td>{item.startDate}</td>
+												<td>{item.availedProgram.name}</td>
+												<td>{Formatter.formatAmount(item.price)}</td>
+										</tr>)}
+								</tbody>
+						</table>;
 				}
+
+				let viewComponent = <div>
+						{availedProgramsComponent}
+				</div>;
 
 				return <div>
 						<div className="clearfix" /> <br />
-						<div className="ui horizontal divider">Availed Programs</div> <br />
+						<div className="ui horizontal divider">Enrolled Programs</div>
 
-						{addComponent} <br />
+						<div>
+								<br />
+								<Button className="ui green basic button" icon="rocket"
+										onClick={() => onEnrollProgram()}>
+										Enroll to a Program
+								</Button>
+						</div>
+						<br />
+
 						{viewComponent}
 				</div>;
 		}
@@ -289,6 +302,7 @@ class Member extends DetailView {
 						</div>
 
 						{showOtherPanels  ? this.getEnrollments() : undefined}
+						<br />
 		    </div>
 		}
 }

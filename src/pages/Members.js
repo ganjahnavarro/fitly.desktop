@@ -1,5 +1,4 @@
 import React from 'react'
-import { Link } from 'react-router'
 
 import View from './abstract/View'
 import ListView from './abstract/ListView'
@@ -108,10 +107,17 @@ class Members extends ListView {
 
 		onSubmit(e) {
 				if (e.keyCode === 13) {
-						Fetch.patch("membership/", this.state.membership, () => {
-								this.setState({ addingAccessCard: false });
-								this.onFetch();
-						});
+						const { membership } = this.state;
+						Fetch.patch("membership/", membership,
+								() => {
+										this.onFetch();
+										this.setState({ addingAccessCard: false });
+								},
+								() => {
+										membership.accessCardNo = undefined
+										this.setState({ addingAccessCard: false, membership });
+								}
+						);
 				}
 		}
 
