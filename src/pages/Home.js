@@ -46,6 +46,7 @@ class Home extends View {
 				});
 
 				Fetch.get("member/count/", { type: "WALKIN" }, (count) => {
+						console.warn("walkins count", count);
 						this.setState({ walkinsCount: count });
 						this.updateEnrolleesChart();
 				});
@@ -62,8 +63,8 @@ class Home extends View {
 										datasets: [{
 												label: '# of Enrollees',
 												data: [
-														walkinsCount || 1,
-														membersCount || 1
+														walkinsCount || 0,
+														membersCount || 0
 												],
 												backgroundColor: [
 														'rgba(255, 206, 86, 0.2)',
@@ -85,6 +86,14 @@ class Home extends View {
 		}
 
 		componentDidMount() {
+				// this.reprocessDashboardItems();
+
+				Fetch.get("report/sales", null, (salesReports) => {
+						console.warn("salesReports", salesReports);
+				});
+		}
+
+		reprocessDashboardItems() {
 				this.fetchEnrolleesCounts();
 
 				this.fetchProgramPurchaseSummaryData();
@@ -92,62 +101,60 @@ class Home extends View {
 
 				const salesChartContext = document.getElementById("salesChart");
 				const salesChart = new Chart(salesChartContext, {
-				    type: 'bar',
-				    data: {
-				        labels: ["Boxing", "Muay Thai", "Gym", "BJJ"],
-				        datasets: [{
-				            label: '# of Votes',
-				            data: [13, 11, 29, 8],
-				            backgroundColor: [
-				                'rgba(255, 99, 132, 0.2)',
-				                'rgba(54, 162, 235, 0.2)',
-				                'rgba(255, 206, 86, 0.2)',
-				                'rgba(75, 192, 192, 0.2)'
-				            ],
-				            borderColor: [
-				                'rgba(255,99,132,1)',
-				                'rgba(54, 162, 235, 1)',
-				                'rgba(255, 206, 86, 1)',
-				                'rgba(75, 192, 192, 1)'
-				            ],
-				            borderWidth: 1
-				        }]
-				    },
-				    options: {
+						type: 'bar',
+						data: {
+								labels: ["Boxing", "Muay Thai", "Gym", "BJJ"],
+								datasets: [{
+										label: '# of Votes',
+										data: [13, 11, 29, 8],
+										backgroundColor: [
+												'rgba(255, 99, 132, 0.2)',
+												'rgba(54, 162, 235, 0.2)',
+												'rgba(255, 206, 86, 0.2)',
+												'rgba(75, 192, 192, 0.2)'
+										],
+										borderColor: [
+												'rgba(255,99,132,1)',
+												'rgba(54, 162, 235, 1)',
+												'rgba(255, 206, 86, 1)',
+												'rgba(75, 192, 192, 1)'
+										],
+										borderWidth: 1
+								}]
+						},
+						options: {
 								responsive: false,
 								legend: { display: false }
-				    }
+						}
 				});
-
-
 
 				const traineesContext = document.getElementById("traineesChart");
 				const traineesChart = new Chart(traineesContext, {
-				    type: 'bar',
-				    data: {
-				        labels: ["Mark", "John", "Justin", "Zeke"],
-				        datasets: [{
-				            label: 'No. of Trainees',
-				            data: [2, 8, 3, 14],
-				            backgroundColor: [
-				                'rgba(255, 99, 132, 0.2)',
-				                'rgba(54, 162, 235, 0.2)',
-				                'rgba(255, 206, 86, 0.2)',
-				                'rgba(75, 192, 192, 0.2)'
-				            ],
-				            borderColor: [
-				                'rgba(255,99,132,1)',
-				                'rgba(54, 162, 235, 1)',
-				                'rgba(255, 206, 86, 1)',
-				                'rgba(75, 192, 192, 1)'
-				            ],
-				            borderWidth: 1
-				        }]
-				    },
-				    options: {
+						type: 'bar',
+						data: {
+								labels: ["Mark", "John", "Justin", "Zeke"],
+								datasets: [{
+										label: 'No. of Trainees',
+										data: [2, 8, 3, 14],
+										backgroundColor: [
+												'rgba(255, 99, 132, 0.2)',
+												'rgba(54, 162, 235, 0.2)',
+												'rgba(255, 206, 86, 0.2)',
+												'rgba(75, 192, 192, 0.2)'
+										],
+										borderColor: [
+												'rgba(255,99,132,1)',
+												'rgba(54, 162, 235, 1)',
+												'rgba(255, 206, 86, 1)',
+												'rgba(75, 192, 192, 1)'
+										],
+										borderWidth: 1
+								}]
+						},
+						options: {
 								responsive: false,
 								legend: { display: false }
-				    }
+						}
 				});
 		}
 
@@ -162,8 +169,9 @@ class Home extends View {
 														<div className="description chart-container">
 																<canvas id="salesChart" />
 														</div>
-														<a className="ui label"><i className="eye icon"></i>
-														View All</a>
+														<a className="ui label">
+																<i className="eye icon"></i> Work in Progress
+														</a>
 												</div>
 										</div>
 								</div>
@@ -193,7 +201,7 @@ class Home extends View {
 																<canvas id="traineesChart" />
 														</div>
 														<a className="ui label">
-																<i className="eye icon"></i> View All
+																<i className="eye icon"></i> Work in Progress
 														</a>
 												</div>
 										</div>
@@ -237,7 +245,7 @@ class Home extends View {
 		}
 
 		onViewDashboard() {
-				this.setState({ currentPage: null });
+				this.setState({ currentPage: null }, () => this.reprocessDashboardItems());
 		}
 
 		onViewProgramPurchases() {

@@ -29,7 +29,7 @@ const template = [
             }
         ]
     }, {
-        label: 'Fitly'
+        label: 'Valiant'
     }
 ]
 

@@ -37,6 +37,7 @@ class Members extends ListView {
 				let { selectedItem, availedPrograms } = this.state;
 				return <Member value={selectedItem}
 						availedPrograms={availedPrograms}
+						loadProgramAvailments={() => this.loadProgramAvailments()}
 						onEnrollProgram={() => this.onEnrollProgram()}
 						onFetch={this.onFetch} />;
 		}
@@ -139,10 +140,15 @@ class Members extends ListView {
 
 				if (this.state.items && this.state.items.length) {
 						let item = this.state.items[index];
-						Fetch.get(`program/availment/${item.id}`, undefined, (availedPrograms) => {
-								this.setState({ availedPrograms })
-						});
+						this.loadProgramAvailments(item.id);
 				}
+		}
+
+		loadProgramAvailments(memberId) {
+				memberId = memberId || this.state.selectedItem.id;
+				Fetch.get(`program/availment/${memberId}/all`, undefined, (availedPrograms) => {
+						this.setState({ availedPrograms });
+				});
 		}
 
 		render() {
@@ -199,8 +205,29 @@ class Member extends DetailView {
 		    this.setState(nextState);
 		}
 
+		onDeleteConfirm(deletePath, id, postAction) {
+				Fetch.delete(deletePath, id, postAction);
+		}
+
 		getEnrollments() {
-				const { onEnrollProgram, availedPrograms } = this.props;
+				const { onEnrollProgram, availedPrograms, loadProgramAvailments } = this.props;
+
+				const getDeleteAction = (deletePath, id, postDeleteAction) => {
+						return <div className="ui label" onClick={() => this.onDeleteConfirm(deletePath, id, postDeleteAction)}
+								data-inverted="" data-tooltip="Delete" data-position="bottom left">
+								<i className="trash icon icon-only" />
+						</div>
+				};
+
+				const renderAvailedProgramRow = (item) => {
+						const deleteAction = getDeleteAction("program/availment/", item.id, loadProgramAvailments);
+						return <tr key={item.id}>
+								<td>{item.startDate}</td>
+								<td>{item.availedProgram.name}</td>
+								<td>{Formatter.formatAmount(item.price)}</td>
+								<td	className="tbl-actions">{deleteAction}</td>
+						</tr>;
+				};
 
 				let availedProgramsComponent = null;
 				if (availedPrograms && availedPrograms.length) {
@@ -213,11 +240,7 @@ class Member extends DetailView {
 										</tr>
 								</thead>
 								<tbody>
-										{availedPrograms.map(item => <tr key={item.id}>
-												<td>{item.startDate}</td>
-												<td>{item.availedProgram.name}</td>
-												<td>{Formatter.formatAmount(item.price)}</td>
-										</tr>)}
+										{availedPrograms.map(renderAvailedProgramRow)}
 								</tbody>
 						</table>;
 				}

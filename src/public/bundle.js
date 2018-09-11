@@ -36496,7 +36496,7 @@
 
 	var _App2 = _interopRequireDefault(_App);
 
-	var _Login = __webpack_require__(592);
+	var _Login = __webpack_require__(601);
 
 	var _Login2 = _interopRequireDefault(_Login);
 
@@ -36504,7 +36504,7 @@
 
 	var _Coaches2 = _interopRequireDefault(_Coaches);
 
-	var _Members = __webpack_require__(629);
+	var _Members = __webpack_require__(631);
 
 	var _Members2 = _interopRequireDefault(_Members);
 
@@ -36520,9 +36520,9 @@
 
 	var _Packages2 = _interopRequireDefault(_Packages);
 
-	var _TrainingSessions = __webpack_require__(636);
+	var _TimeEntries = __webpack_require__(636);
 
-	var _TrainingSessions2 = _interopRequireDefault(_TrainingSessions);
+	var _TimeEntries2 = _interopRequireDefault(_TimeEntries);
 
 	var _Users = __webpack_require__(637);
 
@@ -36540,29 +36540,35 @@
 
 	var _Todo2 = _interopRequireDefault(_Todo);
 
+	var _Auth = __webpack_require__(591);
+
+	var _Auth2 = _interopRequireDefault(_Auth);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	function requireAuth(nextState, replaceState) {}
-	/*
-	    if not logged on, call replaceState("/login");
-	*/
+	function onLogout() {
+	    _Auth2.default.logout();
+	}
 
-
-	/*
-	    <Route path="/users" component={Users} onEnter={requireAuth}/>
-	*/
+	function requireAuth(nextState, replaceState) {
+	    /*
+	        if not logged on, call replaceState("/login");
+	    */
+	}
 
 	module.exports = _react2.default.createElement(
 	    _reactRouter.Route,
 	    { path: '/', component: _App2.default },
-	    _react2.default.createElement(_reactRouter.IndexRoute, { component: _Home2.default }),
-	    _react2.default.createElement(_reactRouter.Route, { path: '/login', component: _Login2.default }),
-	    _react2.default.createElement(_reactRouter.Route, { path: '/coaches', component: _Coaches2.default, onEnter: requireAuth }),
+	    _react2.default.createElement(_reactRouter.IndexRoute, { component: _Login2.default }),
+	    _react2.default.createElement(_reactRouter.Route, { path: '/logout', component: _Login2.default, onEnter: onLogout }),
+	    _react2.default.createElement(_reactRouter.Route, { path: '/users', component: _Users2.default, onEnter: requireAuth }),
+	    _react2.default.createElement(_reactRouter.Route, { path: '/home', component: _Home2.default, onEnter: requireAuth }),
 	    _react2.default.createElement(_reactRouter.Route, { path: '/walkins', component: _Walkins2.default, onEnter: requireAuth }),
 	    _react2.default.createElement(_reactRouter.Route, { path: '/members', component: _Members2.default, onEnter: requireAuth }),
+	    _react2.default.createElement(_reactRouter.Route, { path: '/timeentries', component: _TimeEntries2.default, onEnter: requireAuth }),
+	    _react2.default.createElement(_reactRouter.Route, { path: '/coaches', component: _Coaches2.default, onEnter: requireAuth }),
 	    _react2.default.createElement(_reactRouter.Route, { path: '/programs', component: _Programs2.default, onEnter: requireAuth }),
 	    _react2.default.createElement(_reactRouter.Route, { path: '/packages', component: _Packages2.default, onEnter: requireAuth }),
-	    _react2.default.createElement(_reactRouter.Route, { path: '/training-sessions', component: _Todo2.default, onEnter: requireAuth }),
 	    _react2.default.createElement(_reactRouter.Route, { path: '/settings', component: _Settings2.default, onEnter: requireAuth })
 	);
 
@@ -36617,7 +36623,7 @@
 	            return _react2.default.createElement(
 	                'div',
 	                { className: 'app' },
-	                _react2.default.createElement(_Navigation2.default, null),
+	                _react2.default.createElement(_Navigation2.default, { location: this.props.location }),
 	                _react2.default.createElement(
 	                    'div',
 	                    { className: 'content' },
@@ -55133,7 +55139,11 @@
 
 	var _reactRouter = __webpack_require__(510);
 
-	var _Constants = __webpack_require__(591);
+	var _Auth = __webpack_require__(591);
+
+	var _Auth2 = _interopRequireDefault(_Auth);
+
+	var _Constants = __webpack_require__(599);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -55157,9 +55167,10 @@
 	        value: function createLink(item) {
 	            var to = item.to,
 	                label = item.label,
-	                icon = item.icon;
+	                icon = item.icon,
+	                forAdminOnly = item.forAdminOnly;
 
-	            return _react2.default.createElement(
+	            var linkComponent = _react2.default.createElement(
 	                _reactRouter.Link,
 	                { key: label.toLowerCase(), to: to, className: 'item' },
 	                _react2.default.createElement(
@@ -55171,13 +55182,18 @@
 	                    label
 	                )
 	            );
+
+	            return !forAdminOnly || _Auth2.default.isAdmin() ? linkComponent : null;
 	        }
 	    }, {
 	        key: 'render',
 	        value: function render() {
 	            var _this2 = this;
 
-	            return _react2.default.createElement(
+	            var pathname = this.props.location.pathname;
+
+	            var hideNavigation = ["/", "/logout"].includes(pathname);
+	            var navigationComponent = _react2.default.createElement(
 	                'div',
 	                { className: 'navigation' },
 	                _react2.default.createElement(
@@ -55188,6 +55204,7 @@
 	                    })
 	                )
 	            );
+	            return hideNavigation ? null : navigationComponent;
 	        }
 	    }]);
 
@@ -55198,56 +55215,13 @@
 
 /***/ }),
 /* 591 */
-/***/ (function(module, exports) {
-
-	"use strict";
-
-	Object.defineProperty(exports, "__esModule", {
-	    value: true
-	});
-	var SERVER_URL = exports.SERVER_URL = "http://localhost:8080/";
-	var DEPLOYMENT_URL = exports.DEPLOYMENT_URL = SERVER_URL + "fitly/";
-
-	var VIEWER_PATH = exports.VIEWER_PATH = "web/viewer.html?file=";
-	var PDFS_DIRECTORY = exports.PDFS_DIRECTORY = "pdfs/";
-
-	var DEFAULT_DISPLAYED_ITEM_COUNT = exports.DEFAULT_DISPLAYED_ITEM_COUNT = 20;
-
-	var DASHBOARD_ITEMS = exports.DASHBOARD_ITEMS = [{ to: "/", label: "Home", icon: "icon_home_page" }, { to: "/coaches", label: "Coaches", icon: "icon_coaches" }, { to: "/walkins", label: "Walk-Ins", icon: "icon_walk_ins" }, { to: "/members", label: "Members", icon: "icon_members" }, { to: "/programs", label: "Programs", icon: "icon_programs" }, { to: "/packages", label: "Packages", icon: "icon_packages" }, { to: "/training-sessions", label: "Training Sessions", icon: "icon_training_sessions" }, { to: "/settings", label: "Settings", icon: "icon_settings" }];
-
-	var MEMBER_AVAILMENT_TYPES = exports.MEMBER_AVAILMENT_TYPES = [{ value: "REGULAR", label: "Regular" }, { value: "UNLIMITED", label: "Unlimited for 1 Month" }];
-
-	var GENDERS = exports.GENDERS = [{ value: "MALE", label: "Male" }, { value: "FEMALE", label: "Female" }];
-
-	var PACKAGE_DURATIONS = exports.PACKAGE_DURATIONS = [{ value: "ENDLESS", label: "No duration" }, { value: "DAYS", label: "Days" }, { value: "WEEKS", label: "Weeks" }, { value: "MONTHS", label: "Months" }];
-
-	var USER_TYPES = exports.USER_TYPES = [{ value: "DEFAULT", label: "Default" }, { value: "ADMIN", label: "Admin" }];
-
-/***/ }),
-/* 592 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	Object.defineProperty(exports, "__esModule", {
-			value: true
-	});
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
-
-	var _react = __webpack_require__(327);
-
-	var _react2 = _interopRequireDefault(_react);
-
 	var _reactRouter = __webpack_require__(510);
 
-	var _View2 = __webpack_require__(587);
-
-	var _View3 = _interopRequireDefault(_View2);
-
-	var _Fetch = __webpack_require__(593);
+	var _Fetch = __webpack_require__(592);
 
 	var _Fetch2 = _interopRequireDefault(_Fetch);
 
@@ -55255,107 +55229,38 @@
 
 	var _Alert2 = _interopRequireDefault(_Alert);
 
-	var _Utils = __webpack_require__(601);
-
-	var _Utils2 = _interopRequireDefault(_Utils);
-
-	var _Input = __webpack_require__(602);
-
-	var _Input2 = _interopRequireDefault(_Input);
-
-	var _Button = __webpack_require__(603);
-
-	var _Button2 = _interopRequireDefault(_Button);
-
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	var Auth = {};
 
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	Auth.login = function (userName, password) {
+	    if (userName && password) {
+	        var data = { userName: userName, password: password };
+	        _Fetch2.default.post("login", data, function (user) {
+	            if (user) {
+	                Auth.user = user;
+	                _reactRouter.hashHistory.push("/home");
+	            } else {
+	                _Alert2.default.error("Invalid username and/or password.");
+	            }
+	        });
+	    } else {
+	        _Alert2.default.error("Username and password is required.");
+	    }
+	};
 
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	Auth.logout = function () {
+	    Auth.user = undefined;
+	};
 
-	var Login = function (_View) {
-			_inherits(Login, _View);
+	Auth.isAdmin = function () {
+	    return Auth.user && Auth.user.type === "ADMIN";
+	};
 
-			function Login() {
-					_classCallCheck(this, Login);
-
-					return _possibleConstructorReturn(this, (Login.__proto__ || Object.getPrototypeOf(Login)).apply(this, arguments));
-			}
-
-			_createClass(Login, [{
-					key: 'login',
-					value: function login() {
-							var _state = this.state,
-							    userName = _state.userName,
-							    password = _state.password;
-
-							var data = { userName: userName, password: password };
-
-							if (userName && password) {
-									_Fetch2.default.post("/login", data, function (success) {
-											if (success) {
-													_reactRouter.hashHistory.push("/dashboard");
-											} else {
-													_Alert2.default.error("Invalid username and/or password.");
-											}
-									});
-							} else {
-									_Alert2.default.error("Username and password is required.");
-							}
-					}
-			}, {
-					key: 'render',
-					value: function render() {
-							var _this2 = this;
-
-							return _react2.default.createElement(
-									'div',
-									{ className: 'login ui middle aligned center aligned grid' },
-									_react2.default.createElement(
-											'div',
-											{ className: 'column' },
-											_react2.default.createElement(
-													'div',
-													{ className: 'ui grey image' },
-													_react2.default.createElement('img', { id: 'brand', src: 'resources/images/logo.png', className: 'image' }),
-													_react2.default.createElement(
-															'p',
-															{ className: 'message' },
-															'Log-in to your account'
-													)
-											),
-											_react2.default.createElement(
-													'div',
-													{ className: 'ui large form stacked segment' },
-													_react2.default.createElement(_Input2.default, { ref: function ref(input) {
-																	_this2.initialInput = input;
-															}, autoFocus: 'true', placeholder: 'Username',
-															name: 'userName', value: this.state.userName, icon: 'user',
-															onChange: _get(Login.prototype.__proto__ || Object.getPrototypeOf(Login.prototype), 'onChange', this).bind(this) }),
-													_react2.default.createElement(_Input2.default, { placeholder: 'Password', name: 'password', value: this.state.password,
-															onChange: _get(Login.prototype.__proto__ || Object.getPrototypeOf(Login.prototype), 'onChange', this).bind(this), icon: 'lock', type: 'password' }),
-													_react2.default.createElement(
-															_Button2.default,
-															{ className: 'ui fluid large basic purple submit button', onClick: function onClick() {
-																			return _this2.login();
-																	} },
-															'Login'
-													)
-											)
-									)
-							);
-					}
-			}]);
-
-			return Login;
-	}(_View3.default);
-
-	exports.default = Login;
+	module.exports = Auth;
 
 /***/ }),
-/* 593 */
+/* 592 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function($) {'use strict';
@@ -55364,9 +55269,9 @@
 
 	var _store2 = _interopRequireDefault(_store);
 
-	var _jsBase = __webpack_require__(595);
+	var _jsBase = __webpack_require__(594);
 
-	var _Constants = __webpack_require__(591);
+	var _Constants = __webpack_require__(599);
 
 	var _Alert = __webpack_require__(600);
 
@@ -55489,10 +55394,10 @@
 	}
 
 	module.exports = Fetch;
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(594)))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(593)))
 
 /***/ }),
-/* 594 */
+/* 593 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -65862,7 +65767,7 @@
 
 
 /***/ }),
-/* 595 */
+/* 594 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(global) {/*
@@ -65895,7 +65800,7 @@
 	        if (typeof navigator != 'undefined' && navigator.product == 'ReactNative') {
 	        } else {
 	            try {
-	                buffer = __webpack_require__(596).Buffer;
+	                buffer = __webpack_require__(595).Buffer;
 	            } catch (err) {}
 	        }
 	    }
@@ -66100,7 +66005,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ }),
-/* 596 */
+/* 595 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/*!
@@ -66113,9 +66018,9 @@
 
 	'use strict'
 
-	var base64 = __webpack_require__(597)
-	var ieee754 = __webpack_require__(598)
-	var isArray = __webpack_require__(599)
+	var base64 = __webpack_require__(596)
+	var ieee754 = __webpack_require__(597)
+	var isArray = __webpack_require__(598)
 
 	exports.Buffer = Buffer
 	exports.SlowBuffer = SlowBuffer
@@ -67896,7 +67801,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ }),
-/* 597 */
+/* 596 */
 /***/ (function(module, exports) {
 
 	'use strict'
@@ -68016,7 +67921,7 @@
 
 
 /***/ }),
-/* 598 */
+/* 597 */
 /***/ (function(module, exports) {
 
 	exports.read = function (buffer, offset, isLE, mLen, nBytes) {
@@ -68106,7 +68011,7 @@
 
 
 /***/ }),
-/* 599 */
+/* 598 */
 /***/ (function(module, exports) {
 
 	var toString = {}.toString;
@@ -68115,6 +68020,43 @@
 	  return toString.call(arr) == '[object Array]';
 	};
 
+
+/***/ }),
+/* 599 */
+/***/ (function(module, exports) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+	var COMPANY_NAME = exports.COMPANY_NAME = "VALIANT";
+	var COMPANY_DESCRIPTION = exports.COMPANY_DESCRIPTION = "MMA & Fitness Gym";
+
+	var SERVER_URL = exports.SERVER_URL = "http://localhost:8080/";
+	var DEPLOYMENT_URL = exports.DEPLOYMENT_URL = SERVER_URL + "fitly/";
+
+	var VIEWER_PATH = exports.VIEWER_PATH = "web/viewer.html?file=";
+	var PDFS_DIRECTORY = exports.PDFS_DIRECTORY = "pdfs/";
+
+	var DEFAULT_DISPLAYED_ITEM_COUNT = exports.DEFAULT_DISPLAYED_ITEM_COUNT = 20;
+
+	var DASHBOARD_ITEMS = exports.DASHBOARD_ITEMS = [{ to: "/home", label: "Home", icon: "icon_home_page" }, { to: "/walkins", label: "Walk-Ins", icon: "icon_walk_ins" }, { to: "/members", label: "Members", icon: "icon_members" }, { to: "/timeentries", label: "Time Entries", icon: "icon_records" }, { to: "/coaches", label: "Coaches", icon: "icon_coaches" }, { to: "/programs", label: "Programs", icon: "icon_programs" }, { to: "/packages", label: "Packages", icon: "icon_packages" }, { to: "/users", label: "Users", icon: "icon_users", forAdminOnly: true }, { to: "/settings", label: "Settings", icon: "icon_settings" }, { to: "/logout", label: "Logout", icon: "icon_logout" }];
+
+	var MEMBER_AVAILMENT_TYPES = exports.MEMBER_AVAILMENT_TYPES = [{ value: "REGULAR", label: "Regular" }, { value: "REGULAR_WITH_COACH", label: "Regular (With Coach)" }, { value: "UNLIMITED", label: "Unlimited for 1 Month" }];
+
+	var getAvailmentTypeLabel = exports.getAvailmentTypeLabel = function getAvailmentTypeLabel(type) {
+	    var item = MEMBER_AVAILMENT_TYPES.find(function (i) {
+	        return i.value === type;
+	    });
+	    return item ? item.label : undefined;
+	};
+
+	var GENDERS = exports.GENDERS = [{ value: "MALE", label: "Male" }, { value: "FEMALE", label: "Female" }];
+
+	var PACKAGE_DURATIONS = exports.PACKAGE_DURATIONS = [{ value: "ENDLESS", label: "No duration" }, { value: "DAYS", label: "Days" }, { value: "WEEKS", label: "Weeks" }, { value: "MONTHS", label: "Months" }];
+
+	var USER_TYPES = exports.USER_TYPES = [{ value: "DEFAULT", label: "Default" }, { value: "ADMIN", label: "Admin" }];
 
 /***/ }),
 /* 600 */
@@ -68143,42 +68085,111 @@
 
 	'use strict';
 
-	var _Fetch = __webpack_require__(593);
+	Object.defineProperty(exports, "__esModule", {
+			value: true
+	});
 
-	var _Fetch2 = _interopRequireDefault(_Fetch);
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _Constants = __webpack_require__(591);
+	var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
+	var _react = __webpack_require__(327);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _View2 = __webpack_require__(587);
+
+	var _View3 = _interopRequireDefault(_View2);
+
+	var _Auth = __webpack_require__(591);
+
+	var _Auth2 = _interopRequireDefault(_Auth);
+
+	var _Input = __webpack_require__(602);
+
+	var _Input2 = _interopRequireDefault(_Input);
+
+	var _Button = __webpack_require__(603);
+
+	var _Button2 = _interopRequireDefault(_Button);
+
+	var _Constants = __webpack_require__(599);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	var Utils = {};
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	Utils.isEmpty = function (obj) {
-	    return Object.keys(obj).length === 0 && obj.constructor === Object;
-	};
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-	Utils.getPDFPath = function (fileName) {
-	    var encodedFileName = encodeURIComponent(_Constants.PDFS_DIRECTORY + fileName);
-	    return _Constants.SERVER_URL + _Constants.VIEWER_PATH + encodedFileName;
-	};
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var preview = null;
+	var Login = function (_View) {
+			_inherits(Login, _View);
 
-	Utils.open = function (fileName) {
-	    if (preview != null) {
-	        preview.close();
-	    }
-	    var params = ["height=" + screen.availHeight, "width=" + screen.availWidth].join(',');
-	    preview = window.open(Utils.getPDFPath(fileName), 'popup_window', params);
-	};
+			function Login() {
+					_classCallCheck(this, Login);
 
-	Utils.print = function (type, requestData) {
-	    _Fetch2.default.post('reports/' + type, requestData, function (fileName) {
-	        Utils.open(fileName);
-	    });
-	};
+					return _possibleConstructorReturn(this, (Login.__proto__ || Object.getPrototypeOf(Login)).apply(this, arguments));
+			}
 
-	module.exports = Utils;
+			_createClass(Login, [{
+					key: 'login',
+					value: function login() {
+							var _state = this.state,
+							    userName = _state.userName,
+							    password = _state.password;
+
+							_Auth2.default.login(userName, password);
+					}
+			}, {
+					key: 'render',
+					value: function render() {
+							var _this2 = this;
+
+							var onEnter = function onEnter(event) {
+									event.preventDefault();
+									_this2.login();
+							};
+
+							return _react2.default.createElement(
+									'div',
+									{ className: 'login' },
+									_react2.default.createElement(
+											'form',
+											{ className: 'ui large form stacked segment', onSubmit: onEnter },
+											_react2.default.createElement(
+													'div',
+													{ className: 'title' },
+													_Constants.COMPANY_NAME
+											),
+											_react2.default.createElement(
+													'div',
+													{ className: 'description' },
+													_Constants.COMPANY_DESCRIPTION
+											),
+											_react2.default.createElement(_Input2.default, { ref: function ref(input) {
+															_this2.initialInput = input;
+													}, autoFocus: 'true', placeholder: 'Username',
+													name: 'userName', value: this.state.userName, icon: 'user',
+													onChange: _get(Login.prototype.__proto__ || Object.getPrototypeOf(Login.prototype), 'onChange', this).bind(this) }),
+											_react2.default.createElement(_Input2.default, { placeholder: 'Password', name: 'password', value: this.state.password,
+													onChange: _get(Login.prototype.__proto__ || Object.getPrototypeOf(Login.prototype), 'onChange', this).bind(this), icon: 'lock', type: 'password' }),
+											_react2.default.createElement(
+													_Button2.default,
+													{ className: 'ui fluid large blue submit button', onClick: function onClick() {
+																	return _this2.login();
+															} },
+													'Login'
+											)
+									)
+							);
+					}
+			}]);
+
+			return Login;
+	}(_View3.default);
+
+	exports.default = Login;
 
 /***/ }),
 /* 602 */
@@ -68401,7 +68412,19 @@
 
 	var _Textarea2 = _interopRequireDefault(_Textarea);
 
-	var _Constants = __webpack_require__(591);
+	var _Constants = __webpack_require__(599);
+
+	var _Formatter = __webpack_require__(629);
+
+	var _Formatter2 = _interopRequireDefault(_Formatter);
+
+	var _Provider = __webpack_require__(630);
+
+	var _Provider2 = _interopRequireDefault(_Provider);
+
+	var _Fetch = __webpack_require__(592);
+
+	var _Fetch2 = _interopRequireDefault(_Fetch);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -68430,7 +68453,10 @@
 							var _this2 = this;
 
 							var items = [];
-							var selectedItem = this.state.selectedItem;
+							var _state = this.state,
+							    selectedItem = _state.selectedItem,
+							    selectedIndex = _state.selectedIndex;
+
 
 							if (this.state.items) {
 									items = this.state.items.map(function (item, index) {
@@ -68438,9 +68464,10 @@
 											    middleName = item.middleName,
 											    lastName = item.lastName;
 
+											var className = selectedIndex === index ? "selected" : undefined;
 											return _react2.default.createElement(
 													'li',
-													{ key: index, onClick: _this2.onItemClick.bind(_this2, index) },
+													{ key: index, onClick: _this2.onItemClick.bind(_this2, index), className: className },
 													firstName + ' ' + (middleName ? middleName + " " : "") + lastName
 											);
 									});
@@ -68502,14 +68529,194 @@
 							this.setState(nextState);
 					}
 			}, {
-					key: 'render',
-					value: function render() {
+					key: 'loadCommissions',
+					value: function loadCommissions() {
 							var _this4 = this;
 
-							var _state = this.state,
-							    value = _state.value,
-							    updateMode = _state.updateMode;
+							var value = this.state.value;
 
+							var defaultParameters = {
+									coachId: value.id,
+									pageSize: 100,
+									pageOffset: 0
+							};
+
+							var parameters = Object.assign({}, defaultParameters);
+
+							_Fetch2.default.get("timeentry/", parameters, function (timeEntries) {
+									_this4.setState({ timeEntries: timeEntries });
+							});
+					}
+			}, {
+					key: 'onViewCommissionsPage',
+					value: function onViewCommissionsPage() {
+							this.loadCommissions();
+							this.setState({ viewCommissions: true });
+					}
+			}, {
+					key: 'onViewDetailPage',
+					value: function onViewDetailPage() {
+							this.setState({ viewCommissions: false });
+					}
+			}, {
+					key: 'getCommissionsPage',
+					value: function getCommissionsPage() {
+							var _this5 = this;
+
+							var timeEntries = this.state.timeEntries;
+
+
+							var getMember = function getMember(item) {
+									var _item$member = item.member,
+									    firstName = _item$member.firstName,
+									    middleName = _item$member.middleName,
+									    lastName = _item$member.lastName;
+
+									return firstName + ' ' + (middleName ? middleName + " " : "") + lastName;
+							};
+
+							var getAvailedProduct = function getAvailedProduct(item) {
+									if (item.programAvailment) {
+											return item.programAvailment.availedProgram.name + ' (Program)';
+									} else if (item.packageAvailment) {
+											return item.packageAvailment.availedPackage.name + ' (Package)';
+									}
+							};
+
+							var renderRow = function renderRow(item, index) {
+									return _react2.default.createElement(
+											'tr',
+											{ key: item.id },
+											_react2.default.createElement(
+													'td',
+													null,
+													item.date
+											),
+											_react2.default.createElement(
+													'td',
+													null,
+													getMember(item)
+											),
+											_react2.default.createElement(
+													'td',
+													null,
+													getAvailedProduct(item)
+											),
+											_react2.default.createElement(
+													'td',
+													null,
+													_Formatter2.default.formatAmount(item.commission)
+											)
+									);
+							};
+
+							var timeEntriesComponent = _react2.default.createElement(
+									'div',
+									null,
+									_react2.default.createElement(
+											'h4',
+											null,
+											'No commissions.'
+									)
+							);
+
+							if (timeEntries && timeEntries.length) {
+									var totalCommissions = 0;
+									timeEntries.forEach(function (item) {
+											if (item.commission) {
+													totalCommissions += item.commission;
+											}
+									});
+
+									timeEntriesComponent = _react2.default.createElement(
+											'div',
+											null,
+											_react2.default.createElement(
+													'h4',
+													null,
+													'Commissions'
+											),
+											_react2.default.createElement(
+													'table',
+													{ className: 'ui orange small table' },
+													_react2.default.createElement(
+															'thead',
+															null,
+															_react2.default.createElement(
+																	'tr',
+																	null,
+																	_react2.default.createElement(
+																			'th',
+																			null,
+																			'Date'
+																	),
+																	_react2.default.createElement(
+																			'th',
+																			null,
+																			'Member'
+																	),
+																	_react2.default.createElement(
+																			'th',
+																			null,
+																			'Availed Program/Package'
+																	),
+																	_react2.default.createElement(
+																			'th',
+																			null,
+																			'Commission'
+																	)
+															)
+													),
+													_react2.default.createElement(
+															'tbody',
+															null,
+															timeEntries.map(renderRow)
+													),
+													_react2.default.createElement(
+															'tfoot',
+															{ className: 'full-width footer-total' },
+															_react2.default.createElement(
+																	'tr',
+																	null,
+																	_react2.default.createElement(
+																			'th',
+																			{ colSpan: '4' },
+																			_react2.default.createElement(
+																					'div',
+																					{ className: 'ui blue basic label' },
+																					_react2.default.createElement('i', { className: 'check icon' }),
+																					' Total Commissions: ',
+																					_Formatter2.default.formatAmount(totalCommissions)
+																			)
+																	)
+															)
+													)
+											)
+									);
+							}
+
+							return _react2.default.createElement(
+									'div',
+									null,
+									_react2.default.createElement(
+											'div',
+											{ className: 'ui label clickable padbot', onClick: function onClick() {
+															return _this5.onViewDetailPage();
+													} },
+											_react2.default.createElement('i', { className: 'angle left icon' }),
+											' Back'
+									),
+									timeEntriesComponent
+							);
+					}
+			}, {
+					key: 'getDetailPage',
+					value: function getDetailPage() {
+							var _this6 = this;
+
+							var _state2 = this.state,
+							    value = _state2.value,
+							    updateMode = _state2.updateMode;
 
 							return _react2.default.createElement(
 									'div',
@@ -68521,7 +68728,7 @@
 													'div',
 													{ className: 'three fields' },
 													_react2.default.createElement(_Input2.default, { ref: function ref(input) {
-																	_this4.initialInput = input;
+																	_this6.initialInput = input;
 															}, autoFocus: 'true',
 															name: 'firstName', label: 'First Name', value: value.firstName, disabled: !updateMode,
 															onChange: _get(Coach.prototype.__proto__ || Object.getPrototypeOf(Coach.prototype), 'onChange', this).bind(this) }),
@@ -68555,9 +68762,7 @@
 													{ className: 'fields' },
 													_react2.default.createElement(_Textarea2.default, { name: 'address', label: 'Address', value: value.address, disabled: !updateMode,
 															onChange: _get(Coach.prototype.__proto__ || Object.getPrototypeOf(Coach.prototype), 'onChange', this).bind(this),
-															fieldClassName: 'eleven' }),
-													_react2.default.createElement(_Input2.default, { name: 'commissionPercent', label: 'Commission (%)', value: value.commissionPercent, disabled: !updateMode,
-															onChange: _get(Coach.prototype.__proto__ || Object.getPrototypeOf(Coach.prototype), 'onChange', this).bind(this), fieldClassName: 'five' })
+															fieldClassName: 'eleven' })
 											)
 									),
 									_react2.default.createElement(
@@ -68566,6 +68771,34 @@
 											_react2.default.createElement(_Audit2.default, { value: value }),
 											_get(Coach.prototype.__proto__ || Object.getPrototypeOf(Coach.prototype), 'getActions', this).call(this)
 									)
+							);
+					}
+			}, {
+					key: 'render',
+					value: function render() {
+							var _this7 = this;
+
+							var _state3 = this.state,
+							    value = _state3.value,
+							    updateMode = _state3.updateMode,
+							    viewCommissions = _state3.viewCommissions;
+
+							var showOtherPanels = !updateMode && value && value.id;
+
+							var viewCommissionsAction = _react2.default.createElement(
+									'div',
+									{ className: 'ui orange label clickable padbot', onClick: function onClick() {
+													return _this7.onViewCommissionsPage();
+											} },
+									_react2.default.createElement('i', { className: 'eye icon' }),
+									' View Commissions'
+							);
+
+							return _react2.default.createElement(
+									'div',
+									null,
+									showOtherPanels && !viewCommissions ? viewCommissionsAction : undefined,
+									showOtherPanels && viewCommissions ? this.getCommissionsPage() : this.getDetailPage()
 							);
 					}
 			}]);
@@ -68597,7 +68830,7 @@
 
 	var _View3 = _interopRequireDefault(_View2);
 
-	var _Fetch = __webpack_require__(593);
+	var _Fetch = __webpack_require__(592);
 
 	var _Fetch2 = _interopRequireDefault(_Fetch);
 
@@ -68647,7 +68880,7 @@
 					}
 			}, {
 					key: 'onFetch',
-					value: function onFetch() {
+					value: function onFetch(filterParameters) {
 							var _this3 = this;
 
 							var defaultParameters = {
@@ -68656,19 +68889,28 @@
 									pageOffset: 0
 							};
 
-							var parameters = Object.assign({}, defaultParameters, this.extraParameters);
+							var parameters = Object.assign({}, defaultParameters, filterParameters, this.extraParameters);
 
 							_Fetch2.default.get(this.endpoint, parameters, function (items) {
 									_this3.setState({ items: items });
-									if (items) _this3.onItemClick(0);
+
+									if (items) {
+											var selectedItem = _this3.state.selectedItem;
+
+											var indexToSelect = selectedItem ? Math.max(items.findIndex(function (item) {
+													return item.id === selectedItem.id;
+											}), 0) : 0;
+											_this3.onItemClick(indexToSelect);
+									}
 							});
 					}
 			}, {
 					key: 'renderItem',
 					value: function renderItem(item, index) {
+							var className = this.state.selectedIndex === index ? "selected" : undefined;
 							return _react2.default.createElement(
 									'li',
-									{ key: index, onClick: this.onItemClick.bind(this, index) },
+									{ key: index, onClick: this.onItemClick.bind(this, index), className: className },
 									item.name
 							);
 					}
@@ -68739,7 +68981,11 @@
 
 	var _View3 = _interopRequireDefault(_View2);
 
-	var _Fetch = __webpack_require__(593);
+	var _Auth = __webpack_require__(591);
+
+	var _Auth2 = _interopRequireDefault(_Auth);
+
+	var _Fetch = __webpack_require__(592);
 
 	var _Fetch2 = _interopRequireDefault(_Fetch);
 
@@ -68850,8 +69096,14 @@
 	            });
 	        }
 	    }, {
+	        key: 'getAdminOnlyActions',
+	        value: function getAdminOnlyActions() {
+	            var nonAdmin = !_Auth2.default.isAdmin();
+	            return this.getActions(nonAdmin, nonAdmin, nonAdmin);
+	        }
+	    }, {
 	        key: 'getActions',
-	        value: function getActions() {
+	        value: function getActions(hideAdd, hideEdit, hideDelete) {
 	            var _this5 = this;
 
 	            var value = this.state.value;
@@ -68859,21 +69111,21 @@
 	            var viewingActions = _react2.default.createElement(
 	                'div',
 	                null,
-	                _react2.default.createElement(
+	                !hideAdd ? _react2.default.createElement(
 	                    _Button2.default,
 	                    { className: 'ui green button', icon: 'add', onClick: function onClick() {
 	                            return _this5.onAdd();
 	                        } },
 	                    'Add'
-	                ),
-	                value && value.id ? _react2.default.createElement(
+	                ) : null,
+	                !hideEdit && value && value.id ? _react2.default.createElement(
 	                    _Button2.default,
 	                    { className: 'ui blue button', icon: 'write', onClick: function onClick() {
 	                            return _this5.onEdit();
 	                        } },
 	                    'Edit'
 	                ) : null,
-	                value && value.id ? _react2.default.createElement(
+	                !hideDelete && value && value.id ? _react2.default.createElement(
 	                    _Button2.default,
 	                    { className: 'ui button', icon: 'trash', onClick: function onClick() {
 	                            return _this5.onDelete();
@@ -69020,7 +69272,7 @@
 
 	var _reactSelect2 = _interopRequireDefault(_reactSelect);
 
-	var _Constants = __webpack_require__(591);
+	var _Constants = __webpack_require__(599);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -72605,6 +72857,121 @@
 
 /***/ }),
 /* 629 */
+/***/ (function(module, exports) {
+
+	"use strict";
+
+	var Formatter = {};
+
+	Formatter.format = function (type, value) {
+	    var mapping = [{ "type": "date", "func": Formatter.formatDate }, { "type": "number", "func": Formatter.formatNumber }, { "type": "amount", "func": Formatter.formatAmount }];
+
+	    var func = mapping.find(function (item) {
+	        return item.type == type;
+	    }).func;
+	    return func(value);
+	};
+
+	Formatter.formatDate = function (value) {
+	    return value;
+	};
+
+	Formatter.formatNumber = function (value) {
+	    if (!value || isNaN(value)) return value;
+	    var amount = parseFloat(value);
+	    return amount.toFixed();
+	};
+
+	Formatter.formatAmount = function (value) {
+	    if (!value || isNaN(value)) return value;
+	    var amount = parseFloat(value);
+	    return amount.toFixed(2);
+	};
+
+	module.exports = Formatter;
+
+/***/ }),
+/* 630 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var _Fetch = __webpack_require__(592);
+
+	var _Fetch2 = _interopRequireDefault(_Fetch);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var Provider = {
+	    filteredItems: {}
+	};
+
+	Provider.loadPrograms = function (callback) {
+	    var parameters = {
+	        orderedBy: "name"
+	    };
+
+	    _Fetch2.default.get("program/", parameters, function (items) {
+	        if (callback) {
+	            callback(items);
+	        }
+	    });
+	};
+
+	Provider.loadPackages = function (callback) {
+	    var parameters = {
+	        orderedBy: "name"
+	    };
+
+	    _Fetch2.default.get("package/", parameters, function (items) {
+	        if (callback) {
+	            callback(items);
+	        }
+	    });
+	};
+
+	Provider.loadCoaches = function (callback) {
+	    var parameters = {
+	        orderedBy: "firstName"
+	    };
+
+	    _Fetch2.default.get("coach/", parameters, function (items) {
+	        if (callback) {
+	            callback(items);
+	        }
+	    });
+	};
+
+	Provider.getCoaches = function (input, callback) {
+	    var parameters = {
+	        filter: input,
+	        orderedBy: "firstName",
+	        pageSize: 10
+	    };
+
+	    _Fetch2.default.get("coach/", parameters, function (items) {
+	        Provider.filteredItems.coaches = items;
+
+	        if (items) {
+	            var filteredCoaches = items.map(function (item) {
+	                var firstName = item.firstName,
+	                    middleName = item.middleName,
+	                    lastName = item.lastName;
+
+	                return {
+	                    value: item.id,
+	                    label: firstName + " " + (middleName ? middleName + " " : "") + lastName
+	                };
+	            });
+	            callback(null, { options: filteredCoaches, cache: false });
+	        }
+	    });
+	};
+
+	module.exports = Provider;
+
+/***/ }),
+/* 631 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -72620,8 +72987,6 @@
 	var _react = __webpack_require__(327);
 
 	var _react2 = _interopRequireDefault(_react);
-
-	var _reactRouter = __webpack_require__(510);
 
 	var _View = __webpack_require__(587);
 
@@ -72659,21 +73024,23 @@
 
 	var _Textarea2 = _interopRequireDefault(_Textarea);
 
-	var _Constants = __webpack_require__(591);
+	var _Constants = __webpack_require__(599);
 
-	var _Formatter = __webpack_require__(630);
+	var _Formatter = __webpack_require__(629);
 
 	var _Formatter2 = _interopRequireDefault(_Formatter);
 
-	var _Provider = __webpack_require__(631);
+	var _Provider = __webpack_require__(630);
 
 	var _Provider2 = _interopRequireDefault(_Provider);
 
-	var _Fetch = __webpack_require__(593);
+	var _Fetch = __webpack_require__(592);
 
 	var _Fetch2 = _interopRequireDefault(_Fetch);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -72713,6 +73080,9 @@
 							_Provider2.default.loadPackages(function (packages) {
 									return _this2.setState({ packages: packages });
 							});
+							_Provider2.default.loadCoaches(function (coaches) {
+									return _this2.setState({ coaches: coaches });
+							});
 					}
 			}, {
 					key: 'getInformationPage',
@@ -72723,9 +73093,10 @@
 							    selectedItem = _state.selectedItem,
 							    membership = _state.membership,
 							    availedPrograms = _state.availedPrograms,
-							    availedPackages = _state.availedPackages;
+							    availedPackages = _state.availedPackages,
+							    coaches = _state.coaches;
 
-							return _react2.default.createElement(Member, { value: selectedItem, membership: membership,
+							return _react2.default.createElement(Member, { value: selectedItem, membership: membership, coaches: coaches,
 									availedPrograms: availedPrograms, availedPackages: availedPackages,
 									onEnrollProgram: function onEnrollProgram() {
 											return _this3.onEnrollProgram();
@@ -72782,10 +73153,23 @@
 											return item.id === program.value;
 									});
 									programAvailment.availedProgram = selectedProgram;
-									programAvailment.type = selectedProgram.monthlyPrice ? programAvailment.type : "REGULAR";
 
-									var regularAvailmentType = { value: "REGULAR", label: "Regular" };
-									var memberAvailmentTypes = selectedProgram.monthlyPrice ? _Constants.MEMBER_AVAILMENT_TYPES : [regularAvailmentType];
+									programAvailment.type = programAvailment.type === "UNLIMITED" && !selectedProgram.monthlyPrice ? "REGULAR" : programAvailment.type;
+									programAvailment.type = programAvailment.type === "REGULAR_WITH_COACH" && !selectedProgram.coachPrice ? "REGULAR" : programAvailment.type;
+
+									var regularAvailmentType = _Constants.MEMBER_AVAILMENT_TYPES.find(function (item) {
+											return item.value === "REGULAR";
+									});
+									var withCoachAvailmentType = _Constants.MEMBER_AVAILMENT_TYPES.find(function (item) {
+											return item.value === "REGULAR_WITH_COACH";
+									});
+									var monthlyAvailmentType = _Constants.MEMBER_AVAILMENT_TYPES.find(function (item) {
+											return item.value === "UNLIMITED";
+									});
+
+									var memberAvailmentTypes = [regularAvailmentType];
+									memberAvailmentTypes = selectedProgram.monthlyPrice ? [].concat(_toConsumableArray(memberAvailmentTypes), [monthlyAvailmentType]) : memberAvailmentTypes;
+									memberAvailmentTypes = selectedProgram.coachPrice ? [].concat(_toConsumableArray(memberAvailmentTypes), [withCoachAvailmentType]) : memberAvailmentTypes;
 
 									this.setState({ memberAvailmentTypes: memberAvailmentTypes });
 							}
@@ -72817,9 +73201,15 @@
 							var _this7 = this;
 
 							if (e.keyCode === 13) {
-									_Fetch2.default.patch("membership/", this.state.membership, function () {
-											_this7.setState({ addingAccessCard: false });
+									var membership = this.state.membership;
+
+									_Fetch2.default.patch("membership/", membership, function () {
 											_this7.onFetch();
+											_this7.setState({ addingAccessCard: false });
+									}, function () {
+											membership.accessCardNo = undefined;
+											_this7.setState({ addingAccessCard: false, membership: membership });
+											console.warn(membership.accessCardNo);
 									});
 							}
 					}
@@ -72911,7 +73301,7 @@
 													_react2.default.createElement(_Dropdown2.default, { name: 'program', label: 'Program', value: program.id,
 															options: programOptions, onChange: this.onProgramChange.bind(this),
 															fieldClassName: 'eight' }),
-													_react2.default.createElement(_Input2.default, { name: 'programAvailment.date', label: 'Date', value: programAvailment.date,
+													_react2.default.createElement(_Input2.default, { name: 'programAvailment.startDate', label: 'Start Date', value: programAvailment.startDate,
 															onChange: _get(Members.prototype.__proto__ || Object.getPrototypeOf(Members.prototype), 'onChange', this).bind(this), placeholder: 'MM/dd/yyyy',
 															fieldClassName: 'eight' })
 											),
@@ -72983,7 +73373,7 @@
 													_react2.default.createElement(_Dropdown2.default, { name: 'package', label: 'Package', value: availedPackage.id,
 															options: packageOptions, onChange: this.onPackageChange.bind(this),
 															fieldClassName: 'eight' }),
-													_react2.default.createElement(_Input2.default, { name: 'packageAvailment.date', label: 'Date', value: packageAvailment.date,
+													_react2.default.createElement(_Input2.default, { name: 'packageAvailment.startDate', label: 'Start Date', value: packageAvailment.startDate,
 															onChange: _get(Members.prototype.__proto__ || Object.getPrototypeOf(Members.prototype), 'onChange', this).bind(this), placeholder: 'MM/dd/yyyy',
 															fieldClassName: 'eight' })
 											),
@@ -73101,15 +73491,19 @@
 							var _this12 = this;
 
 							var items = [];
+							var selectedIndex = this.state.selectedIndex;
+
+
 							if (this.state.items) {
 									items = this.state.items.map(function (item, index) {
 											var firstName = item.firstName,
 											    middleName = item.middleName,
 											    lastName = item.lastName;
 
+											var className = selectedIndex === index ? "selected" : undefined;
 											return _react2.default.createElement(
 													'li',
-													{ key: index, onClick: _this12.onItemClick.bind(_this12, index) },
+													{ key: index, onClick: _this12.onItemClick.bind(_this12, index), className: className },
 													firstName + ' ' + (middleName ? middleName + " " : "") + lastName
 											);
 									});
@@ -73231,36 +73625,163 @@
 							    availedPackages = _props2.availedPackages;
 
 
+							var availedProgramsComponent = null;
+							if (availedPrograms && availedPrograms.length) {
+									availedProgramsComponent = _react2.default.createElement(
+											'table',
+											{ className: 'ui green small table' },
+											_react2.default.createElement(
+													'thead',
+													null,
+													_react2.default.createElement(
+															'tr',
+															null,
+															_react2.default.createElement(
+																	'th',
+																	null,
+																	'Date'
+															),
+															_react2.default.createElement(
+																	'th',
+																	null,
+																	'Program'
+															),
+															_react2.default.createElement(
+																	'th',
+																	null,
+																	'Availment Type'
+															),
+															_react2.default.createElement(
+																	'th',
+																	null,
+																	'Price'
+															)
+													)
+											),
+											_react2.default.createElement(
+													'tbody',
+													null,
+													availedPrograms.map(function (item) {
+															return _react2.default.createElement(
+																	'tr',
+																	{ key: item.id },
+																	_react2.default.createElement(
+																			'td',
+																			null,
+																			item.startDate
+																	),
+																	_react2.default.createElement(
+																			'td',
+																			null,
+																			item.availedProgram.name
+																	),
+																	_react2.default.createElement(
+																			'td',
+																			null,
+																			(0, _Constants.getAvailmentTypeLabel)(item.type)
+																	),
+																	_react2.default.createElement(
+																			'td',
+																			null,
+																			_Formatter2.default.formatAmount(item.price)
+																	)
+															);
+													})
+											)
+									);
+							}
+
+							var availedPackagesComponent = null;
+							if (availedPackages && availedPackages.length) {
+									availedPackagesComponent = _react2.default.createElement(
+											'table',
+											{ className: 'ui blue small table' },
+											_react2.default.createElement(
+													'thead',
+													null,
+													_react2.default.createElement(
+															'tr',
+															null,
+															_react2.default.createElement(
+																	'th',
+																	null,
+																	'Start Date'
+															),
+															_react2.default.createElement(
+																	'th',
+																	null,
+																	'End Date'
+															),
+															_react2.default.createElement(
+																	'th',
+																	null,
+																	'Package'
+															),
+															_react2.default.createElement(
+																	'th',
+																	null,
+																	'No. of Sessions'
+															),
+															_react2.default.createElement(
+																	'th',
+																	null,
+																	'Remaining Sessions'
+															),
+															_react2.default.createElement(
+																	'th',
+																	null,
+																	'Price'
+															)
+													)
+											),
+											_react2.default.createElement(
+													'tbody',
+													null,
+													availedPackages.map(function (item) {
+															return _react2.default.createElement(
+																	'tr',
+																	{ key: item.id },
+																	_react2.default.createElement(
+																			'td',
+																			null,
+																			item.startDate
+																	),
+																	_react2.default.createElement(
+																			'td',
+																			null,
+																			item.endDate
+																	),
+																	_react2.default.createElement(
+																			'td',
+																			null,
+																			item.availedPackage.name
+																	),
+																	_react2.default.createElement(
+																			'td',
+																			null,
+																			item.sessionsCount
+																	),
+																	_react2.default.createElement(
+																			'td',
+																			null,
+																			item.sessionsRemaining
+																	),
+																	_react2.default.createElement(
+																			'td',
+																			null,
+																			_Formatter2.default.formatAmount(item.price)
+																	)
+															);
+													})
+											)
+									);
+							}
+
 							var viewComponent = _react2.default.createElement(
 									'div',
 									null,
-									_react2.default.createElement('br', null),
-									availedPrograms && availedPrograms.map(function (item) {
-											return _react2.default.createElement(
-													'div',
-													{ key: item.id, className: 'ui label',
-															'data-variation': 'mini', 'data-inverted': '', 'data-tooltip': 'Program' },
-													item.availedProgram.name,
-													_react2.default.createElement(
-															'div',
-															{ className: 'detail' },
-															item.date
-													)
-											);
-									}),
-									availedPackages && availedPackages.map(function (item) {
-											return _react2.default.createElement(
-													'div',
-													{ key: item.id, className: 'ui label',
-															'data-variation': 'mini', 'data-inverted': '', 'data-tooltip': 'Package' },
-													item.availedPackage.name,
-													_react2.default.createElement(
-															'div',
-															{ className: 'detail' },
-															item.date
-													)
-											);
-									})
+									availedProgramsComponent,
+									availedPackagesComponent
 							);
 
 							return _react2.default.createElement(
@@ -73295,8 +73816,24 @@
 													'Enroll to a Package'
 											)
 									),
+									_react2.default.createElement('br', null),
 									viewComponent
 							);
+					}
+			}, {
+					key: 'onDefaultCoachChange',
+					value: function onDefaultCoachChange(coach) {
+							var coaches = this.props.coaches;
+							var value = this.state.value;
+
+
+							if (coaches) {
+									var selectedCoach = coaches.find(function (item) {
+											return item.id === coach.value;
+									});
+									value.defaultCoach = selectedCoach;
+							}
+							this.setState({ value: value });
 					}
 			}, {
 					key: 'render',
@@ -73308,6 +73845,22 @@
 							    updateMode = _state7.updateMode;
 
 							var showOtherPanels = !updateMode && value && value.id;
+
+							var coaches = this.props.coaches;
+
+							var coachOptions = [];
+							var defaultCoach = value.defaultCoach || {};
+
+							if (coaches) {
+									coachOptions = coaches.map(function (item, index) {
+											var firstName = item.firstName,
+											    middleName = item.middleName,
+											    lastName = item.lastName;
+
+											var name = firstName + ' ' + (middleName ? middleName + " " : "") + lastName;
+											return { value: item.id, label: name };
+									});
+							}
 
 							return _react2.default.createElement(
 									'div',
@@ -73360,7 +73913,10 @@
 													{ className: 'fields' },
 													_react2.default.createElement(_Textarea2.default, { name: 'address', label: 'Address', value: value.address, disabled: !updateMode,
 															onChange: _get(Member.prototype.__proto__ || Object.getPrototypeOf(Member.prototype), 'onChange', this).bind(this),
-															fieldClassName: 'eleven' })
+															fieldClassName: 'eleven' }),
+													_react2.default.createElement(_Dropdown2.default, { name: 'defaultCoach', label: 'Default Coach', value: defaultCoach.id,
+															options: coachOptions, onChange: this.onDefaultCoachChange.bind(this), disabled: !updateMode,
+															fieldClassName: 'eight' })
 											)
 									),
 									_react2.default.createElement(
@@ -73369,7 +73925,8 @@
 											_react2.default.createElement(_Audit2.default, { value: value }),
 											_get(Member.prototype.__proto__ || Object.getPrototypeOf(Member.prototype), 'getActions', this).call(this)
 									),
-									showOtherPanels ? this.getEnrollments() : undefined
+									showOtherPanels ? this.getEnrollments() : undefined,
+									_react2.default.createElement('br', null)
 							);
 					}
 			}]);
@@ -73378,102 +73935,6 @@
 	}(_DetailView3.default);
 
 	exports.default = Members;
-
-/***/ }),
-/* 630 */
-/***/ (function(module, exports) {
-
-	"use strict";
-
-	var Formatter = {};
-
-	Formatter.format = function (type, value) {
-	    var mapping = [{ "type": "date", "func": Formatter.formatDate }, { "type": "number", "func": Formatter.formatNumber }, { "type": "amount", "func": Formatter.formatAmount }];
-
-	    var func = mapping.find(function (item) {
-	        return item.type == type;
-	    }).func;
-	    return func(value);
-	};
-
-	Formatter.formatDate = function (value) {
-	    return value;
-	};
-
-	Formatter.formatNumber = function (value) {
-	    if (!value || isNaN(value)) return value;
-	    var amount = parseFloat(value);
-	    return amount.toFixed();
-	};
-
-	Formatter.formatAmount = function (value) {
-	    if (!value || isNaN(value)) return value;
-	    var amount = parseFloat(value);
-	    return amount.toFixed(2);
-	};
-
-	module.exports = Formatter;
-
-/***/ }),
-/* 631 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var _Fetch = __webpack_require__(593);
-
-	var _Fetch2 = _interopRequireDefault(_Fetch);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	var Provider = {
-	    filteredItems: {}
-	};
-
-	Provider.loadPrograms = function (callback) {
-	    var parameters = {
-	        orderedBy: "name"
-	    };
-
-	    _Fetch2.default.get("program/", parameters, function (items) {
-	        if (callback) {
-	            callback(items);
-	        }
-	    });
-	};
-
-	Provider.loadPackages = function (callback) {
-	    var parameters = {
-	        orderedBy: "name"
-	    };
-
-	    _Fetch2.default.get("package/", parameters, function (items) {
-	        if (callback) {
-	            callback(items);
-	        }
-	    });
-	};
-
-	Provider.getStocks = function (input, callback) {
-	    var parameters = {
-	        filter: input,
-	        orderedBy: "name",
-	        pageSize: 10
-	    };
-
-	    _Fetch2.default.get("stock/", parameters, function (items) {
-	        Provider.filteredItems.stock = items;
-
-	        if (items) {
-	            var filteredStocks = items.map(function (item) {
-	                return { value: item.id, label: item.name };
-	            });
-	            callback(null, { options: filteredStocks, cache: false });
-	        }
-	    });
-	};
-
-	module.exports = Provider;
 
 /***/ }),
 /* 632 */
@@ -73492,8 +73953,6 @@
 	var _react = __webpack_require__(327);
 
 	var _react2 = _interopRequireDefault(_react);
-
-	var _reactRouter = __webpack_require__(510);
 
 	var _View = __webpack_require__(587);
 
@@ -73531,17 +73990,17 @@
 
 	var _Textarea2 = _interopRequireDefault(_Textarea);
 
-	var _Constants = __webpack_require__(591);
+	var _Constants = __webpack_require__(599);
 
-	var _Formatter = __webpack_require__(630);
+	var _Formatter = __webpack_require__(629);
 
 	var _Formatter2 = _interopRequireDefault(_Formatter);
 
-	var _Provider = __webpack_require__(631);
+	var _Provider = __webpack_require__(630);
 
 	var _Provider2 = _interopRequireDefault(_Provider);
 
-	var _Fetch = __webpack_require__(593);
+	var _Fetch = __webpack_require__(592);
 
 	var _Fetch2 = _interopRequireDefault(_Fetch);
 
@@ -73566,7 +74025,6 @@
 					_this.extraParameters = { type: "WALKIN" };
 
 					_this.state.enrollingProgram = false;
-					_this.state.enrollingPackage = false;
 					return _this;
 			}
 
@@ -73593,9 +74051,6 @@
 									availedPrograms: availedPrograms,
 									onEnrollProgram: function onEnrollProgram() {
 											return _this3.onEnrollProgram();
-									},
-									onEnrollPackage: function onEnrollPackage() {
-											return _this3.onEnrollPackage();
 									},
 									onFetch: this.onFetch });
 					}
@@ -73677,7 +74132,7 @@
 													_react2.default.createElement(_Dropdown2.default, { name: 'program', label: 'Program', value: program.id,
 															options: programOptions, onChange: this.onProgramChange.bind(this),
 															fieldClassName: 'eight' }),
-													_react2.default.createElement(_Input2.default, { name: 'programAvailment.date', label: 'Date', value: programAvailment.date,
+													_react2.default.createElement(_Input2.default, { name: 'programAvailment.startDate', label: 'Start Date', value: programAvailment.startDate,
 															onChange: _get(Members.prototype.__proto__ || Object.getPrototypeOf(Members.prototype), 'onChange', this).bind(this), placeholder: 'MM/dd/yyyy',
 															fieldClassName: 'eight' })
 											),
@@ -73749,7 +74204,7 @@
 
 							_get(Members.prototype.__proto__ || Object.getPrototypeOf(Members.prototype), 'onItemClick', this).call(this, index);
 
-							if (this.state.items) {
+							if (this.state.items && this.state.items.length) {
 									var item = this.state.items[index];
 									_Fetch2.default.get('program/availment/' + item.id, undefined, function (availedPrograms) {
 											_this7.setState({ availedPrograms: availedPrograms });
@@ -73762,15 +74217,19 @@
 							var _this8 = this;
 
 							var items = [];
+							var selectedIndex = this.state.selectedIndex;
+
+
 							if (this.state.items) {
 									items = this.state.items.map(function (item, index) {
 											var firstName = item.firstName,
 											    middleName = item.middleName,
 											    lastName = item.lastName;
 
+											var className = selectedIndex === index ? "selected" : undefined;
 											return _react2.default.createElement(
 													'li',
-													{ key: index, onClick: _this8.onItemClick.bind(_this8, index) },
+													{ key: index, onClick: _this8.onItemClick.bind(_this8, index), className: className },
 													firstName + ' ' + (middleName ? middleName + " " : "") + lastName
 											);
 									});
@@ -73844,39 +74303,70 @@
 					value: function getEnrollments() {
 							var _props = this.props,
 							    onEnrollProgram = _props.onEnrollProgram,
-							    onEnrollPackage = _props.onEnrollPackage,
 							    availedPrograms = _props.availedPrograms;
 
 
-							var addComponent = _react2.default.createElement(
-									_Button2.default,
-									{ className: 'ui green basic button', icon: 'rocket',
-											onClick: function onClick() {
-													return onEnrollProgram();
-											} },
-									'Avail Program'
-							);
-
-							var viewComponent = undefined;
+							var availedProgramsComponent = null;
 							if (availedPrograms && availedPrograms.length) {
-									viewComponent = _react2.default.createElement(
-											'div',
-											null,
-											_react2.default.createElement('br', null),
-											availedPrograms.map(function (item) {
-													return _react2.default.createElement(
-															'div',
-															{ key: item.id, className: 'ui label' },
-															item.availedProgram.name,
+									availedProgramsComponent = _react2.default.createElement(
+											'table',
+											{ className: 'ui green small table' },
+											_react2.default.createElement(
+													'thead',
+													null,
+													_react2.default.createElement(
+															'tr',
+															null,
 															_react2.default.createElement(
-																	'div',
-																	{ className: 'detail' },
-																	item.date
+																	'th',
+																	null,
+																	'Date'
+															),
+															_react2.default.createElement(
+																	'th',
+																	null,
+																	'Program'
+															),
+															_react2.default.createElement(
+																	'th',
+																	null,
+																	'Price'
 															)
-													);
-											})
+													)
+											),
+											_react2.default.createElement(
+													'tbody',
+													null,
+													availedPrograms.map(function (item) {
+															return _react2.default.createElement(
+																	'tr',
+																	{ key: item.id },
+																	_react2.default.createElement(
+																			'td',
+																			null,
+																			item.startDate
+																	),
+																	_react2.default.createElement(
+																			'td',
+																			null,
+																			item.availedProgram.name
+																	),
+																	_react2.default.createElement(
+																			'td',
+																			null,
+																			_Formatter2.default.formatAmount(item.price)
+																	)
+															);
+													})
+											)
 									);
 							}
+
+							var viewComponent = _react2.default.createElement(
+									'div',
+									null,
+									availedProgramsComponent
+							);
 
 							return _react2.default.createElement(
 									'div',
@@ -73887,12 +74377,21 @@
 									_react2.default.createElement(
 											'div',
 											{ className: 'ui horizontal divider' },
-											'Availed Programs'
+											'Enrolled Programs'
 									),
-									' ',
-									_react2.default.createElement('br', null),
-									addComponent,
-									' ',
+									_react2.default.createElement(
+											'div',
+											null,
+											_react2.default.createElement('br', null),
+											_react2.default.createElement(
+													_Button2.default,
+													{ className: 'ui green basic button', icon: 'rocket',
+															onClick: function onClick() {
+																	return onEnrollProgram();
+															} },
+													'Enroll to a Program'
+											)
+									),
 									_react2.default.createElement('br', null),
 									viewComponent
 							);
@@ -73967,7 +74466,8 @@
 											_react2.default.createElement(_Audit2.default, { value: value }),
 											_get(Member.prototype.__proto__ || Object.getPrototypeOf(Member.prototype), 'getActions', this).call(this)
 									),
-									showOtherPanels ? this.getEnrollments() : undefined
+									showOtherPanels ? this.getEnrollments() : undefined,
+									_react2.default.createElement('br', null)
 							);
 					}
 			}]);
@@ -74117,10 +74617,6 @@
 							    updateMode = _state.updateMode;
 
 
-							var coachPriceComponent = _react2.default.createElement(_Input2.default, { name: 'coachPrice', label: 'Coach Price',
-									value: value.coachPrice, disabled: !updateMode, onChange: _get(Program.prototype.__proto__ || Object.getPrototypeOf(Program.prototype), 'onChange', this).bind(this),
-									fieldClassName: 'eight' });
-
 							return _react2.default.createElement(
 									'div',
 									null,
@@ -74134,8 +74630,6 @@
 													onChange: _get(Program.prototype.__proto__ || Object.getPrototypeOf(Program.prototype), 'onChange', this).bind(this) }),
 											_react2.default.createElement(_Textarea2.default, { name: 'description', label: 'Description', value: value.description, disabled: !updateMode,
 													onChange: _get(Program.prototype.__proto__ || Object.getPrototypeOf(Program.prototype), 'onChange', this).bind(this) }),
-											_react2.default.createElement(_Checkbox2.default, { name: 'hasCoach', label: 'Coach allowed?', value: value.hasCoach, disabled: !updateMode,
-													onChange: _get(Program.prototype.__proto__ || Object.getPrototypeOf(Program.prototype), 'onChecked', this).bind(this) }),
 											_react2.default.createElement(
 													'div',
 													{ className: 'fields' },
@@ -74152,14 +74646,23 @@
 													_react2.default.createElement(_Input2.default, { name: 'monthlyPrice', label: 'Unlimited Price', value: value.monthlyPrice, disabled: !updateMode,
 															onChange: _get(Program.prototype.__proto__ || Object.getPrototypeOf(Program.prototype), 'onChange', this).bind(this),
 															fieldClassName: 'eight' }),
-													value.hasCoach ? coachPriceComponent : undefined
+													_react2.default.createElement(_Input2.default, { name: 'coachPrice', label: 'Coach Price',
+															value: value.coachPrice, disabled: !updateMode, onChange: _get(Program.prototype.__proto__ || Object.getPrototypeOf(Program.prototype), 'onChange', this).bind(this),
+															fieldClassName: 'eight' })
+											),
+											_react2.default.createElement(
+													'div',
+													{ className: 'fields' },
+													_react2.default.createElement(_Input2.default, { name: 'commission', label: 'Commission', value: value.commission, disabled: !updateMode,
+															onChange: _get(Program.prototype.__proto__ || Object.getPrototypeOf(Program.prototype), 'onChange', this).bind(this),
+															fieldClassName: 'eight' })
 											)
 									),
 									_react2.default.createElement(
 											'div',
 											null,
 											_react2.default.createElement(_Audit2.default, { value: value }),
-											_get(Program.prototype.__proto__ || Object.getPrototypeOf(Program.prototype), 'getActions', this).call(this)
+											_get(Program.prototype.__proto__ || Object.getPrototypeOf(Program.prototype), 'getAdminOnlyActions', this).call(this)
 									)
 							);
 					}
@@ -74212,9 +74715,10 @@
 	                fieldClassName = _props.fieldClassName;
 
 	            fieldClassName = fieldClassName ? fieldClassName + " wide field" : "field";
+	            value = value ? value : false;
 
-	            var checkboxClassName = "ui checkbox";
-	            var props = Object.assign({}, this.props, { type: "checkbox", checked: value });
+	            var checkboxClassName = "ui toggle checkbox";
+	            var props = Object.assign({}, this.props, { type: "checkbox", checked: value, value: value });
 	            delete props.label;
 	            delete props.fieldClassName;
 
@@ -74296,7 +74800,7 @@
 
 	var _Dropdown2 = _interopRequireDefault(_Dropdown);
 
-	var _Constants = __webpack_require__(591);
+	var _Constants = __webpack_require__(599);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -74432,6 +74936,9 @@
 													{ className: 'fields' },
 													_react2.default.createElement(_Input2.default, { name: 'price', label: 'Price', value: value.price, disabled: !updateMode,
 															onChange: _get(Package.prototype.__proto__ || Object.getPrototypeOf(Package.prototype), 'onChange', this).bind(this),
+															fieldClassName: 'eight' }),
+													_react2.default.createElement(_Input2.default, { name: 'commission', label: 'Commission', value: value.commission, disabled: !updateMode,
+															onChange: _get(Package.prototype.__proto__ || Object.getPrototypeOf(Package.prototype), 'onChange', this).bind(this),
 															fieldClassName: 'eight' })
 											)
 									),
@@ -74439,7 +74946,7 @@
 											'div',
 											null,
 											_react2.default.createElement(_Audit2.default, { value: value }),
-											_get(Package.prototype.__proto__ || Object.getPrototypeOf(Package.prototype), 'getActions', this).call(this)
+											_get(Package.prototype.__proto__ || Object.getPrototypeOf(Package.prototype), 'getAdminOnlyActions', this).call(this)
 									)
 							);
 					}
@@ -74457,12 +74964,12 @@
 	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
-			value: true
+	    value: true
 	});
 
-	var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
-
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
 	var _react = __webpack_require__(327);
 
@@ -74470,29 +74977,41 @@
 
 	var _reactRouter = __webpack_require__(510);
 
-	var _View = __webpack_require__(587);
+	var _View2 = __webpack_require__(587);
 
-	var _View2 = _interopRequireDefault(_View);
+	var _View3 = _interopRequireDefault(_View2);
 
-	var _ListView2 = __webpack_require__(605);
+	var _Fetch = __webpack_require__(592);
 
-	var _ListView3 = _interopRequireDefault(_ListView2);
+	var _Fetch2 = _interopRequireDefault(_Fetch);
 
-	var _DetailView2 = __webpack_require__(606);
+	var _Alert = __webpack_require__(600);
 
-	var _DetailView3 = _interopRequireDefault(_DetailView2);
+	var _Alert2 = _interopRequireDefault(_Alert);
+
+	var _Formatter = __webpack_require__(629);
+
+	var _Formatter2 = _interopRequireDefault(_Formatter);
+
+	var _Provider = __webpack_require__(630);
+
+	var _Provider2 = _interopRequireDefault(_Provider);
 
 	var _Input = __webpack_require__(602);
 
 	var _Input2 = _interopRequireDefault(_Input);
 
-	var _Audit = __webpack_require__(607);
+	var _Button = __webpack_require__(603);
 
-	var _Audit2 = _interopRequireDefault(_Audit);
+	var _Button2 = _interopRequireDefault(_Button);
 
 	var _Header = __webpack_require__(608);
 
 	var _Header2 = _interopRequireDefault(_Header);
+
+	var _Dropdown = __webpack_require__(627);
+
+	var _Dropdown2 = _interopRequireDefault(_Dropdown);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -74502,111 +75021,281 @@
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var Units = function (_ListView) {
-			_inherits(Units, _ListView);
+	var ENTER_KEY_CODE = 13;
+	var ESCAPE_KEY_CODE = 27;
 
-			function Units(props) {
-					_classCallCheck(this, Units);
+	var TimeEntries = function (_View) {
+	    _inherits(TimeEntries, _View);
 
-					var _this = _possibleConstructorReturn(this, (Units.__proto__ || Object.getPrototypeOf(Units)).call(this, props));
+	    function TimeEntries(props) {
+	        _classCallCheck(this, TimeEntries);
 
-					_this.endpoint = "unit/";
-					return _this;
-			}
+	        var _this = _possibleConstructorReturn(this, (TimeEntries.__proto__ || Object.getPrototypeOf(TimeEntries)).call(this, props));
 
-			_createClass(Units, [{
-					key: 'render',
-					value: function render() {
-							var items = [];
-							var selectedItem = this.state.selectedItem;
+	        _this.state.isAdding = false;
+	        return _this;
+	    }
 
-							if (this.state.items) {
-									items = this.state.items.map(this.renderItem.bind(this));
-							}
+	    _createClass(TimeEntries, [{
+	        key: 'onAdd',
+	        value: function onAdd() {
+	            this.setState({ isAdding: true });
+	        }
+	    }, {
+	        key: 'onCancelAdd',
+	        value: function onCancelAdd() {
+	            this.setState({ isAdding: false, accessCardNoUsed: undefined });
+	        }
+	    }, {
+	        key: 'componentDidMount',
+	        value: function componentDidMount() {
+	            this.onFetch();
+	        }
+	    }, {
+	        key: 'onFetch',
+	        value: function onFetch(filterParameters) {
+	            var _this2 = this;
 
-							return _react2.default.createElement(
-									'div',
-									null,
-									_react2.default.createElement(_Header2.default, { location: this.props.location }),
-									_react2.default.createElement(
-											'div',
-											{ className: 'ui grid' },
-											_react2.default.createElement(
-													'div',
-													{ className: 'five wide column ui form' },
-													_react2.default.createElement(_Input2.default, { label: 'Search', value: this.state.filter, name: 'filter',
-															onChange: this.onFilter.bind(this), placeholder: 'Type here to search' }),
-													_react2.default.createElement('div', { className: 'ui divider' }),
-													_react2.default.createElement(
-															'div',
-															{ className: 'files' },
-															_react2.default.createElement(
-																	'ul',
-																	{ className: 'ui list' },
-																	items
-															)
-													)
-											),
-											_react2.default.createElement(
-													'div',
-													{ className: 'eleven wide column' },
-													_react2.default.createElement(Unit, { value: selectedItem, onFetch: this.onFetch })
-											)
-									)
-							);
-					}
-			}]);
+	            var defaultParameters = {
+	                pageSize: 100,
+	                pageOffset: 0
+	            };
 
-			return Units;
-	}(_ListView3.default);
+	            var parameters = Object.assign({}, defaultParameters, filterParameters);
 
-	var Unit = function (_DetailView) {
-			_inherits(Unit, _DetailView);
+	            _Fetch2.default.get("timeentry/", parameters, function (items) {
+	                _this2.setState({ items: items });
+	            });
+	        }
+	    }, {
+	        key: 'onKeyDown',
+	        value: function onKeyDown(e) {
+	            if (e.keyCode === ENTER_KEY_CODE) {
+	                this.onSubmitTimeEntry();
+	            } else if (e.keyCode === ESCAPE_KEY_CODE) {
+	                this.onCancelAdd();
+	            }
+	        }
+	    }, {
+	        key: 'onSubmitTimeEntry',
+	        value: function onSubmitTimeEntry() {
+	            var _this3 = this;
 
-			function Unit(props) {
-					_classCallCheck(this, Unit);
+	            var accessCardNoUsed = this.state.accessCardNoUsed;
 
-					var _this2 = _possibleConstructorReturn(this, (Unit.__proto__ || Object.getPrototypeOf(Unit)).call(this, props));
+	            var timeEntryData = { accessCardNoUsed: accessCardNoUsed };
 
-					_this2.endpoint = "unit/";
-					return _this2;
-			}
+	            _Fetch2.default.post("timeentry/", timeEntryData, function (response) {
+	                _this3.onFetch();
+	            });
 
-			_createClass(Unit, [{
-					key: 'render',
-					value: function render() {
-							var _this3 = this;
+	            this.onCancelAdd();
+	        }
+	    }, {
+	        key: 'getAddComponent',
+	        value: function getAddComponent() {
+	            var _this4 = this;
 
-							var value = this.state.value;
+	            var accessCardNoUsed = this.state.accessCardNoUsed;
 
-							return _react2.default.createElement(
-									'div',
-									null,
-									_react2.default.createElement(
-											'div',
-											{ className: 'ui form' },
-											_react2.default.createElement(_Input2.default, { ref: function ref(input) {
-															_this3.initialInput = input;
-													}, autoFocus: 'true', label: 'Name',
-													name: 'name', value: this.state.value.name, disabled: !this.state.updateMode,
-													onChange: _get(Unit.prototype.__proto__ || Object.getPrototypeOf(Unit.prototype), 'onChange', this).bind(this) }),
-											_react2.default.createElement(_Input2.default, { name: 'pluralName', label: 'Plural Name', value: this.state.value.pluralName, disabled: !this.state.updateMode,
-													onChange: _get(Unit.prototype.__proto__ || Object.getPrototypeOf(Unit.prototype), 'onChange', this).bind(this) })
-									),
-									_react2.default.createElement(
-											'div',
-											null,
-											_react2.default.createElement(_Audit2.default, { value: value }),
-											_get(Unit.prototype.__proto__ || Object.getPrototypeOf(Unit.prototype), 'getActions', this).call(this)
-									)
-							);
-					}
-			}]);
+	            return _react2.default.createElement(
+	                'div',
+	                { className: 'basic-overlay' },
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'ui label clickable close', onClick: function onClick() {
+	                            return _this4.onCancelAdd();
+	                        } },
+	                    'Close'
+	                ),
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'content' },
+	                    _react2.default.createElement('img', { src: 'resources/images/icon_scan.png', className: 'ui image' }),
+	                    _react2.default.createElement(
+	                        'div',
+	                        { className: 'ui form' },
+	                        _react2.default.createElement(_Input2.default, { ref: function ref(input) {
+	                                _this4.initialInput = input;
+	                            }, autoFocus: 'true',
+	                            name: 'accessCardNoUsed', label: 'Access Card No.',
+	                            value: accessCardNoUsed, onChange: _get(TimeEntries.prototype.__proto__ || Object.getPrototypeOf(TimeEntries.prototype), 'onChange', this).bind(this),
+	                            onKeyDown: function onKeyDown(e) {
+	                                return _this4.onKeyDown(e);
+	                            } }),
+	                        _react2.default.createElement(
+	                            'div',
+	                            { className: 'ui blue label' },
+	                            _react2.default.createElement('i', { className: 'barcode icon' }),
+	                            ' Scan access card using RFID reader or manually type and then press enter'
+	                        )
+	                    )
+	                )
+	            );
+	        }
+	    }, {
+	        key: 'onCoachAssignedChange',
+	        value: function onCoachAssignedChange(rowIndex, selected) {
+	            var _this5 = this;
 
-			return Unit;
-	}(_DetailView3.default);
+	            var items = this.state.items;
 
-	exports.default = Units;
+
+	            var coaches = _Provider2.default.filteredItems.coaches;
+	            var coach = coaches.find(function (coach) {
+	                return coach.id == selected.value;
+	            });
+
+	            items[rowIndex].coachAssigned = coach;
+
+	            _Fetch2.default.patch("timeentry/", items[rowIndex], function (response) {
+	                _this5.setState({ items: items });
+	            });
+	        }
+	    }, {
+	        key: 'render',
+	        value: function render() {
+	            var _this6 = this;
+
+	            var _state = this.state,
+	                isAdding = _state.isAdding,
+	                items = _state.items;
+
+
+	            var getMember = function getMember(item) {
+	                var _item$member = item.member,
+	                    firstName = _item$member.firstName,
+	                    middleName = _item$member.middleName,
+	                    lastName = _item$member.lastName;
+
+	                return firstName + ' ' + (middleName ? middleName + " " : "") + lastName;
+	            };
+
+	            var getCoachedAssigned = function getCoachedAssigned(item) {
+	                if (item.coachAssigned) {
+	                    var _item$coachAssigned = item.coachAssigned,
+	                        firstName = _item$coachAssigned.firstName,
+	                        middleName = _item$coachAssigned.middleName,
+	                        lastName = _item$coachAssigned.lastName;
+
+	                    return firstName + ' ' + (middleName ? middleName + " " : "") + lastName;
+	                }
+	                return "-";
+	            };
+
+	            var getAvailedProduct = function getAvailedProduct(item) {
+	                if (item.programAvailment) {
+	                    return item.programAvailment.availedProgram.name + ' (Program)';
+	                } else if (item.packageAvailment) {
+	                    return item.packageAvailment.availedPackage.name + ' (Package)';
+	                }
+	            };
+
+	            var renderRow = function renderRow(item, index) {
+	                return _react2.default.createElement(
+	                    'tr',
+	                    { key: item.id },
+	                    _react2.default.createElement(
+	                        'td',
+	                        null,
+	                        item.date
+	                    ),
+	                    _react2.default.createElement(
+	                        'td',
+	                        null,
+	                        getMember(item)
+	                    ),
+	                    _react2.default.createElement(
+	                        'td',
+	                        null,
+	                        getAvailedProduct(item)
+	                    ),
+	                    _react2.default.createElement(
+	                        'td',
+	                        null,
+	                        _react2.default.createElement(_Dropdown2.default, { value: item.coachAssigned ? item.coachAssigned.id : null,
+	                            onChange: function onChange(selected) {
+	                                return _this6.onCoachAssignedChange(index, selected);
+	                            },
+	                            loadOptions: _Provider2.default.getCoaches })
+	                    ),
+	                    _react2.default.createElement(
+	                        'td',
+	                        null,
+	                        _Formatter2.default.formatAmount(item.commission)
+	                    )
+	                );
+	            };
+
+	            var itemsComponent = null;
+	            if (items && items.length) {
+	                itemsComponent = _react2.default.createElement(
+	                    'table',
+	                    { className: 'ui orange small table' },
+	                    _react2.default.createElement(
+	                        'thead',
+	                        null,
+	                        _react2.default.createElement(
+	                            'tr',
+	                            null,
+	                            _react2.default.createElement(
+	                                'th',
+	                                null,
+	                                'Date'
+	                            ),
+	                            _react2.default.createElement(
+	                                'th',
+	                                null,
+	                                'Member'
+	                            ),
+	                            _react2.default.createElement(
+	                                'th',
+	                                null,
+	                                'Availed Program/Package'
+	                            ),
+	                            _react2.default.createElement(
+	                                'th',
+	                                { width: '200' },
+	                                'Coach'
+	                            ),
+	                            _react2.default.createElement(
+	                                'th',
+	                                null,
+	                                'Commission'
+	                            )
+	                        )
+	                    ),
+	                    _react2.default.createElement(
+	                        'tbody',
+	                        null,
+	                        items.map(renderRow)
+	                    )
+	                );
+	            }
+
+	            return _react2.default.createElement(
+	                'div',
+	                { className: 'time-entry' },
+	                _react2.default.createElement(_Header2.default, { location: this.props.location }),
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'ui orange label clickable', onClick: function onClick() {
+	                            return _this6.onAdd();
+	                        } },
+	                    _react2.default.createElement('i', { className: 'plus icon' }),
+	                    ' Add Time Entry'
+	                ),
+	                itemsComponent,
+	                isAdding ? this.getAddComponent() : undefined,
+	                _react2.default.createElement('br', null)
+	            );
+	        }
+	    }]);
+
+	    return TimeEntries;
+	}(_View3.default);
+
+	exports.default = TimeEntries;
 
 /***/ }),
 /* 637 */
@@ -74660,7 +75349,11 @@
 
 	var _Textarea2 = _interopRequireDefault(_Textarea);
 
-	var _Constants = __webpack_require__(591);
+	var _Checkbox = __webpack_require__(634);
+
+	var _Checkbox2 = _interopRequireDefault(_Checkbox);
+
+	var _Constants = __webpack_require__(599);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -74689,7 +75382,10 @@
 							var _this2 = this;
 
 							var items = [];
-							var selectedItem = this.state.selectedItem;
+							var _state = this.state,
+							    selectedItem = _state.selectedItem,
+							    selectedIndex = _state.selectedIndex;
+
 
 							if (this.state.items) {
 									items = this.state.items.map(function (item, index) {
@@ -74697,9 +75393,10 @@
 											    middleName = item.middleName,
 											    lastName = item.lastName;
 
+											var className = selectedIndex === index ? "selected" : undefined;
 											return _react2.default.createElement(
 													'li',
-													{ key: index, onClick: _this2.onItemClick.bind(_this2, index) },
+													{ key: index, onClick: _this2.onItemClick.bind(_this2, index), className: className },
 													firstName + ' ' + (middleName ? middleName + " " : "") + lastName
 											);
 									});
@@ -74772,19 +75469,20 @@
 					value: function render() {
 							var _this4 = this;
 
-							var _state = this.state,
-							    value = _state.value,
-							    updateMode = _state.updateMode;
+							var _state2 = this.state,
+							    value = _state2.value,
+							    updateMode = _state2.updateMode;
 
 
+							var passwordConfirmationValue = updateMode ? value.passwordConfirmation : value.password;
 							var passwordComponent = _react2.default.createElement(
 									'div',
 									{ className: 'fields' },
 									_react2.default.createElement(_Input2.default, { name: 'password', label: 'Password', type: 'password', value: value.password,
-											onChange: _get(User.prototype.__proto__ || Object.getPrototypeOf(User.prototype), 'onChange', this).bind(this),
+											onChange: _get(User.prototype.__proto__ || Object.getPrototypeOf(User.prototype), 'onChange', this).bind(this), disabled: !updateMode,
 											fieldClassName: 'eight' }),
 									_react2.default.createElement(_Input2.default, { name: 'passwordConfirmation', label: 'Password Confirmation', type: 'password',
-											value: value.passwordConfirmation, onChange: _get(User.prototype.__proto__ || Object.getPrototypeOf(User.prototype), 'onChange', this).bind(this),
+											value: passwordConfirmationValue, onChange: _get(User.prototype.__proto__ || Object.getPrototypeOf(User.prototype), 'onChange', this).bind(this), disabled: !updateMode,
 											fieldClassName: 'eight' })
 							);
 
@@ -74797,14 +75495,17 @@
 											_react2.default.createElement(
 													'div',
 													{ className: 'fields' },
-													_react2.default.createElement(_Input2.default, { name: 'userName', label: 'Username', value: value.userName, disabled: !updateMode,
+													_react2.default.createElement(_Input2.default, { ref: function ref(input) {
+																	_this4.initialInput = input;
+															}, autoFocus: 'true',
+															name: 'userName', label: 'Username', value: value.userName, disabled: !updateMode,
 															onChange: _get(User.prototype.__proto__ || Object.getPrototypeOf(User.prototype), 'onChange', this).bind(this),
 															fieldClassName: 'eight' }),
 													_react2.default.createElement(_Dropdown2.default, { name: 'type', label: 'Type', value: value.type, disabled: !updateMode,
 															options: _Constants.USER_TYPES, onChange: this.onTypeChange.bind(this),
 															fieldClassName: 'eight' })
 											),
-											updateMode === "CREATE" ? passwordComponent : undefined,
+											passwordComponent,
 											_react2.default.createElement(
 													'div',
 													{ className: 'ui horizontal divider' },
@@ -74813,10 +75514,7 @@
 											_react2.default.createElement(
 													'div',
 													{ className: 'three fields' },
-													_react2.default.createElement(_Input2.default, { ref: function ref(input) {
-																	_this4.initialInput = input;
-															}, autoFocus: 'true',
-															name: 'firstName', label: 'First Name', value: value.firstName, disabled: !updateMode,
+													_react2.default.createElement(_Input2.default, { name: 'firstName', label: 'First Name', value: value.firstName, disabled: !updateMode,
 															onChange: _get(User.prototype.__proto__ || Object.getPrototypeOf(User.prototype), 'onChange', this).bind(this) }),
 													_react2.default.createElement(_Input2.default, { name: 'middleName', label: 'Middle Name', value: value.middleName, disabled: !updateMode,
 															onChange: _get(User.prototype.__proto__ || Object.getPrototypeOf(User.prototype), 'onChange', this).bind(this) }),
@@ -74848,7 +75546,13 @@
 													{ className: 'fields' },
 													_react2.default.createElement(_Textarea2.default, { name: 'address', label: 'Address', value: value.address, disabled: !updateMode,
 															onChange: _get(User.prototype.__proto__ || Object.getPrototypeOf(User.prototype), 'onChange', this).bind(this),
-															fieldClassName: 'eleven' })
+															fieldClassName: 'eleven' }),
+													_react2.default.createElement(
+															'div',
+															{ className: 'five wide field padtop' },
+															_react2.default.createElement(_Checkbox2.default, { name: 'active', label: 'Active', value: value.active, disabled: !updateMode,
+																	onChange: _get(User.prototype.__proto__ || Object.getPrototypeOf(User.prototype), 'onChecked', this).bind(this) })
+													)
 											)
 									),
 									_react2.default.createElement(
@@ -75085,6 +75789,8 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
+	var _reactRouter = __webpack_require__(510);
+
 	var _chart = __webpack_require__(640);
 
 	var _chart2 = _interopRequireDefault(_chart);
@@ -75097,6 +75803,10 @@
 
 	var _Button2 = _interopRequireDefault(_Button);
 
+	var _Fetch = __webpack_require__(592);
+
+	var _Fetch2 = _interopRequireDefault(_Fetch);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -75108,15 +75818,102 @@
 	var Home = function (_View) {
 			_inherits(Home, _View);
 
-			function Home() {
+			function Home(props) {
 					_classCallCheck(this, Home);
 
-					return _possibleConstructorReturn(this, (Home.__proto__ || Object.getPrototypeOf(Home)).apply(this, arguments));
+					var _this = _possibleConstructorReturn(this, (Home.__proto__ || Object.getPrototypeOf(Home)).call(this, props));
+
+					var placeholderValue = "...";
+					_this.state.mostPurchasedProgram = placeholderValue;
+					_this.state.mostPurchasedPackage = placeholderValue;
+					return _this;
 			}
 
 			_createClass(Home, [{
+					key: 'fetchProgramPurchaseSummaryData',
+					value: function fetchProgramPurchaseSummaryData() {
+							var _this2 = this;
+
+							_Fetch2.default.get("report/program/summary/", undefined, function (items) {
+									if (items && items.length) {
+											_this2.setState({
+													mostPurchasedProgram: items[0].program.name,
+													programPurchaseSummaries: items
+											});
+									}
+							});
+					}
+			}, {
+					key: 'fetchPackagePurchaseSummaryData',
+					value: function fetchPackagePurchaseSummaryData() {
+							var _this3 = this;
+
+							_Fetch2.default.get("report/package/summary/", undefined, function (items) {
+									if (items && items.length) {
+											_this3.setState({
+													mostPurchasedPackage: items[0].pkg.name,
+													packagePurchaseSummaries: items
+											});
+									}
+							});
+					}
+			}, {
+					key: 'fetchEnrolleesCounts',
+					value: function fetchEnrolleesCounts() {
+							var _this4 = this;
+
+							_Fetch2.default.get("member/count/", undefined, function (count) {
+									_this4.setState({ membersCount: count });
+									_this4.updateEnrolleesChart();
+							});
+
+							_Fetch2.default.get("member/count/", { type: "WALKIN" }, function (count) {
+									console.warn("walkins count", count);
+									_this4.setState({ walkinsCount: count });
+									_this4.updateEnrolleesChart();
+							});
+					}
+			}, {
+					key: 'updateEnrolleesChart',
+					value: function updateEnrolleesChart() {
+							var _state = this.state,
+							    membersCount = _state.membersCount,
+							    walkinsCount = _state.walkinsCount;
+
+							if (membersCount !== undefined && walkinsCount !== undefined) {
+									var enrolleesChartContext = document.getElementById("enrolleesChart");
+									var enrolleesChart = new _chart2.default(enrolleesChartContext, {
+											type: 'bar',
+											data: {
+													labels: ["Walk-Ins", "Memberships"],
+													datasets: [{
+															label: '# of Enrollees',
+															data: [walkinsCount || 0, membersCount || 0],
+															backgroundColor: ['rgba(255, 206, 86, 0.2)', 'rgba(75, 192, 192, 0.2)'],
+															borderColor: ['rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)'],
+															borderWidth: 1
+													}]
+											},
+											options: {
+													responsive: false,
+													legend: { display: false }
+											}
+									});
+							}
+					}
+			}, {
 					key: 'componentDidMount',
 					value: function componentDidMount() {
+							this.reprocessDashboardItems();
+					}
+			}, {
+					key: 'reprocessDashboardItems',
+					value: function reprocessDashboardItems() {
+							this.fetchEnrolleesCounts();
+
+							this.fetchProgramPurchaseSummaryData();
+							this.fetchPackagePurchaseSummaryData();
+
 							var salesChartContext = document.getElementById("salesChart");
 							var salesChart = new _chart2.default(salesChartContext, {
 									type: 'bar',
@@ -75127,25 +75924,6 @@
 													data: [13, 11, 29, 8],
 													backgroundColor: ['rgba(255, 99, 132, 0.2)', 'rgba(54, 162, 235, 0.2)', 'rgba(255, 206, 86, 0.2)', 'rgba(75, 192, 192, 0.2)'],
 													borderColor: ['rgba(255,99,132,1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)'],
-													borderWidth: 1
-											}]
-									},
-									options: {
-											responsive: false,
-											legend: { display: false }
-									}
-							});
-
-							var enrolleesChartContext = document.getElementById("enrolleesChart");
-							var enrolleesChart = new _chart2.default(enrolleesChartContext, {
-									type: 'bar',
-									data: {
-											labels: ["Walk-Ins", "Memberships"],
-											datasets: [{
-													label: '# of Votes',
-													data: [21, 13],
-													backgroundColor: ['rgba(255, 206, 86, 0.2)', 'rgba(75, 192, 192, 0.2)'],
-													borderColor: ['rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)'],
 													borderWidth: 1
 											}]
 									},
@@ -75175,8 +75953,14 @@
 							});
 					}
 			}, {
-					key: 'render',
-					value: function render() {
+					key: 'getDashboard',
+					value: function getDashboard() {
+							var _this5 = this;
+
+							var _state2 = this.state,
+							    mostPurchasedProgram = _state2.mostPurchasedProgram,
+							    mostPurchasedPackage = _state2.mostPurchasedPackage;
+
 							return _react2.default.createElement(
 									'div',
 									{ className: 'home' },
@@ -75206,7 +75990,7 @@
 																			'a',
 																			{ className: 'ui label' },
 																			_react2.default.createElement('i', { className: 'eye icon' }),
-																			'View All'
+																			' Work in Progress'
 																	)
 															)
 													)
@@ -75231,10 +76015,16 @@
 																			_react2.default.createElement('canvas', { id: 'enrolleesChart' })
 																	),
 																	_react2.default.createElement(
-																			'a',
-																			{ className: 'ui label' },
+																			_reactRouter.Link,
+																			{ className: 'ui label', to: '/walkins' },
 																			_react2.default.createElement('i', { className: 'eye icon' }),
-																			'View All'
+																			' Walk-Ins'
+																	),
+																	_react2.default.createElement(
+																			_reactRouter.Link,
+																			{ className: 'ui label', to: '/members' },
+																			_react2.default.createElement('i', { className: 'eye icon' }),
+																			' Memberships'
 																	)
 															)
 													)
@@ -75262,7 +76052,7 @@
 																			'a',
 																			{ className: 'ui label' },
 																			_react2.default.createElement('i', { className: 'eye icon' }),
-																			'View All'
+																			' Work in Progress'
 																	)
 															)
 													)
@@ -75288,8 +76078,16 @@
 																					'h4',
 																					{ className: 'ui center aligned icon header' },
 																					_react2.default.createElement('img', { src: "resources/images/icon_programs.png", className: 'ui circular image' }),
-																					'Muay Thai'
+																					mostPurchasedProgram
 																			)
+																	),
+																	_react2.default.createElement(
+																			'a',
+																			{ className: 'ui label', onClick: function onClick() {
+																							return _this5.onViewProgramPurchases();
+																					} },
+																			_react2.default.createElement('i', { className: 'eye icon' }),
+																			' View All'
 																	)
 															)
 													)
@@ -75315,13 +76113,272 @@
 																					'h4',
 																					{ className: 'ui center aligned icon header' },
 																					_react2.default.createElement('img', { src: "resources/images/icon_packages.png", className: 'ui circular image' }),
-																					'Boxing'
+																					mostPurchasedPackage
 																			)
+																	),
+																	_react2.default.createElement(
+																			'a',
+																			{ className: 'ui label', onClick: function onClick() {
+																							return _this5.onViewPackagePurchases();
+																					} },
+																			_react2.default.createElement('i', { className: 'eye icon' }),
+																			' View All'
 																	)
 															)
 													)
 											)
 									)
+							);
+					}
+			}, {
+					key: 'onViewDashboard',
+					value: function onViewDashboard() {
+							var _this6 = this;
+
+							this.setState({ currentPage: null }, function () {
+									return _this6.reprocessDashboardItems();
+							});
+					}
+			}, {
+					key: 'onViewProgramPurchases',
+					value: function onViewProgramPurchases() {
+							this.setState({ currentPage: "view.program.purchases" });
+					}
+			}, {
+					key: 'onViewPackagePurchases',
+					value: function onViewPackagePurchases() {
+							this.setState({ currentPage: "view.package.purchases" });
+					}
+			}, {
+					key: 'getBackToDashboardComponent',
+					value: function getBackToDashboardComponent() {
+							var _this7 = this;
+
+							return _react2.default.createElement(
+									'div',
+									{ className: 'ui label clickable padbot back-to-dashboard', onClick: function onClick() {
+													return _this7.onViewDashboard();
+											} },
+									_react2.default.createElement('i', { className: 'angle left icon' }),
+									' Back'
+							);
+					}
+			}, {
+					key: 'getProgramPurchasesComponent',
+					value: function getProgramPurchasesComponent() {
+							var programPurchaseSummaries = this.state.programPurchaseSummaries;
+
+
+							var renderRow = function renderRow(item, index) {
+									return _react2.default.createElement(
+											'tr',
+											{ key: item.id },
+											_react2.default.createElement(
+													'td',
+													null,
+													item.program.name
+											),
+											_react2.default.createElement(
+													'td',
+													null,
+													item.count
+											)
+									);
+							};
+
+							var component = _react2.default.createElement(
+									'div',
+									null,
+									_react2.default.createElement(
+											'h4',
+											null,
+											'No program purchases yet.'
+									)
+							);
+
+							if (programPurchaseSummaries && programPurchaseSummaries.length) {
+									var totalCount = 0;
+									programPurchaseSummaries.forEach(function (item) {
+											if (item.count) {
+													totalCount += item.count;
+											}
+									});
+
+									component = _react2.default.createElement(
+											'div',
+											null,
+											_react2.default.createElement(
+													'h4',
+													null,
+													'Program Purchases'
+											),
+											_react2.default.createElement(
+													'table',
+													{ className: 'ui green small table' },
+													_react2.default.createElement(
+															'thead',
+															null,
+															_react2.default.createElement(
+																	'tr',
+																	null,
+																	_react2.default.createElement(
+																			'th',
+																			null,
+																			'Program'
+																	),
+																	_react2.default.createElement(
+																			'th',
+																			null,
+																			'Count'
+																	)
+															)
+													),
+													_react2.default.createElement(
+															'tbody',
+															null,
+															programPurchaseSummaries.map(renderRow)
+													),
+													_react2.default.createElement(
+															'tfoot',
+															{ className: 'full-width footer-total' },
+															_react2.default.createElement(
+																	'tr',
+																	null,
+																	_react2.default.createElement(
+																			'th',
+																			{ colSpan: '2' },
+																			_react2.default.createElement(
+																					'div',
+																					{ className: 'ui blue basic label' },
+																					_react2.default.createElement('i', { className: 'check icon' }),
+																					' Total Purchases: ',
+																					totalCount
+																			)
+																	)
+															)
+													)
+											)
+									);
+							}
+							return component;
+					}
+			}, {
+					key: 'getPackagePurchasesComponent',
+					value: function getPackagePurchasesComponent() {
+							var packagePurchaseSummaries = this.state.packagePurchaseSummaries;
+
+
+							var renderRow = function renderRow(item, index) {
+									return _react2.default.createElement(
+											'tr',
+											{ key: item.id },
+											_react2.default.createElement(
+													'td',
+													null,
+													item.pkg.name
+											),
+											_react2.default.createElement(
+													'td',
+													null,
+													item.count
+											)
+									);
+							};
+
+							var component = _react2.default.createElement(
+									'div',
+									null,
+									_react2.default.createElement(
+											'h4',
+											null,
+											'No package purchases yet.'
+									)
+							);
+
+							if (packagePurchaseSummaries && packagePurchaseSummaries.length) {
+									var totalCount = 0;
+									packagePurchaseSummaries.forEach(function (item) {
+											if (item.count) {
+													totalCount += item.count;
+											}
+									});
+
+									component = _react2.default.createElement(
+											'div',
+											null,
+											_react2.default.createElement(
+													'h4',
+													null,
+													'Package Purchases'
+											),
+											_react2.default.createElement(
+													'table',
+													{ className: 'ui green small table' },
+													_react2.default.createElement(
+															'thead',
+															null,
+															_react2.default.createElement(
+																	'tr',
+																	null,
+																	_react2.default.createElement(
+																			'th',
+																			null,
+																			'Package'
+																	),
+																	_react2.default.createElement(
+																			'th',
+																			null,
+																			'Count'
+																	)
+															)
+													),
+													_react2.default.createElement(
+															'tbody',
+															null,
+															packagePurchaseSummaries.map(renderRow)
+													),
+													_react2.default.createElement(
+															'tfoot',
+															{ className: 'full-width footer-total' },
+															_react2.default.createElement(
+																	'tr',
+																	null,
+																	_react2.default.createElement(
+																			'th',
+																			{ colSpan: '2' },
+																			_react2.default.createElement(
+																					'div',
+																					{ className: 'ui blue basic label' },
+																					_react2.default.createElement('i', { className: 'check icon' }),
+																					' Total Purchases: ',
+																					totalCount
+																			)
+																	)
+															)
+													)
+											)
+									);
+							}
+							return component;
+					}
+			}, {
+					key: 'render',
+					value: function render() {
+							var component = this.getDashboard();
+							switch (this.state.currentPage) {
+									case "view.program.purchases":
+											component = this.getProgramPurchasesComponent();
+											break;
+									case "view.package.purchases":
+											component = this.getPackagePurchasesComponent();
+											break;
+							}
+
+							return _react2.default.createElement(
+									'div',
+									null,
+									this.state.currentPage ? this.getBackToDashboardComponent() : undefined,
+									component
 							);
 					}
 			}]);
@@ -106573,7 +107630,7 @@
 
 	var _View3 = _interopRequireDefault(_View2);
 
-	var _Fetch = __webpack_require__(593);
+	var _Fetch = __webpack_require__(592);
 
 	var _Fetch2 = _interopRequireDefault(_Fetch);
 

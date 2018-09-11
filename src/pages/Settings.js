@@ -54,10 +54,6 @@ class Config extends DetailView {
         this.endpoint = "config/";
     }
 
-		getActions() {
-
-    }
-
 		render() {
 				let { value, updateMode } = this.state;
 
@@ -80,8 +76,6 @@ class Config extends DetailView {
 
 						<div>
 								<Audit value={value} />
-								{this.getActions()}
-
 								<div className="actions">
 				            {updateMode ? editingActions : viewingActions}
 				        </div>

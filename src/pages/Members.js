@@ -43,6 +43,9 @@ class Members extends ListView {
 				let { selectedItem, membership, availedPrograms, availedPackages, coaches } = this.state;
 				return <Member value={selectedItem} membership={membership} coaches={coaches}
 						availedPrograms={availedPrograms} availedPackages={availedPackages}
+						loadProgramAvailments={() => this.loadProgramAvailments()}
+						loadPackageAvailments={() => this.loadPackageAvailments()}
+						loadMemberships={() => this.loadMemberships()}
 						onEnrollProgram={() => this.onEnrollProgram()}
 						onEnrollPackage={() => this.onEnrollPackage()}
 						onAddAccessCard={() => this.onAddAccessCard()}
@@ -296,21 +299,33 @@ class Members extends ListView {
 		onItemClick(index) {
         super.onItemClick(index);
 
-				if (this.state.items) {
+				if (this.state.items && this.state.items.length) {
 						let item = this.state.items[index];
-
-						Fetch.get(`membership/member/${item.id}`, undefined, (membership) => {
-								this.setState({ membership });
-						});
-
-						Fetch.get(`program/availment/${item.id}`, undefined, (availedPrograms) => {
-								this.setState({ availedPrograms })
-						});
-
-						Fetch.get(`package/availment/${item.id}`, undefined, (availedPackages) => {
-								this.setState({ availedPackages })
-						});
+						this.loadMemberships(item.id);
+						this.loadProgramAvailments(item.id);
+						this.loadPackageAvailments(item.id);
 				}
+		}
+
+		loadMemberships(memberId) {
+				memberId = memberId || this.state.selectedItem.id;
+				Fetch.get(`membership/member/${memberId}`, undefined, (membership) => {
+						this.setState({ membership });
+				});
+		}
+
+		loadProgramAvailments(memberId) {
+				memberId = memberId || this.state.selectedItem.id;
+				Fetch.get(`program/availment/${memberId}/all`, undefined, (availedPrograms) => {
+						this.setState({ availedPrograms });
+				});
+		}
+
+		loadPackageAvailments(memberId) {
+				memberId = memberId || this.state.selectedItem.id;
+				Fetch.get(`package/availment/${memberId}/all`, undefined, (availedPackages) => {
+						this.setState({ availedPackages });
+				});
 		}
 
 		render() {
@@ -391,8 +406,44 @@ class Member extends DetailView {
 				return undefined;
 		}
 
+		onDeleteConfirm(deletePath, id, postAction) {
+				Fetch.delete(deletePath, id, postAction);
+		}
+
 		getEnrollments() {
-				const { onEnrollProgram, onEnrollPackage, availedPrograms, availedPackages } = this.props;
+				const { onEnrollProgram, onEnrollPackage, availedPrograms, availedPackages,
+				 		loadProgramAvailments, loadPackageAvailments } = this.props;
+
+				const getDeleteAction = (deletePath, id, postDeleteAction) => {
+						return <div className="ui label" onClick={() => this.onDeleteConfirm(deletePath, id, postDeleteAction)}
+								data-inverted="" data-tooltip="Delete" data-position="bottom left">
+								<i className="trash icon icon-only" />
+						</div>
+				};
+
+				const renderAvailedProgramRow = (item) => {
+						const deleteAction = getDeleteAction("program/availment/", item.id, loadProgramAvailments);
+						return <tr key={item.id}>
+								<td>{item.startDate}</td>
+								<td>{item.availedProgram.name}</td>
+								<td>{getAvailmentTypeLabel(item.type)}</td>
+								<td>{Formatter.formatAmount(item.price)}</td>
+								<td	className="tbl-actions">{deleteAction}</td>
+						</tr>;
+				};
+
+				const renderAvailedPackageRow = (item) => {
+						const deleteAction = getDeleteAction("package/availment/", item.id, loadPackageAvailments);
+						return <tr key={item.id}>
+								<td>{item.startDate}</td>
+								<td>{item.endDate}</td>
+								<td>{item.availedPackage.name}</td>
+								<td>{item.sessionsCount}</td>
+								<td>{item.sessionsRemaining}</td>
+								<td>{Formatter.formatAmount(item.price)}</td>
+								<td	className="tbl-actions">{deleteAction}</td>
+						</tr>;
+				};
 
 				let availedProgramsComponent = null;
 				if (availedPrograms && availedPrograms.length) {
@@ -403,21 +454,18 @@ class Member extends DetailView {
 												<th>Program</th>
 												<th>Availment Type</th>
 												<th>Price</th>
+												<th></th>
 										</tr>
 								</thead>
 								<tbody>
-										{availedPrograms.map(item => <tr key={item.id}>
-												<td>{item.startDate}</td>
-												<td>{item.availedProgram.name}</td>
-												<td>{getAvailmentTypeLabel(item.type)}</td>
-												<td>{Formatter.formatAmount(item.price)}</td>
-										</tr>)}
+										{availedPrograms.map(renderAvailedProgramRow)}
 								</tbody>
 						</table>;
 				}
 
 				let availedPackagesComponent = null;
 				if (availedPackages && availedPackages.length) {
+						const memberId = this.state.value.id;
 						availedPackagesComponent = <table className="ui blue small table">
 								<thead>
 										<tr>
@@ -427,17 +475,11 @@ class Member extends DetailView {
 												<th>No. of Sessions</th>
 												<th>Remaining Sessions</th>
 												<th>Price</th>
+												<th></th>
 										</tr>
 								</thead>
 								<tbody>
-										{availedPackages.map(item => <tr key={item.id}>
-												<td>{item.startDate}</td>
-												<td>{item.endDate}</td>
-												<td>{item.availedPackage.name}</td>
-												<td>{item.sessionsCount}</td>
-												<td>{item.sessionsRemaining}</td>
-												<td>{Formatter.formatAmount(item.price)}</td>
-										</tr>)}
+										{availedPackages.map(renderAvailedPackageRow)}
 								</tbody>
 						</table>;
 				}

@@ -102,6 +102,14 @@
     padding: 0;
 }
 
+.ui.table td.tbl-actions {
+    text-align: right;
+}
+
+.ui.table td.tbl-actions .ui.label {
+    cursor: pointer;
+}
+
 .ui.icon.buttons .button, .ui.icon.button {
     padding: 0.25rem;
 }
@@ -136,6 +144,10 @@ button.ui.button {
 .ui.label > .detail,
 [data-tooltip]:after {
     font-size: inherit;
+}
+
+.ui.label > .icon.icon-only {
+    margin: 0;
 }
 
 .padtop .ui.checkbox {

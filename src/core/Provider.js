@@ -40,6 +40,18 @@ Provider.loadCoaches = function(callback) {
     });
 };
 
+Provider.loadMembers = function(callback) {
+    let parameters = {
+        orderedBy: "firstName"
+    };
+
+    Fetch.get("member/", parameters, (items) => {
+        if (callback) {
+            callback(items);
+        }
+    });
+};
+
 Provider.getCoaches = (input, callback) => {
     let parameters = {
         filter: input,

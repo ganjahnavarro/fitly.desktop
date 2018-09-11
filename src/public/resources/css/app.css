@@ -229,6 +229,10 @@ span.transaction-placeholder {
     right: 1rem;
 }
 
+.time-entry .ui.table {
+    margin-top: 0;
+}
+
 .padbot,
 .ui.label.padbot {
     margin-bottom: 1rem;

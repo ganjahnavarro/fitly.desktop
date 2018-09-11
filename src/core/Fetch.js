@@ -47,7 +47,7 @@ Fetch.delete = function(resource, id, successCallback, errorCallback) {
     });
 
     fetch(url, headers)
-        .then((response) => successCallback())
+        .then((response) => handleResponse(successCallback, errorCallback, response))
         .catch((error) => handleError(errorCallback, error));
 }
 
