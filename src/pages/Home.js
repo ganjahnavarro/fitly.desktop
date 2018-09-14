@@ -5,6 +5,7 @@ import Chart from 'chart.js';
 import View from './abstract/View'
 import Button from '../components/Button'
 
+import Formatter from '../core/Formatter'
 import Fetch from '../core/Fetch'
 
 class Home extends View {
@@ -52,45 +53,94 @@ class Home extends View {
 				});
 		}
 
+		fetchSalesReports() {
+				Fetch.get("report/sales", null, (salesReports) => {
+						this.setState({ salesReports });
+						this.updateSalesReportChart();
+				});
+		}
+
 		updateEnrolleesChart() {
 				const { membersCount, walkinsCount } = this.state;
 				if (membersCount !== undefined && walkinsCount !== undefined) {
-						const enrolleesChartContext = document.getElementById("enrolleesChart");
-						const enrolleesChart = new Chart(enrolleesChartContext, {
-								type: 'bar',
-								data: {
-										labels: ["Walk-Ins", "Memberships"],
-										datasets: [{
-												label: '# of Enrollees',
-												data: [
-														walkinsCount || 0,
-														membersCount || 0
-												],
-												backgroundColor: [
-														'rgba(255, 206, 86, 0.2)',
-														'rgba(75, 192, 192, 0.2)'
-												],
-												borderColor: [
-														'rgba(255, 206, 86, 1)',
-														'rgba(75, 192, 192, 1)'
-												],
-												borderWidth: 1
-										}]
-								},
-								options: {
-										responsive: false,
-										legend: { display: false }
-								}
+						this.createBarChart({
+								id: "enrolleesChart",
+								title: "Enrollees",
+								labels: ["Walk-Ins", "Memberships"],
+								values: [
+										walkinsCount || 0,
+										membersCount || 0
+								],
 						});
 				}
 		}
 
-		componentDidMount() {
-				// this.reprocessDashboardItems();
+		updateSalesReportChart() {
+				const { salesReports } = this.state;
 
-				Fetch.get("report/sales", null, (salesReports) => {
-						console.warn("salesReports", salesReports);
+				let totals = new Map();
+				totals.set("Memberships", 0);
+				totals.set("Program Availments", 0);
+				totals.set("Package Availments", 0);
+				totals.set("Commissions", 0);
+
+				if (salesReports && salesReports.length) {
+						salesReports.forEach(item => {
+								const amount = item.amount + totals.get(item.description);
+								totals.set(item.description, amount);
+						});
+
+						this.createBarChart({
+								id: "salesChart",
+								title: "Sales",
+								labels: Array.from(totals.keys()),
+								values: Array.from(totals.values())
+						});
+				}
+		}
+
+		createBarChart({ id, title, labels, values }) {
+				const context = document.getElementById(id);
+
+				const backgroundColors = [];
+				const borderColors = [];
+
+				labels.forEach(() => {
+						var r = Math.floor(Math.random() * 255);
+						var g = Math.floor(Math.random() * 255);
+						var b = Math.floor(Math.random() * 255);
+						backgroundColors.push(`rgba(${r}, ${g}, ${b}, 0.2)`);
+						borderColors.push(`rgba(${r}, ${g}, ${b}, 1)`);
 				});
+
+				new Chart(context, {
+						type: 'bar',
+						data: {
+								labels,
+								datasets: [{
+										label: title,
+										data: values,
+										backgroundColor: backgroundColors,
+										borderColor: borderColors,
+										borderWidth: 1
+								}]
+						},
+						options: {
+								responsive: false,
+								legend: { display: false },
+								scales: {
+										yAxes: [{
+												ticks: {
+														beginAtZero: true
+												}
+										}]
+								}
+						}
+				});
+		}
+
+		componentDidMount() {
+				this.reprocessDashboardItems();
 		}
 
 		reprocessDashboardItems() {
@@ -98,35 +148,7 @@ class Home extends View {
 
 				this.fetchProgramPurchaseSummaryData();
 				this.fetchPackagePurchaseSummaryData();
-
-				const salesChartContext = document.getElementById("salesChart");
-				const salesChart = new Chart(salesChartContext, {
-						type: 'bar',
-						data: {
-								labels: ["Boxing", "Muay Thai", "Gym", "BJJ"],
-								datasets: [{
-										label: '# of Votes',
-										data: [13, 11, 29, 8],
-										backgroundColor: [
-												'rgba(255, 99, 132, 0.2)',
-												'rgba(54, 162, 235, 0.2)',
-												'rgba(255, 206, 86, 0.2)',
-												'rgba(75, 192, 192, 0.2)'
-										],
-										borderColor: [
-												'rgba(255,99,132,1)',
-												'rgba(54, 162, 235, 1)',
-												'rgba(255, 206, 86, 1)',
-												'rgba(75, 192, 192, 1)'
-										],
-										borderWidth: 1
-								}]
-						},
-						options: {
-								responsive: false,
-								legend: { display: false }
-						}
-				});
+				this.fetchSalesReports();
 
 				const traineesContext = document.getElementById("traineesChart");
 				const traineesChart = new Chart(traineesContext, {
@@ -158,30 +180,46 @@ class Home extends View {
 				});
 		}
 
+		createMostPurchasedCard({ title, value, icon, onClick }) {
+				return <div className="ui fluid card">
+						<div className="content">
+								<span className="ui basic green label">{title}</span>
+								<div className="description">
+										<h4 className="ui center aligned icon header">
+												<img src={`resources/images/${icon}.png`} className="ui circular image" />{value}
+										</h4>
+								</div>
+								<a className="ui label"	onClick={onClick}>
+										<i className="eye icon"></i> View All
+								</a>
+						</div>
+				</div>;
+		}
+
 		getDashboard() {
 				const { mostPurchasedProgram, mostPurchasedPackage } = this.state;
 				return <div className="home">
-						<div className="ui three column grid">
-								<div className="column">
+						<div className="ui grid">
+								<div className="ten wide column">
 										<div className="ui fluid card">
 												<div className="content">
-														<a className="ui basic green label">Sales Report</a>
-														<div className="description chart-container">
-																<canvas id="salesChart" />
+														<span className="ui basic green label">Sales Report</span>
+														<div className="description">
+																<canvas id="salesChart" width="630" height="150" />
 														</div>
-														<a className="ui label">
-																<i className="eye icon"></i> Work in Progress
+														<a className="ui label"	onClick={() => this.onViewSalesReports()}>
+																<i className="eye icon"></i> View All
 														</a>
 												</div>
 										</div>
 								</div>
 
-								<div className="column">
+								<div className="six wide column">
 										<div className="ui fluid card">
 												<div className="content">
-														<a className="ui basic green label">Enrollees</a>
-														<div className="description chart-container">
-																<canvas id="enrolleesChart" />
+														<span className="ui basic green label">Enrollees</span>
+														<div className="description">
+																<canvas id="enrolleesChart" width="350" height="150" />
 														</div>
 														<Link className="ui label" to="/walkins">
 																<i className="eye icon"></i> Walk-Ins
@@ -192,11 +230,13 @@ class Home extends View {
 												</div>
 										</div>
 								</div>
+						</div>
 
+						<div className="ui three column grid">
 								<div className="column">
 										<div className="ui fluid card">
 												<div className="content">
-														<a className="ui basic green label">Trainees per Coach</a>
+														<span className="ui basic green label">Trainees per Coach</span>
 														<div className="description chart-container">
 																<canvas id="traineesChart" />
 														</div>
@@ -208,37 +248,21 @@ class Home extends View {
 								</div>
 
 								<div className="column">
-										<div className="ui fluid card">
-												<div className="content">
-														<a className="ui basic green label">Most purchased Program</a>
-														<div className="description">
-																<h4 className="ui center aligned icon header">
-																		<img src={"resources/images/icon_programs.png"} className="ui circular image" />
-																		{mostPurchasedProgram}
-																</h4>
-														</div>
-														<a className="ui label"	onClick={() => this.onViewProgramPurchases()}>
-																<i className="eye icon"></i> View All
-														</a>
-												</div>
-										</div>
+										{this.createMostPurchasedCard({
+												onClick: () => this.onViewProgramPurchases(),
+												title: "Most purchased Program",
+												value: mostPurchasedProgram,
+												icon: "icon_programs"
+										})}
 								</div>
 
 								<div className="column">
-										<div className="ui fluid card">
-												<div className="content">
-														<a className="ui basic green label">Most purchased Package</a>
-														<div className="description">
-																<h4 className="ui center aligned icon header">
-																		<img src={"resources/images/icon_packages.png"} className="ui circular image" />
-																		{mostPurchasedPackage}
-																</h4>
-														</div>
-														<a className="ui label"	onClick={() => this.onViewPackagePurchases()}>
-																<i className="eye icon"></i> View All
-														</a>
-												</div>
-										</div>
+										{this.createMostPurchasedCard({
+												onClick: () => this.onViewPackagePurchases(),
+												title: "Most purchased Package",
+												value: mostPurchasedPackage,
+												icon: "icon_packages"
+										})}
 								</div>
 						</div>
 				</div>;
@@ -246,6 +270,10 @@ class Home extends View {
 
 		onViewDashboard() {
 				this.setState({ currentPage: null }, () => this.reprocessDashboardItems());
+		}
+
+		onViewSalesReports() {
+				this.setState({ currentPage: "view.sales.reports" });
 		}
 
 		onViewProgramPurchases() {
@@ -260,6 +288,62 @@ class Home extends View {
 				return <div className="ui label clickable padbot back-to-dashboard" onClick={() => this.onViewDashboard()}>
 						<i className="angle left icon"></i> Back
 				</div>;
+		}
+
+		getSalesReportsComponent() {
+				const { salesReports } = this.state;
+
+				const renderRow = (item, index) => {
+						return <tr key={item.id}>
+								<td>{item.date}</td>
+								<td>{item.person}</td>
+								<td>{item.description}</td>
+								<td className="right aligned">{Formatter.formatAmount(item.amount)}</td>
+						</tr>;
+				};
+
+				let component = <div>
+						<h4>No data to show.</h4>
+				</div>;
+
+				if (salesReports && salesReports.length) {
+						let totalAmount = 0;
+						salesReports.forEach(item => {
+								totalAmount += (item.description === "Commissions" ? -item.amount : item.amount);
+						});
+
+						component = <div>
+								<h4>Program Purchases</h4>
+								<div className="ui grid">
+										<div className="twelve wide column">
+												<table className="ui green small table ">
+														<thead>
+																<tr>
+																		<th>Date</th>
+																		<th>Name</th>
+																		<th>Type</th>
+																		<th>Amount</th>
+																</tr>
+														</thead>
+														<tbody>
+																{salesReports.map(renderRow)}
+														</tbody>
+
+														<tfoot className="full-width footer-total">
+																<tr>
+																		<th colSpan="4">
+																				<div className="ui blue basic label">
+																						<i className="check icon"></i> Total Sales: {Formatter.formatAmount(totalAmount)}
+																				</div>
+																		</th>
+																</tr>
+														</tfoot>
+												</table>
+										</div>
+								</div>
+						</div>;
+				}
+				return component;
 		}
 
 		getProgramPurchasesComponent() {
@@ -286,27 +370,31 @@ class Home extends View {
 
 						component = <div>
 								<h4>Program Purchases</h4>
-								<table className="ui green small table">
-										<thead>
-												<tr>
-														<th>Program</th>
-														<th>Count</th>
-												</tr>
-										</thead>
-										<tbody>
-												{programPurchaseSummaries.map(renderRow)}
-										</tbody>
+								<div className="ui grid">
+										<div className="eight wide column">
+												<table className="ui green small table ">
+														<thead>
+																<tr>
+																		<th>Program</th>
+																		<th>Count</th>
+																</tr>
+														</thead>
+														<tbody>
+																{programPurchaseSummaries.map(renderRow)}
+														</tbody>
 
-										<tfoot className="full-width footer-total">
-												<tr>
-														<th colSpan="2">
-																<div className="ui blue basic label">
-																		<i className="check icon"></i> Total Purchases: {totalCount}
-																</div>
-														</th>
-												</tr>
-										</tfoot>
-								</table>
+														<tfoot className="full-width footer-total">
+																<tr>
+																		<th colSpan="2">
+																				<div className="ui blue basic label">
+																						<i className="check icon"></i> Total Purchases: {totalCount}
+																				</div>
+																		</th>
+																</tr>
+														</tfoot>
+												</table>
+										</div>
+								</div>
 						</div>;
 				}
 				return component;
@@ -336,27 +424,31 @@ class Home extends View {
 
 						component = <div>
 								<h4>Package Purchases</h4>
-								<table className="ui green small table">
-										<thead>
-												<tr>
-														<th>Package</th>
-														<th>Count</th>
-												</tr>
-										</thead>
-										<tbody>
-													{packagePurchaseSummaries.map(renderRow)}
-										</tbody>
+								<div className="ui grid">
+										<div className="eight wide column">
+												<table className="ui green small table">
+														<thead>
+																<tr>
+																		<th>Package</th>
+																		<th>Count</th>
+																</tr>
+														</thead>
+														<tbody>
+																	{packagePurchaseSummaries.map(renderRow)}
+														</tbody>
 
-										<tfoot className="full-width footer-total">
-												<tr>
-														<th colSpan="2">
-																<div className="ui blue basic label">
-																		<i className="check icon"></i> Total Purchases: {totalCount}
-																</div>
-														</th>
-												</tr>
-										</tfoot>
-								</table>
+														<tfoot className="full-width footer-total">
+																<tr>
+																		<th colSpan="2">
+																				<div className="ui blue basic label">
+																						<i className="check icon"></i> Total Purchases: {totalCount}
+																				</div>
+																		</th>
+																</tr>
+														</tfoot>
+												</table>
+										</div>
+								</div>
 						</div>;
 				}
 				return component;
@@ -365,6 +457,9 @@ class Home extends View {
 		render() {
 				let component = this.getDashboard();
 				switch (this.state.currentPage) {
+						case "view.sales.reports":
+								component = this.getSalesReportsComponent();
+								break;
 						case "view.program.purchases":
 								component = this.getProgramPurchasesComponent();
 								break;
