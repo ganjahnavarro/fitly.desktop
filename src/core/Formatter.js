@@ -16,13 +16,13 @@ Formatter.formatDate = (value) => {
 };
 
 Formatter.formatNumber = (value) => {
-    if (!value || isNaN(value)) return value;
+    if (value === null || isNaN(value)) return value;
     let amount = parseFloat(value);
     return amount.toFixed();
 };
 
 Formatter.formatAmount = (value) => {
-    if (!value || isNaN(value)) return value;
+    if (value === null || isNaN(value)) return value;
     let amount = parseFloat(value);
     return amount.toFixed(2);
 };

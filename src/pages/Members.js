@@ -18,6 +18,9 @@ import Formatter from '../core/Formatter'
 import Provider from '../core/Provider'
 import Fetch from '../core/Fetch'
 
+const MENU_PERSONAL = "Personal";
+const MENU_ENROLLMENTS = "Packages/Programs";
+const MENU_MEMBERSHIP = "Membership";
 
 class Members extends ListView {
 
@@ -42,15 +45,15 @@ class Members extends ListView {
 		}
 
 		getInformationPage() {
-				let { selectedItem, membership, availedPrograms, availedPackages, coaches } = this.state;
-				return <Member value={selectedItem} membership={membership} coaches={coaches}
+				let { selectedItem, memberships, availedPrograms, availedPackages, coaches } = this.state;
+				return <Member value={selectedItem} memberships={memberships} coaches={coaches}
 						availedPrograms={availedPrograms} availedPackages={availedPackages}
 						loadProgramAvailments={() => this.loadProgramAvailments()}
 						loadPackageAvailments={() => this.loadPackageAvailments()}
 						loadMemberships={() => this.loadMemberships()}
 						onEnrollProgram={() => this.onEnrollProgram()}
 						onEnrollPackage={() => this.onEnrollPackage()}
-						onAddAccessCard={() => this.onAddAccessCard()}
+						onAddAccessCard={(membership) => this.onAddAccessCard(membership)}
 						onFetch={this.onFetch} />;
 		}
 
@@ -259,8 +262,7 @@ class Members extends ListView {
 				});
 		}
 
-		onAddAccessCard() {
-				const membership = this.state.membership;
+		onAddAccessCard(membership) {
 				membership.accessCardNo = undefined;
 				this.setState({ membership, addingAccessCard: true });
 		}
@@ -311,8 +313,9 @@ class Members extends ListView {
 
 		loadMemberships(memberId) {
 				memberId = memberId || this.state.selectedItem.id;
-				Fetch.get(`membership/member/${memberId}`, undefined, (membership) => {
-						this.setState({ membership });
+				Fetch.get(`membership/member/${memberId}`, undefined, (memberships) => {
+						console.warn("memberships", memberships);
+						this.setState({ memberships });
 				});
 		}
 
@@ -384,28 +387,91 @@ class Member extends DetailView {
 		    this.setState(nextState);
 		}
 
-		getMembership() {
-				const { onAddAccessCard, membership } = this.props;
+		getMenu() {
+				const menus = [MENU_PERSONAL, MENU_ENROLLMENTS, MENU_MEMBERSHIP];
 
-				if (membership) {
-						const renderMembershipInfo = (label, value, icon) => <div className="ui basic orange label"
-								data-variation="mini" data-inverted="" data-tooltip={label} data-position="bottom left">
-								<i className={`${icon} icon`}></i> {value}
-						</div>;
+				let { selectedMenu } = this.state;
+				selectedMenu = selectedMenu || menus[0];
 
-						const viewAccessCardComponent = renderMembershipInfo("Access Card No.", membership.accessCardNo, "barcode");
-						const addAccessCardComponent = <div className="ui orange label clickable" onClick={() => onAddAccessCard()}>
+				const onSelectMenu = (selectedMenu) => this.setState({ selectedMenu });
+
+				const renderItem = (item) => {
+						const className = `${item === selectedMenu ? "active " : ""}item`;
+						return <a key={item} className={className} onClick={() => onSelectMenu(item)}>
+								{item}
+						</a>
+				};
+
+				return <div className="ui tabular mini menu">
+						{menus.map(renderItem)}
+				</div>;
+		}
+
+		onPromoChange(rowIndex, selected) {
+        const { memberships } = this.props;
+
+        const promos = Provider.filteredItems.promos;
+        const promo = promos.find((promo) => promo.id == selected.value);
+
+        memberships[rowIndex].promo = promo;
+
+        Fetch.patch("membership/", memberships[rowIndex], (membership) => {
+						memberships[rowIndex] = membership;
+            this.setState({ memberships });
+        });
+		}
+
+		getMemberships() {
+				const { onEnrollProgram, memberships, onAddAccessCard, loadMemberships } = this.props;
+				const renderRow = (item, index) => {
+						const addAccessCardComponent = <div className="ui orange label clickable" onClick={() => onAddAccessCard(item)}>
 								<i className="plus icon"></i> Add Access Card
 						</div>;
 
-						return <div className="membership">
-								{renderMembershipInfo("Member Since", membership.startDate, "calendar")}
-								{renderMembershipInfo("Membership Expiry", membership.endDate, "ban")}
-								{membership.accessCardNo ? viewAccessCardComponent : addAccessCardComponent}
-								<div className="clearfix" /> <br />
-						</div>;
+						/*
+						<td	className="tbl-actions">
+								<DeleteAction id={item.id} path="membership/" postAction={loadMemberships} />
+						</td>
+						*/
+
+						return <tr key={item.id}>
+								<td>{item.startDate}</td>
+								<td>{item.endDate}</td>
+								<td>{item.accessCardNo || addAccessCardComponent}</td>
+								<td>
+                    <Dropdown value={item.promo ? item.promo.id : null}
+                        onChange={(selected) => this.onPromoChange(index, selected)}
+                        loadOptions={Provider.getPromos} />
+                </td>
+								<td>{Formatter.formatAmount(item.discountedAmount)}</td>
+						</tr>;
+				};
+
+				let membershipsComponent = null;
+				if (memberships && memberships.length) {
+						membershipsComponent = <table className="ui orange small table">
+								<thead>
+										<tr>
+												<th>Start Date</th>
+												<th>End Date</th>
+												<th>Access Card</th>
+												<th width="180">Promo Code</th>
+												<th>Amount</th>
+										</tr>
+								</thead>
+								<tbody>
+										{memberships.map(renderRow)}
+								</tbody>
+						</table>;
 				}
-				return undefined;
+
+				/*
+				<Button className="ui orange basic button" icon="user plus"
+						onClick={() => onEnrollProgram()}>
+						Add Membership
+				</Button>
+				*/
+				return membershipsComponent;
 		}
 
 		getEnrollments() {
@@ -477,17 +543,8 @@ class Member extends DetailView {
 						</table>;
 				}
 
-				let viewComponent = <div>
-						{availedProgramsComponent}
-						{availedPackagesComponent}
-				</div>;
-
 				return <div>
-						<div className="clearfix" /> <br />
-						<div className="ui horizontal divider">Enrolled Program/Packages</div>
-
 						<div>
-								<br />
 								<Button className="ui green basic button" icon="rocket"
 										onClick={() => onEnrollProgram()}>
 										Enroll to a Program
@@ -499,7 +556,10 @@ class Member extends DetailView {
 						</div>
 						<br />
 
-						{viewComponent}
+						<div>
+								{availedProgramsComponent}
+								{availedPackagesComponent}
+						</div>
 				</div>;
 		}
 
@@ -514,9 +574,8 @@ class Member extends DetailView {
 		    this.setState({ value });
 		}
 
-		render() {
+		getPersonalInformation() {
 				const { value, updateMode } = this.state;
-				const showOtherPanels = !updateMode && value && value.id;
 
 				let { coaches } = this.props;
 				let coachOptions = [];
@@ -530,9 +589,7 @@ class Member extends DetailView {
 						});
 				}
 
-		    return <div>
-						{showOtherPanels ? this.getMembership() : undefined}
-
+				return <div>
 						<div className="ui form">
 								<div className="three fields">
 										<Input ref={(input) => {this.initialInput = input}} autoFocus="true"
@@ -589,8 +646,26 @@ class Member extends DetailView {
 								<Audit value={value} />
 								{super.getActions()}
 						</div>
+				</div>;
+		}
 
-						{showOtherPanels  ? this.getEnrollments() : undefined}
+		render() {
+				const { value, updateMode, selectedMenu } = this.state;
+				const showOtherPanels = !updateMode && value && value.id;
+
+				// {this.getPersonalInformation()}
+				// {showOtherPanels  ? this.getEnrollments() : undefined}
+
+				let component = this.getPersonalInformation();
+				if (selectedMenu === MENU_ENROLLMENTS) {
+						component = this.getEnrollments();
+				} else if (selectedMenu === MENU_MEMBERSHIP) {
+						component = this.getMemberships();
+				}
+
+		    return <div>
+						{showOtherPanels ? this.getMenu() : undefined}
+						{component}
 						<br />
 				</div>
 		}

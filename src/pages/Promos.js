@@ -72,8 +72,8 @@ class Promo extends DetailView {
                         onChange={super.onChange.bind(this)}
                         fieldClassName="eight" />
 
-										<Input name="lessAmount" label="Less Amount"
-												value={value.lessAmount} disabled={!updateMode} onChange={super.onChange.bind(this)}
+										<Input name="discountAmount" label="Discount Amount"
+												value={value.discountAmount} disabled={!updateMode} onChange={super.onChange.bind(this)}
 												fieldClassName="eight" />
 								</div>
 

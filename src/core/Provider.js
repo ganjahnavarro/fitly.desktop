@@ -75,4 +75,26 @@ Provider.getCoaches = (input, callback) => {
     });
 };
 
+Provider.getPromos = (input, callback) => {
+    let parameters = {
+        filter: input,
+        orderedBy: "code",
+        pageSize: 10
+    };
+
+    Fetch.get("promo/", parameters, (items) => {
+        Provider.filteredItems.promos = items;
+
+        if (items && items.length) {
+            const nullValue = { value: null, label: '-' };
+            let filteredPromos = [nullValue];
+
+            items.map((item) => {
+                filteredPromos.push({ value: item.id, label: item.code });
+            });
+            callback(null, { options: filteredPromos, cache: false });
+        }
+    });
+};
+
 module.exports = Provider;
