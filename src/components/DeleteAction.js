@@ -25,7 +25,7 @@ class DeleteAction extends React.Component {
 
     render() {
         const { confirming } = this.state;
-        const tooltip = confirming ? "Click again to confirm delete" : "Delete?";
+        const tooltip = confirming ? "Click again to confirm." : "Delete?";
 
         return <div className="ui label"
             onClick={() => this.onDelete()} onMouseLeave={() => this.onCancelDelete()}

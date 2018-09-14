@@ -163,7 +163,7 @@ span.transaction-placeholder {
 .app .ui.header > .image:not(.icon),
 .app .ui.header > img {
     margin-top: 0.25rem;
-    width: 2rem;
+    width: 1.8rem;
 }
 
 .login {

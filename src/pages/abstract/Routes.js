@@ -12,6 +12,7 @@ import Packages from '../Packages'
 import TimeEntries from '../TimeEntries'
 import Users from '../Users'
 import Settings from '../Settings'
+import Promos from '../Promos'
 import Home from '../Home'
 import Todo from '../Todo'
 
@@ -42,6 +43,7 @@ module.exports = (
 
         <Route path="/programs" component={Programs} onEnter={requireAuth} />
         <Route path="/packages" component={Packages} onEnter={requireAuth} />
+        <Route path="/promos" component={Promos} onEnter={requireAuth} />
 
         <Route path="/settings" component={Settings} onEnter={requireAuth} />
     </Route>

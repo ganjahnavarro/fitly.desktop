@@ -17,6 +17,7 @@ export const DASHBOARD_ITEMS = [
     { to: "/coaches", label: "Coaches", icon: "icon_coaches" },
     { to: "/programs", label: "Programs", icon: "icon_programs" },
     { to: "/packages", label: "Packages", icon: "icon_packages" },
+    { to: "/promos", label: "Promos", icon: "icon_promos" },
     { to: "/users", label: "Users", icon: "icon_users", forAdminOnly: true },
     { to: "/settings", label: "Settings", icon: "icon_settings" },
     { to: "/logout", label: "Logout", icon: "icon_logout" }
