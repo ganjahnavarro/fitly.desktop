@@ -12,6 +12,8 @@ import Button from '../components/Button'
 import Header from '../components/Header'
 import Dropdown from '../components/Dropdown'
 
+import DeleteAction from '../components/DeleteAction'
+
 const ENTER_KEY_CODE = 13;
 const ESCAPE_KEY_CODE = 27;
 
@@ -23,15 +25,15 @@ class TimeEntries extends View {
     }
 
     onAdd() {
-        this.setState({ isAdding: true, isManualAdd: false });
+        this.setState({ isAdding: true, isManualAdd: false, value: {} });
     }
 
     onAddManually() {
-        this.setState({ isAdding: true, isManualAdd: true });
+        this.setState({ isAdding: true, isManualAdd: true, value: {} });
     }
 
     onCancelAdd() {
-        this.setState({ isAdding: false, accessCardNoUsed: undefined });
+        this.setState({ isAdding: false, accessCardNoUsed: undefined, value: {} });
     }
 
     componentDidMount() {
@@ -157,17 +159,26 @@ class TimeEntries extends View {
             </div>
         </div>;
 
+        let commission = null;
         let productComponent = <Input label="Program/Package" disabled={true} fieldClassName="eight" />;
         if (selectedProductType === "PROGRAM") {
             productComponent = <Dropdown name="program" label="Availed Programs" value={programAvailment.id}
                 options={programAvailmentOptions} disabled={programAvailmentOptions.length <= 1}
                 onChange={this.onProgramAvailmentChange.bind(this)}
                 fieldClassName="eight" />;
+
+            if (programAvailment.availedProgram) {
+                commission = programAvailment.availedProgram.commission;
+            }
         } else if (selectedProductType === "PACKAGE") {
             productComponent = <Dropdown name="package" label="Availed Packages" value={packageAvailment.id}
                 options={packageAvailmentOptions} disabled={packageAvailmentOptions.length <= 1}
                 onChange={this.onPackageAvailmentChange.bind(this)}
                 fieldClassName="eight" />;
+
+            if (packageAvailment.availedPackage) {
+                commission = packageAvailment.availedPackage.commission;
+            }
         }
 
         return <div>
@@ -194,7 +205,7 @@ class TimeEntries extends View {
                 </div>
 
                 <div className="fields">
-                    <Input name="commission" label="Commission" value={Formatter.formatAmount(value.commission)}
+                    <Input name="commission" label="Commission" value={Formatter.formatAmount(commission)}
                         disabled={true} fieldClassName="eight" />
                 </div>
 						</div>
@@ -301,7 +312,6 @@ class TimeEntries extends View {
 		}
 
     onSaveManualTimeEntry() {
-        console.warn("Save: ", this.state.value);
         Fetch.post("timeentry/manually", this.state.value, () => {
 						this.onFetch();
             this.onCancelAdd();
@@ -345,6 +355,7 @@ class TimeEntries extends View {
             }
         };
 
+        const loadTimeEntries = () => this.onFetch();
         const renderRow = (item, index) => {
             return <tr key={item.id}>
                 <td>{item.date}</td>
@@ -356,6 +367,9 @@ class TimeEntries extends View {
                         loadOptions={Provider.getCoaches} />
                 </td>
                 <td>{Formatter.formatAmount(item.commission)}</td>
+                <td	className="tbl-actions">
+                    <DeleteAction id={item.id} path="timeentry/" postAction={loadTimeEntries} />
+                </td>
             </tr>;
         };
 
@@ -369,6 +383,7 @@ class TimeEntries extends View {
 												<th>Availed Program/Package</th>
 												<th width="200">Coach</th>
 												<th>Commission</th>
+												<th></th>
 										</tr>
 								</thead>
 								<tbody>

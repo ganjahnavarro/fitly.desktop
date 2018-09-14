@@ -11,6 +11,8 @@ import Button from '../components/Button'
 import Dropdown from '../components/Dropdown'
 import Textarea from '../components/Textarea'
 
+import DeleteAction from '../components/DeleteAction'
+
 import { GENDERS, MEMBER_AVAILMENT_TYPES, getAvailmentTypeLabel } from '../core/Constants'
 import Formatter from '../core/Formatter'
 import Provider from '../core/Provider'
@@ -406,34 +408,23 @@ class Member extends DetailView {
 				return undefined;
 		}
 
-		onDeleteConfirm(deletePath, id, postAction) {
-				Fetch.delete(deletePath, id, postAction);
-		}
-
 		getEnrollments() {
 				const { onEnrollProgram, onEnrollPackage, availedPrograms, availedPackages,
 				 		loadProgramAvailments, loadPackageAvailments } = this.props;
 
-				const getDeleteAction = (deletePath, id, postDeleteAction) => {
-						return <div className="ui label" onClick={() => this.onDeleteConfirm(deletePath, id, postDeleteAction)}
-								data-inverted="" data-tooltip="Delete" data-position="bottom left">
-								<i className="trash icon icon-only" />
-						</div>
-				};
-
 				const renderAvailedProgramRow = (item) => {
-						const deleteAction = getDeleteAction("program/availment/", item.id, loadProgramAvailments);
 						return <tr key={item.id}>
 								<td>{item.startDate}</td>
 								<td>{item.availedProgram.name}</td>
 								<td>{getAvailmentTypeLabel(item.type)}</td>
 								<td>{Formatter.formatAmount(item.price)}</td>
-								<td	className="tbl-actions">{deleteAction}</td>
+								<td	className="tbl-actions">
+										<DeleteAction id={item.id} path="program/availment/" postAction={loadProgramAvailments} />
+								</td>
 						</tr>;
 				};
 
 				const renderAvailedPackageRow = (item) => {
-						const deleteAction = getDeleteAction("package/availment/", item.id, loadPackageAvailments);
 						return <tr key={item.id}>
 								<td>{item.startDate}</td>
 								<td>{item.endDate}</td>
@@ -441,7 +432,9 @@ class Member extends DetailView {
 								<td>{item.sessionsCount}</td>
 								<td>{item.sessionsRemaining}</td>
 								<td>{Formatter.formatAmount(item.price)}</td>
-								<td	className="tbl-actions">{deleteAction}</td>
+								<td	className="tbl-actions">
+										<DeleteAction id={item.id} path="package/availment/" postAction={loadPackageAvailments} />
+								</td>
 						</tr>;
 				};
 

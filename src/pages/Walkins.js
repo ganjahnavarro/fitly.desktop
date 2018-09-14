@@ -16,6 +16,7 @@ import Formatter from '../core/Formatter'
 import Provider from '../core/Provider'
 import Fetch from '../core/Fetch'
 
+import DeleteAction from '../components/DeleteAction'
 
 class Members extends ListView {
 
@@ -205,27 +206,17 @@ class Member extends DetailView {
 		    this.setState(nextState);
 		}
 
-		onDeleteConfirm(deletePath, id, postAction) {
-				Fetch.delete(deletePath, id, postAction);
-		}
-
 		getEnrollments() {
 				const { onEnrollProgram, availedPrograms, loadProgramAvailments } = this.props;
 
-				const getDeleteAction = (deletePath, id, postDeleteAction) => {
-						return <div className="ui label" onClick={() => this.onDeleteConfirm(deletePath, id, postDeleteAction)}
-								data-inverted="" data-tooltip="Delete" data-position="bottom left">
-								<i className="trash icon icon-only" />
-						</div>
-				};
-
 				const renderAvailedProgramRow = (item) => {
-						const deleteAction = getDeleteAction("program/availment/", item.id, loadProgramAvailments);
 						return <tr key={item.id}>
 								<td>{item.startDate}</td>
 								<td>{item.availedProgram.name}</td>
 								<td>{Formatter.formatAmount(item.price)}</td>
-								<td	className="tbl-actions">{deleteAction}</td>
+								<td	className="tbl-actions">
+										<DeleteAction id={item.id} path="program/availment/" postAction={loadProgramAvailments} />
+								</td>
 						</tr>;
 				};
 
