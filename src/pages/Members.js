@@ -314,7 +314,6 @@ class Members extends ListView {
 		loadMemberships(memberId) {
 				memberId = memberId || this.state.selectedItem.id;
 				Fetch.get(`membership/member/${memberId}`, undefined, (memberships) => {
-						console.warn("memberships", memberships);
 						this.setState({ memberships });
 				});
 		}

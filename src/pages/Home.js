@@ -47,7 +47,6 @@ class Home extends View {
 				});
 
 				Fetch.get("member/count/", { type: "WALKIN" }, (count) => {
-						console.warn("walkins count", count);
 						this.setState({ walkinsCount: count });
 						this.updateEnrolleesChart();
 				});
@@ -57,6 +56,13 @@ class Home extends View {
 				Fetch.get("report/sales", null, (salesReports) => {
 						this.setState({ salesReports });
 						this.updateSalesReportChart();
+				});
+		}
+
+		fetchCoachEnrollees() {
+				Fetch.get("report/coach/enrollees", null, (coachEnrollees) => {
+						this.setState({ coachEnrollees });
+						this.updateCoachEnrolleesChart();
 				});
 		}
 
@@ -71,6 +77,7 @@ class Home extends View {
 										walkinsCount || 0,
 										membersCount || 0
 								],
+								fixedStepSize: 1
 						});
 				}
 		}
@@ -99,7 +106,24 @@ class Home extends View {
 				}
 		}
 
-		createBarChart({ id, title, labels, values }) {
+		updateCoachEnrolleesChart() {
+				const { coachEnrollees } = this.state;
+
+				if (coachEnrollees && coachEnrollees.length) {
+						const maxDisplayed = 5;
+						const items = coachEnrollees.slice(0, maxDisplayed);
+
+						this.createBarChart({
+								id: "traineesChart",
+								title: "No. of Trainees per Coach",
+								labels: items.map(item => item.coach.firstName),
+								values: items.map(item => item.count),
+								fixedStepSize: 1
+						});
+				}
+		}
+
+		createBarChart({ id, title, labels, values, fixedStepSize }) {
 				const context = document.getElementById(id);
 
 				const backgroundColors = [];
@@ -112,6 +136,11 @@ class Home extends View {
 						backgroundColors.push(`rgba(${r}, ${g}, ${b}, 0.2)`);
 						borderColors.push(`rgba(${r}, ${g}, ${b}, 1)`);
 				});
+
+				const ticks = { beginAtZero: true };
+				if (fixedStepSize) {
+						ticks.fixedStepSize = fixedStepSize;
+				}
 
 				new Chart(context, {
 						type: 'bar',
@@ -129,11 +158,7 @@ class Home extends View {
 								responsive: false,
 								legend: { display: false },
 								scales: {
-										yAxes: [{
-												ticks: {
-														beginAtZero: true
-												}
-										}]
+										yAxes: [{ ticks }]
 								}
 						}
 				});
@@ -145,39 +170,10 @@ class Home extends View {
 
 		reprocessDashboardItems() {
 				this.fetchEnrolleesCounts();
-
+				this.fetchCoachEnrollees();
 				this.fetchProgramPurchaseSummaryData();
 				this.fetchPackagePurchaseSummaryData();
 				this.fetchSalesReports();
-
-				const traineesContext = document.getElementById("traineesChart");
-				const traineesChart = new Chart(traineesContext, {
-						type: 'bar',
-						data: {
-								labels: ["Mark", "John", "Justin", "Zeke"],
-								datasets: [{
-										label: 'No. of Trainees',
-										data: [2, 8, 3, 14],
-										backgroundColor: [
-												'rgba(255, 99, 132, 0.2)',
-												'rgba(54, 162, 235, 0.2)',
-												'rgba(255, 206, 86, 0.2)',
-												'rgba(75, 192, 192, 0.2)'
-										],
-										borderColor: [
-												'rgba(255,99,132,1)',
-												'rgba(54, 162, 235, 1)',
-												'rgba(255, 206, 86, 1)',
-												'rgba(75, 192, 192, 1)'
-										],
-										borderWidth: 1
-								}]
-						},
-						options: {
-								responsive: false,
-								legend: { display: false }
-						}
-				});
 		}
 
 		createMostPurchasedCard({ title, value, icon, onClick }) {
@@ -230,24 +226,22 @@ class Home extends View {
 												</div>
 										</div>
 								</div>
-						</div>
 
-						<div className="ui three column grid">
-								<div className="column">
+								<div className="eight wide column">
 										<div className="ui fluid card">
 												<div className="content">
 														<span className="ui basic green label">Trainees per Coach</span>
 														<div className="description chart-container">
-																<canvas id="traineesChart" />
+																<canvas id="traineesChart" width="480" height="150" />
 														</div>
-														<a className="ui label">
-																<i className="eye icon"></i> Work in Progress
+														<a className="ui label"	onClick={() => this.onViewCoachEnrollees()}>
+																<i className="eye icon"></i> View All
 														</a>
 												</div>
 										</div>
 								</div>
 
-								<div className="column">
+								<div className="four wide column">
 										{this.createMostPurchasedCard({
 												onClick: () => this.onViewProgramPurchases(),
 												title: "Most purchased Program",
@@ -256,7 +250,7 @@ class Home extends View {
 										})}
 								</div>
 
-								<div className="column">
+								<div className="four wide column">
 										{this.createMostPurchasedCard({
 												onClick: () => this.onViewPackagePurchases(),
 												title: "Most purchased Package",
@@ -274,6 +268,10 @@ class Home extends View {
 
 		onViewSalesReports() {
 				this.setState({ currentPage: "view.sales.reports" });
+		}
+
+		onViewCoachEnrollees() {
+				this.setState({ currentPage: "view.coach.enrollees" });
 		}
 
 		onViewProgramPurchases() {
@@ -313,7 +311,7 @@ class Home extends View {
 						});
 
 						component = <div>
-								<h4>Program Purchases</h4>
+								<h4>Sales Reports</h4>
 								<div className="ui grid">
 										<div className="twelve wide column">
 												<table className="ui green small table ">
@@ -334,6 +332,57 @@ class Home extends View {
 																		<th colSpan="4">
 																				<div className="ui blue basic label">
 																						<i className="check icon"></i> Total Sales: {Formatter.formatAmount(totalAmount)}
+																				</div>
+																		</th>
+																</tr>
+														</tfoot>
+												</table>
+										</div>
+								</div>
+						</div>;
+				}
+				return component;
+		}
+
+		getCoachEnrolleesComponent() {
+				const { coachEnrollees } = this.state;
+
+				const renderRow = (item, index) => {
+						const { firstName, middleName, lastName } = item.coach;
+						return <tr key={item.id}>
+								<td>{`${firstName} ${middleName ? middleName + " " : ""}${lastName}`}</td>
+								<td>{item.count}</td>
+						</tr>;
+				};
+
+				let component = <div>
+						<h4>No data to show.</h4>
+				</div>;
+
+				if (coachEnrollees && coachEnrollees.length) {
+						let totalCount = 0;
+						coachEnrollees.forEach(item => totalCount += item.count);
+
+						component = <div>
+								<h4>Coach Enrollees</h4>
+								<div className="ui grid">
+										<div className="eight wide column">
+												<table className="ui green small table ">
+														<thead>
+																<tr>
+																		<th>Coach</th>
+																		<th>Count</th>
+																</tr>
+														</thead>
+														<tbody>
+																{coachEnrollees.map(renderRow)}
+														</tbody>
+
+														<tfoot className="full-width footer-total">
+																<tr>
+																		<th colSpan="2">
+																				<div className="ui blue basic label">
+																						<i className="check icon"></i> Total Enrollees: {totalCount}
 																				</div>
 																		</th>
 																</tr>
@@ -459,6 +508,9 @@ class Home extends View {
 				switch (this.state.currentPage) {
 						case "view.sales.reports":
 								component = this.getSalesReportsComponent();
+								break;
+						case "view.coach.enrollees":
+								component = this.getCoachEnrolleesComponent();
 								break;
 						case "view.program.purchases":
 								component = this.getProgramPurchasesComponent();
