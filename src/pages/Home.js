@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router'
 import Chart from 'chart.js';
+import moment from 'moment';
 
 import View from './abstract/View'
 import Button from '../components/Button'
@@ -206,6 +207,9 @@ class Home extends View {
 														<a className="ui label"	onClick={() => this.onViewSalesReports()}>
 																<i className="eye icon"></i> View All
 														</a>
+														<a className="ui label"	onClick={() => this.onPrintSalesReport()}>
+																<i className="download icon"></i> Download
+														</a>
 												</div>
 										</div>
 								</div>
@@ -260,6 +264,11 @@ class Home extends View {
 								</div>
 						</div>
 				</div>;
+		}
+
+		onPrintSalesReport() {
+				const dateTime = moment().format('MM_DD_YYYY_hh_mm_ss');
+				Fetch.download("report/sales/download", null, `Sales Report (${dateTime}).xls`);
 		}
 
 		onViewDashboard() {

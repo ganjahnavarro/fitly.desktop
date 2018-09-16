@@ -36508,35 +36508,39 @@
 
 	var _Members2 = _interopRequireDefault(_Members);
 
-	var _Walkins = __webpack_require__(632);
+	var _Walkins = __webpack_require__(633);
 
 	var _Walkins2 = _interopRequireDefault(_Walkins);
 
-	var _Programs = __webpack_require__(633);
+	var _Programs = __webpack_require__(634);
 
 	var _Programs2 = _interopRequireDefault(_Programs);
 
-	var _Packages = __webpack_require__(635);
+	var _Packages = __webpack_require__(636);
 
 	var _Packages2 = _interopRequireDefault(_Packages);
 
-	var _TimeEntries = __webpack_require__(636);
+	var _TimeEntries = __webpack_require__(637);
 
 	var _TimeEntries2 = _interopRequireDefault(_TimeEntries);
 
-	var _Users = __webpack_require__(637);
+	var _Users = __webpack_require__(638);
 
 	var _Users2 = _interopRequireDefault(_Users);
 
-	var _Settings = __webpack_require__(638);
+	var _Settings = __webpack_require__(639);
 
 	var _Settings2 = _interopRequireDefault(_Settings);
 
-	var _Home = __webpack_require__(639);
+	var _Promos = __webpack_require__(640);
+
+	var _Promos2 = _interopRequireDefault(_Promos);
+
+	var _Home = __webpack_require__(641);
 
 	var _Home2 = _interopRequireDefault(_Home);
 
-	var _Todo = __webpack_require__(822);
+	var _Todo = __webpack_require__(824);
 
 	var _Todo2 = _interopRequireDefault(_Todo);
 
@@ -36569,6 +36573,7 @@
 	    _react2.default.createElement(_reactRouter.Route, { path: '/coaches', component: _Coaches2.default, onEnter: requireAuth }),
 	    _react2.default.createElement(_reactRouter.Route, { path: '/programs', component: _Programs2.default, onEnter: requireAuth }),
 	    _react2.default.createElement(_reactRouter.Route, { path: '/packages', component: _Packages2.default, onEnter: requireAuth }),
+	    _react2.default.createElement(_reactRouter.Route, { path: '/promos', component: _Promos2.default, onEnter: requireAuth }),
 	    _react2.default.createElement(_reactRouter.Route, { path: '/settings', component: _Settings2.default, onEnter: requireAuth })
 	);
 
@@ -55328,7 +55333,7 @@
 	    });
 
 	    fetch(url, headers).then(function (response) {
-	        return successCallback();
+	        return handleResponse(successCallback, errorCallback, response);
 	    }).catch(function (error) {
 	        return handleError(errorCallback, error);
 	    });
@@ -68041,7 +68046,7 @@
 
 	var DEFAULT_DISPLAYED_ITEM_COUNT = exports.DEFAULT_DISPLAYED_ITEM_COUNT = 20;
 
-	var DASHBOARD_ITEMS = exports.DASHBOARD_ITEMS = [{ to: "/home", label: "Home", icon: "icon_home_page" }, { to: "/walkins", label: "Walk-Ins", icon: "icon_walk_ins" }, { to: "/members", label: "Members", icon: "icon_members" }, { to: "/timeentries", label: "Time Entries", icon: "icon_records" }, { to: "/coaches", label: "Coaches", icon: "icon_coaches" }, { to: "/programs", label: "Programs", icon: "icon_programs" }, { to: "/packages", label: "Packages", icon: "icon_packages" }, { to: "/users", label: "Users", icon: "icon_users", forAdminOnly: true }, { to: "/settings", label: "Settings", icon: "icon_settings" }, { to: "/logout", label: "Logout", icon: "icon_logout" }];
+	var DASHBOARD_ITEMS = exports.DASHBOARD_ITEMS = [{ to: "/home", label: "Home", icon: "icon_home_page" }, { to: "/walkins", label: "Walk-Ins", icon: "icon_walk_ins" }, { to: "/members", label: "Members", icon: "icon_members" }, { to: "/timeentries", label: "Time Entries", icon: "icon_records" }, { to: "/coaches", label: "Coaches", icon: "icon_coaches" }, { to: "/programs", label: "Programs", icon: "icon_programs" }, { to: "/packages", label: "Packages", icon: "icon_packages" }, { to: "/promos", label: "Promos", icon: "icon_promos" }, { to: "/users", label: "Users", icon: "icon_users", forAdminOnly: true }, { to: "/settings", label: "Settings", icon: "icon_settings" }, { to: "/logout", label: "Logout", icon: "icon_logout" }];
 
 	var MEMBER_AVAILMENT_TYPES = exports.MEMBER_AVAILMENT_TYPES = [{ value: "REGULAR", label: "Regular" }, { value: "REGULAR_WITH_COACH", label: "Regular (With Coach)" }, { value: "UNLIMITED", label: "Unlimited for 1 Month" }];
 
@@ -72877,15 +72882,35 @@
 	};
 
 	Formatter.formatNumber = function (value) {
-	    if (!value || isNaN(value)) return value;
+	    if (value === null || isNaN(value)) return value;
 	    var amount = parseFloat(value);
 	    return amount.toFixed();
 	};
 
 	Formatter.formatAmount = function (value) {
-	    if (!value || isNaN(value)) return value;
+	    if (value === null || isNaN(value)) return value;
 	    var amount = parseFloat(value);
-	    return amount.toFixed(2);
+	    return formatMoney(amount);
+	};
+
+	function formatMoney(amount) {
+	    var decimalCount = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 2;
+	    var decimal = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : ".";
+	    var thousands = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : ",";
+
+	    try {
+	        decimalCount = Math.abs(decimalCount);
+	        decimalCount = isNaN(decimalCount) ? 2 : decimalCount;
+
+	        var negativeSign = amount < 0 ? "-" : "";
+
+	        var i = parseInt(amount = Math.abs(Number(amount) || 0).toFixed(decimalCount)).toString();
+	        var j = i.length > 3 ? i.length % 3 : 0;
+
+	        return negativeSign + (j ? i.substr(0, j) + thousands : '') + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + thousands) + (decimalCount ? decimal + Math.abs(amount - i).toFixed(decimalCount).slice(2) : "");
+	    } catch (e) {
+	        console.log(e);
+	    }
 	};
 
 	module.exports = Formatter;
@@ -72942,6 +72967,18 @@
 	    });
 	};
 
+	Provider.loadMembers = function (callback) {
+	    var parameters = {
+	        orderedBy: "firstName"
+	    };
+
+	    _Fetch2.default.get("member/", parameters, function (items) {
+	        if (callback) {
+	            callback(items);
+	        }
+	    });
+	};
+
 	Provider.getCoaches = function (input, callback) {
 	    var parameters = {
 	        filter: input,
@@ -72964,6 +73001,28 @@
 	                };
 	            });
 	            callback(null, { options: filteredCoaches, cache: false });
+	        }
+	    });
+	};
+
+	Provider.getPromos = function (input, callback) {
+	    var parameters = {
+	        filter: input,
+	        orderedBy: "code",
+	        pageSize: 10
+	    };
+
+	    _Fetch2.default.get("promo/", parameters, function (items) {
+	        Provider.filteredItems.promos = items;
+
+	        if (items && items.length) {
+	            var nullValue = { value: null, label: '-' };
+	            var filteredPromos = [nullValue];
+
+	            items.map(function (item) {
+	                filteredPromos.push({ value: item.id, label: item.code });
+	            });
+	            callback(null, { options: filteredPromos, cache: false });
 	        }
 	    });
 	};
@@ -73024,6 +73083,10 @@
 
 	var _Textarea2 = _interopRequireDefault(_Textarea);
 
+	var _DeleteAction = __webpack_require__(632);
+
+	var _DeleteAction2 = _interopRequireDefault(_DeleteAction);
+
 	var _Constants = __webpack_require__(599);
 
 	var _Formatter = __webpack_require__(629);
@@ -73047,6 +73110,10 @@
 	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var MENU_PERSONAL = "Personal";
+	var MENU_ENROLLMENTS = "Packages/Programs";
+	var MENU_MEMBERSHIP = "Membership";
 
 	var Members = function (_ListView) {
 			_inherits(Members, _ListView);
@@ -73091,21 +73158,30 @@
 
 							var _state = this.state,
 							    selectedItem = _state.selectedItem,
-							    membership = _state.membership,
+							    memberships = _state.memberships,
 							    availedPrograms = _state.availedPrograms,
 							    availedPackages = _state.availedPackages,
 							    coaches = _state.coaches;
 
-							return _react2.default.createElement(Member, { value: selectedItem, membership: membership, coaches: coaches,
+							return _react2.default.createElement(Member, { value: selectedItem, memberships: memberships, coaches: coaches,
 									availedPrograms: availedPrograms, availedPackages: availedPackages,
+									loadProgramAvailments: function loadProgramAvailments() {
+											return _this3.loadProgramAvailments();
+									},
+									loadPackageAvailments: function loadPackageAvailments() {
+											return _this3.loadPackageAvailments();
+									},
+									loadMemberships: function loadMemberships() {
+											return _this3.loadMemberships();
+									},
 									onEnrollProgram: function onEnrollProgram() {
 											return _this3.onEnrollProgram();
 									},
 									onEnrollPackage: function onEnrollPackage() {
 											return _this3.onEnrollPackage();
 									},
-									onAddAccessCard: function onAddAccessCard() {
-											return _this3.onAddAccessCard();
+									onAddAccessCard: function onAddAccessCard(membership) {
+											return _this3.onAddAccessCard(membership);
 									},
 									onFetch: this.onFetch });
 					}
@@ -73209,7 +73285,6 @@
 									}, function () {
 											membership.accessCardNo = undefined;
 											_this7.setState({ addingAccessCard: false, membership: membership });
-											console.warn(membership.accessCardNo);
 									});
 							}
 					}
@@ -73415,8 +73490,7 @@
 					}
 			}, {
 					key: 'onAddAccessCard',
-					value: function onAddAccessCard() {
-							var membership = this.state.membership;
+					value: function onAddAccessCard(membership) {
 							membership.accessCardNo = undefined;
 							this.setState({ membership: membership, addingAccessCard: true });
 					}
@@ -73465,30 +73539,49 @@
 			}, {
 					key: 'onItemClick',
 					value: function onItemClick(index) {
-							var _this11 = this;
-
 							_get(Members.prototype.__proto__ || Object.getPrototypeOf(Members.prototype), 'onItemClick', this).call(this, index);
 
-							if (this.state.items) {
+							if (this.state.items && this.state.items.length) {
 									var item = this.state.items[index];
-
-									_Fetch2.default.get('membership/member/' + item.id, undefined, function (membership) {
-											_this11.setState({ membership: membership });
-									});
-
-									_Fetch2.default.get('program/availment/' + item.id, undefined, function (availedPrograms) {
-											_this11.setState({ availedPrograms: availedPrograms });
-									});
-
-									_Fetch2.default.get('package/availment/' + item.id, undefined, function (availedPackages) {
-											_this11.setState({ availedPackages: availedPackages });
-									});
+									this.loadMemberships(item.id);
+									this.loadProgramAvailments(item.id);
+									this.loadPackageAvailments(item.id);
 							}
+					}
+			}, {
+					key: 'loadMemberships',
+					value: function loadMemberships(memberId) {
+							var _this11 = this;
+
+							memberId = memberId || this.state.selectedItem.id;
+							_Fetch2.default.get('membership/member/' + memberId, undefined, function (memberships) {
+									_this11.setState({ memberships: memberships });
+							});
+					}
+			}, {
+					key: 'loadProgramAvailments',
+					value: function loadProgramAvailments(memberId) {
+							var _this12 = this;
+
+							memberId = memberId || this.state.selectedItem.id;
+							_Fetch2.default.get('program/availment/' + memberId + '/all', undefined, function (availedPrograms) {
+									_this12.setState({ availedPrograms: availedPrograms });
+							});
+					}
+			}, {
+					key: 'loadPackageAvailments',
+					value: function loadPackageAvailments(memberId) {
+							var _this13 = this;
+
+							memberId = memberId || this.state.selectedItem.id;
+							_Fetch2.default.get('package/availment/' + memberId + '/all', undefined, function (availedPackages) {
+									_this13.setState({ availedPackages: availedPackages });
+							});
 					}
 			}, {
 					key: 'render',
 					value: function render() {
-							var _this12 = this;
+							var _this14 = this;
 
 							var items = [];
 							var selectedIndex = this.state.selectedIndex;
@@ -73503,7 +73596,7 @@
 											var className = selectedIndex === index ? "selected" : undefined;
 											return _react2.default.createElement(
 													'li',
-													{ key: index, onClick: _this12.onItemClick.bind(_this12, index), className: className },
+													{ key: index, onClick: _this14.onItemClick.bind(_this14, index), className: className },
 													firstName + ' ' + (middleName ? middleName + " " : "") + lastName
 											);
 									});
@@ -73551,10 +73644,10 @@
 			function Member(props) {
 					_classCallCheck(this, Member);
 
-					var _this13 = _possibleConstructorReturn(this, (Member.__proto__ || Object.getPrototypeOf(Member)).call(this, props));
+					var _this15 = _possibleConstructorReturn(this, (Member.__proto__ || Object.getPrototypeOf(Member)).call(this, props));
 
-					_this13.endpoint = "member/";
-					return _this13;
+					_this15.endpoint = "member/";
+					return _this15;
 			}
 
 			_createClass(Member, [{
@@ -73573,47 +73666,172 @@
 							this.setState(nextState);
 					}
 			}, {
-					key: 'getMembership',
-					value: function getMembership() {
+					key: 'getMenu',
+					value: function getMenu() {
+							var _this16 = this;
+
+							var menus = [MENU_PERSONAL, MENU_ENROLLMENTS, MENU_MEMBERSHIP];
+
+							var selectedMenu = this.state.selectedMenu;
+
+							selectedMenu = selectedMenu || menus[0];
+
+							var onSelectMenu = function onSelectMenu(selectedMenu) {
+									return _this16.setState({ selectedMenu: selectedMenu });
+							};
+
+							var renderItem = function renderItem(item) {
+									var className = (item === selectedMenu ? "active " : "") + 'item';
+									return _react2.default.createElement(
+											'a',
+											{ key: item, className: className, onClick: function onClick() {
+															return onSelectMenu(item);
+													} },
+											item
+									);
+							};
+
+							return _react2.default.createElement(
+									'div',
+									{ className: 'ui tabular mini menu' },
+									menus.map(renderItem)
+							);
+					}
+			}, {
+					key: 'onPromoChange',
+					value: function onPromoChange(rowIndex, selected) {
+							var _this17 = this;
+
+							var memberships = this.props.memberships;
+
+
+							var promos = _Provider2.default.filteredItems.promos;
+							var promo = promos.find(function (promo) {
+									return promo.id == selected.value;
+							});
+
+							memberships[rowIndex].promo = promo;
+
+							_Fetch2.default.patch("membership/", memberships[rowIndex], function (membership) {
+									memberships[rowIndex] = membership;
+									_this17.setState({ memberships: memberships });
+							});
+					}
+			}, {
+					key: 'getMemberships',
+					value: function getMemberships() {
+							var _this18 = this;
+
 							var _props = this.props,
+							    onEnrollProgram = _props.onEnrollProgram,
+							    memberships = _props.memberships,
 							    onAddAccessCard = _props.onAddAccessCard,
-							    membership = _props.membership;
+							    loadMemberships = _props.loadMemberships;
 
-
-							if (membership) {
-									var renderMembershipInfo = function renderMembershipInfo(label, value, icon) {
-											return _react2.default.createElement(
-													'div',
-													{ className: 'ui basic orange label',
-															'data-variation': 'mini', 'data-inverted': '', 'data-tooltip': label, 'data-position': 'bottom left' },
-													_react2.default.createElement('i', { className: icon + ' icon' }),
-													' ',
-													value
-											);
-									};
-
-									var viewAccessCardComponent = renderMembershipInfo("Access Card No.", membership.accessCardNo, "barcode");
+							var renderRow = function renderRow(item, index) {
 									var addAccessCardComponent = _react2.default.createElement(
 											'div',
 											{ className: 'ui orange label clickable', onClick: function onClick() {
-															return onAddAccessCard();
+															return onAddAccessCard(item);
 													} },
 											_react2.default.createElement('i', { className: 'plus icon' }),
 											' Add Access Card'
 									);
 
+									/*
+	        <td	className="tbl-actions">
+	        		<DeleteAction id={item.id} path="membership/" postAction={loadMemberships} />
+	        </td>
+	        */
+
 									return _react2.default.createElement(
-											'div',
-											{ className: 'membership' },
-											renderMembershipInfo("Member Since", membership.startDate, "calendar"),
-											renderMembershipInfo("Membership Expiry", membership.endDate, "ban"),
-											membership.accessCardNo ? viewAccessCardComponent : addAccessCardComponent,
-											_react2.default.createElement('div', { className: 'clearfix' }),
-											' ',
-											_react2.default.createElement('br', null)
+											'tr',
+											{ key: item.id },
+											_react2.default.createElement(
+													'td',
+													null,
+													item.startDate
+											),
+											_react2.default.createElement(
+													'td',
+													null,
+													item.endDate
+											),
+											_react2.default.createElement(
+													'td',
+													null,
+													item.accessCardNo || addAccessCardComponent
+											),
+											_react2.default.createElement(
+													'td',
+													null,
+													_react2.default.createElement(_Dropdown2.default, { value: item.promo ? item.promo.id : null,
+															onChange: function onChange(selected) {
+																	return _this18.onPromoChange(index, selected);
+															},
+															loadOptions: _Provider2.default.getPromos })
+											),
+											_react2.default.createElement(
+													'td',
+													null,
+													_Formatter2.default.formatAmount(item.discountedAmount)
+											)
+									);
+							};
+
+							var membershipsComponent = null;
+							if (memberships && memberships.length) {
+									membershipsComponent = _react2.default.createElement(
+											'table',
+											{ className: 'ui orange small table' },
+											_react2.default.createElement(
+													'thead',
+													null,
+													_react2.default.createElement(
+															'tr',
+															null,
+															_react2.default.createElement(
+																	'th',
+																	null,
+																	'Start Date'
+															),
+															_react2.default.createElement(
+																	'th',
+																	null,
+																	'End Date'
+															),
+															_react2.default.createElement(
+																	'th',
+																	null,
+																	'Access Card'
+															),
+															_react2.default.createElement(
+																	'th',
+																	{ width: '180' },
+																	'Promo Code'
+															),
+															_react2.default.createElement(
+																	'th',
+																	null,
+																	'Amount'
+															)
+													)
+											),
+											_react2.default.createElement(
+													'tbody',
+													null,
+													memberships.map(renderRow)
+											)
 									);
 							}
-							return undefined;
+
+							/*
+	      <Button className="ui orange basic button" icon="user plus"
+	      		onClick={() => onEnrollProgram()}>
+	      		Add Membership
+	      </Button>
+	      */
+							return membershipsComponent;
 					}
 			}, {
 					key: 'getEnrollments',
@@ -73622,8 +73840,84 @@
 							    onEnrollProgram = _props2.onEnrollProgram,
 							    onEnrollPackage = _props2.onEnrollPackage,
 							    availedPrograms = _props2.availedPrograms,
-							    availedPackages = _props2.availedPackages;
+							    availedPackages = _props2.availedPackages,
+							    loadProgramAvailments = _props2.loadProgramAvailments,
+							    loadPackageAvailments = _props2.loadPackageAvailments;
 
+
+							var renderAvailedProgramRow = function renderAvailedProgramRow(item) {
+									return _react2.default.createElement(
+											'tr',
+											{ key: item.id },
+											_react2.default.createElement(
+													'td',
+													null,
+													item.startDate
+											),
+											_react2.default.createElement(
+													'td',
+													null,
+													item.availedProgram.name
+											),
+											_react2.default.createElement(
+													'td',
+													null,
+													(0, _Constants.getAvailmentTypeLabel)(item.type)
+											),
+											_react2.default.createElement(
+													'td',
+													null,
+													_Formatter2.default.formatAmount(item.price)
+											),
+											_react2.default.createElement(
+													'td',
+													{ className: 'tbl-actions' },
+													_react2.default.createElement(_DeleteAction2.default, { id: item.id, path: 'program/availment/', postAction: loadProgramAvailments })
+											)
+									);
+							};
+
+							var renderAvailedPackageRow = function renderAvailedPackageRow(item) {
+									return _react2.default.createElement(
+											'tr',
+											{ key: item.id },
+											_react2.default.createElement(
+													'td',
+													null,
+													item.startDate
+											),
+											_react2.default.createElement(
+													'td',
+													null,
+													item.endDate
+											),
+											_react2.default.createElement(
+													'td',
+													null,
+													item.availedPackage.name
+											),
+											_react2.default.createElement(
+													'td',
+													null,
+													item.sessionsCount
+											),
+											_react2.default.createElement(
+													'td',
+													null,
+													item.sessionsRemaining
+											),
+											_react2.default.createElement(
+													'td',
+													null,
+													_Formatter2.default.formatAmount(item.price)
+											),
+											_react2.default.createElement(
+													'td',
+													{ className: 'tbl-actions' },
+													_react2.default.createElement(_DeleteAction2.default, { id: item.id, path: 'package/availment/', postAction: loadPackageAvailments })
+											)
+									);
+							};
 
 							var availedProgramsComponent = null;
 							if (availedPrograms && availedPrograms.length) {
@@ -73655,44 +73949,21 @@
 																	'th',
 																	null,
 																	'Price'
-															)
+															),
+															_react2.default.createElement('th', null)
 													)
 											),
 											_react2.default.createElement(
 													'tbody',
 													null,
-													availedPrograms.map(function (item) {
-															return _react2.default.createElement(
-																	'tr',
-																	{ key: item.id },
-																	_react2.default.createElement(
-																			'td',
-																			null,
-																			item.startDate
-																	),
-																	_react2.default.createElement(
-																			'td',
-																			null,
-																			item.availedProgram.name
-																	),
-																	_react2.default.createElement(
-																			'td',
-																			null,
-																			(0, _Constants.getAvailmentTypeLabel)(item.type)
-																	),
-																	_react2.default.createElement(
-																			'td',
-																			null,
-																			_Formatter2.default.formatAmount(item.price)
-																	)
-															);
-													})
+													availedPrograms.map(renderAvailedProgramRow)
 											)
 									);
 							}
 
 							var availedPackagesComponent = null;
 							if (availedPackages && availedPackages.length) {
+									var memberId = this.state.value.id;
 									availedPackagesComponent = _react2.default.createElement(
 											'table',
 											{ className: 'ui blue small table' },
@@ -73731,74 +74002,24 @@
 																	'th',
 																	null,
 																	'Price'
-															)
+															),
+															_react2.default.createElement('th', null)
 													)
 											),
 											_react2.default.createElement(
 													'tbody',
 													null,
-													availedPackages.map(function (item) {
-															return _react2.default.createElement(
-																	'tr',
-																	{ key: item.id },
-																	_react2.default.createElement(
-																			'td',
-																			null,
-																			item.startDate
-																	),
-																	_react2.default.createElement(
-																			'td',
-																			null,
-																			item.endDate
-																	),
-																	_react2.default.createElement(
-																			'td',
-																			null,
-																			item.availedPackage.name
-																	),
-																	_react2.default.createElement(
-																			'td',
-																			null,
-																			item.sessionsCount
-																	),
-																	_react2.default.createElement(
-																			'td',
-																			null,
-																			item.sessionsRemaining
-																	),
-																	_react2.default.createElement(
-																			'td',
-																			null,
-																			_Formatter2.default.formatAmount(item.price)
-																	)
-															);
-													})
+													availedPackages.map(renderAvailedPackageRow)
 											)
 									);
 							}
 
-							var viewComponent = _react2.default.createElement(
-									'div',
-									null,
-									availedProgramsComponent,
-									availedPackagesComponent
-							);
-
 							return _react2.default.createElement(
 									'div',
 									null,
-									_react2.default.createElement('div', { className: 'clearfix' }),
-									' ',
-									_react2.default.createElement('br', null),
-									_react2.default.createElement(
-											'div',
-											{ className: 'ui horizontal divider' },
-											'Enrolled Program/Packages'
-									),
 									_react2.default.createElement(
 											'div',
 											null,
-											_react2.default.createElement('br', null),
 											_react2.default.createElement(
 													_Button2.default,
 													{ className: 'ui green basic button', icon: 'rocket',
@@ -73817,7 +74038,12 @@
 											)
 									),
 									_react2.default.createElement('br', null),
-									viewComponent
+									_react2.default.createElement(
+											'div',
+											null,
+											availedProgramsComponent,
+											availedPackagesComponent
+									)
 							);
 					}
 			}, {
@@ -73836,16 +74062,13 @@
 							this.setState({ value: value });
 					}
 			}, {
-					key: 'render',
-					value: function render() {
-							var _this14 = this;
+					key: 'getPersonalInformation',
+					value: function getPersonalInformation() {
+							var _this19 = this;
 
 							var _state7 = this.state,
 							    value = _state7.value,
 							    updateMode = _state7.updateMode;
-
-							var showOtherPanels = !updateMode && value && value.id;
-
 							var coaches = this.props.coaches;
 
 							var coachOptions = [];
@@ -73865,7 +74088,6 @@
 							return _react2.default.createElement(
 									'div',
 									null,
-									showOtherPanels ? this.getMembership() : undefined,
 									_react2.default.createElement(
 											'div',
 											{ className: 'ui form' },
@@ -73873,7 +74095,7 @@
 													'div',
 													{ className: 'three fields' },
 													_react2.default.createElement(_Input2.default, { ref: function ref(input) {
-																	_this14.initialInput = input;
+																	_this19.initialInput = input;
 															}, autoFocus: 'true',
 															name: 'firstName', label: 'First Name', value: value.firstName, disabled: !updateMode,
 															onChange: _get(Member.prototype.__proto__ || Object.getPrototypeOf(Member.prototype), 'onChange', this).bind(this) }),
@@ -73924,8 +74146,34 @@
 											null,
 											_react2.default.createElement(_Audit2.default, { value: value }),
 											_get(Member.prototype.__proto__ || Object.getPrototypeOf(Member.prototype), 'getActions', this).call(this)
-									),
-									showOtherPanels ? this.getEnrollments() : undefined,
+									)
+							);
+					}
+			}, {
+					key: 'render',
+					value: function render() {
+							var _state8 = this.state,
+							    value = _state8.value,
+							    updateMode = _state8.updateMode,
+							    selectedMenu = _state8.selectedMenu;
+
+							var showOtherPanels = !updateMode && value && value.id;
+
+							// {this.getPersonalInformation()}
+							// {showOtherPanels  ? this.getEnrollments() : undefined}
+
+							var component = this.getPersonalInformation();
+							if (selectedMenu === MENU_ENROLLMENTS) {
+									component = this.getEnrollments();
+							} else if (selectedMenu === MENU_MEMBERSHIP) {
+									component = this.getMemberships();
+							}
+
+							return _react2.default.createElement(
+									'div',
+									null,
+									showOtherPanels ? this.getMenu() : undefined,
+									component,
 									_react2.default.createElement('br', null)
 							);
 					}
@@ -73938,6 +74186,95 @@
 
 /***/ }),
 /* 632 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(327);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _Fetch = __webpack_require__(592);
+
+	var _Fetch2 = _interopRequireDefault(_Fetch);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var DeleteAction = function (_React$Component) {
+	    _inherits(DeleteAction, _React$Component);
+
+	    function DeleteAction(props) {
+	        _classCallCheck(this, DeleteAction);
+
+	        var _this = _possibleConstructorReturn(this, (DeleteAction.__proto__ || Object.getPrototypeOf(DeleteAction)).call(this, props));
+
+	        _this.state = { confirming: false, tooltip: "Delete" };
+	        return _this;
+	    }
+
+	    _createClass(DeleteAction, [{
+	        key: 'onDelete',
+	        value: function onDelete() {
+	            var confirming = this.state.confirming;
+	            var _props = this.props,
+	                id = _props.id,
+	                path = _props.path,
+	                postAction = _props.postAction;
+
+
+	            if (confirming) {
+	                _Fetch2.default.delete(path, id, postAction);
+	            } else {
+	                this.setState({ confirming: true });
+	            }
+	        }
+	    }, {
+	        key: 'onCancelDelete',
+	        value: function onCancelDelete() {
+	            this.setState({ confirming: false });
+	        }
+	    }, {
+	        key: 'render',
+	        value: function render() {
+	            var _this2 = this;
+
+	            var confirming = this.state.confirming;
+
+	            var tooltip = confirming ? "Click again to confirm." : "Delete?";
+
+	            return _react2.default.createElement(
+	                'div',
+	                { className: 'ui label',
+	                    onClick: function onClick() {
+	                        return _this2.onDelete();
+	                    }, onMouseLeave: function onMouseLeave() {
+	                        return _this2.onCancelDelete();
+	                    },
+	                    'data-inverted': '', 'data-tooltip': tooltip, 'data-position': 'left center' },
+	                _react2.default.createElement('i', { className: 'trash icon icon-only' })
+	            );
+	        }
+	    }]);
+
+	    return DeleteAction;
+	}(_react2.default.Component);
+
+	exports.default = DeleteAction;
+
+/***/ }),
+/* 633 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -74004,6 +74341,10 @@
 
 	var _Fetch2 = _interopRequireDefault(_Fetch);
 
+	var _DeleteAction = __webpack_require__(632);
+
+	var _DeleteAction2 = _interopRequireDefault(_DeleteAction);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -74049,6 +74390,9 @@
 
 							return _react2.default.createElement(Member, { value: selectedItem,
 									availedPrograms: availedPrograms,
+									loadProgramAvailments: function loadProgramAvailments() {
+											return _this3.loadProgramAvailments();
+									},
 									onEnrollProgram: function onEnrollProgram() {
 											return _this3.onEnrollProgram();
 									},
@@ -74200,16 +74544,22 @@
 			}, {
 					key: 'onItemClick',
 					value: function onItemClick(index) {
-							var _this7 = this;
-
 							_get(Members.prototype.__proto__ || Object.getPrototypeOf(Members.prototype), 'onItemClick', this).call(this, index);
 
 							if (this.state.items && this.state.items.length) {
 									var item = this.state.items[index];
-									_Fetch2.default.get('program/availment/' + item.id, undefined, function (availedPrograms) {
-											_this7.setState({ availedPrograms: availedPrograms });
-									});
+									this.loadProgramAvailments(item.id);
 							}
+					}
+			}, {
+					key: 'loadProgramAvailments',
+					value: function loadProgramAvailments(memberId) {
+							var _this7 = this;
+
+							memberId = memberId || this.state.selectedItem.id;
+							_Fetch2.default.get('program/availment/' + memberId + '/all', undefined, function (availedPrograms) {
+									_this7.setState({ availedPrograms: availedPrograms });
+							});
 					}
 			}, {
 					key: 'render',
@@ -74303,8 +74653,36 @@
 					value: function getEnrollments() {
 							var _props = this.props,
 							    onEnrollProgram = _props.onEnrollProgram,
-							    availedPrograms = _props.availedPrograms;
+							    availedPrograms = _props.availedPrograms,
+							    loadProgramAvailments = _props.loadProgramAvailments;
 
+
+							var renderAvailedProgramRow = function renderAvailedProgramRow(item) {
+									return _react2.default.createElement(
+											'tr',
+											{ key: item.id },
+											_react2.default.createElement(
+													'td',
+													null,
+													item.startDate
+											),
+											_react2.default.createElement(
+													'td',
+													null,
+													item.availedProgram.name
+											),
+											_react2.default.createElement(
+													'td',
+													null,
+													_Formatter2.default.formatAmount(item.price)
+											),
+											_react2.default.createElement(
+													'td',
+													{ className: 'tbl-actions' },
+													_react2.default.createElement(_DeleteAction2.default, { id: item.id, path: 'program/availment/', postAction: loadProgramAvailments })
+											)
+									);
+							};
 
 							var availedProgramsComponent = null;
 							if (availedPrograms && availedPrograms.length) {
@@ -74337,27 +74715,7 @@
 											_react2.default.createElement(
 													'tbody',
 													null,
-													availedPrograms.map(function (item) {
-															return _react2.default.createElement(
-																	'tr',
-																	{ key: item.id },
-																	_react2.default.createElement(
-																			'td',
-																			null,
-																			item.startDate
-																	),
-																	_react2.default.createElement(
-																			'td',
-																			null,
-																			item.availedProgram.name
-																	),
-																	_react2.default.createElement(
-																			'td',
-																			null,
-																			_Formatter2.default.formatAmount(item.price)
-																	)
-															);
-													})
+													availedPrograms.map(renderAvailedProgramRow)
 											)
 									);
 							}
@@ -74478,7 +74836,7 @@
 	exports.default = Members;
 
 /***/ }),
-/* 633 */
+/* 634 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -74525,7 +74883,7 @@
 
 	var _Textarea2 = _interopRequireDefault(_Textarea);
 
-	var _Checkbox = __webpack_require__(634);
+	var _Checkbox = __webpack_require__(635);
 
 	var _Checkbox2 = _interopRequireDefault(_Checkbox);
 
@@ -74674,7 +75032,7 @@
 	exports.default = Programs;
 
 /***/ }),
-/* 634 */
+/* 635 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -74749,7 +75107,7 @@
 	exports.default = Checkbox;
 
 /***/ }),
-/* 635 */
+/* 636 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -74958,7 +75316,7 @@
 	exports.default = Packages;
 
 /***/ }),
-/* 636 */
+/* 637 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -75013,6 +75371,10 @@
 
 	var _Dropdown2 = _interopRequireDefault(_Dropdown);
 
+	var _DeleteAction = __webpack_require__(632);
+
+	var _DeleteAction2 = _interopRequireDefault(_DeleteAction);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -75039,22 +75401,36 @@
 	    _createClass(TimeEntries, [{
 	        key: 'onAdd',
 	        value: function onAdd() {
-	            this.setState({ isAdding: true });
+	            this.setState({ isAdding: true, isManualAdd: false, value: {} });
+	        }
+	    }, {
+	        key: 'onAddManually',
+	        value: function onAddManually() {
+	            this.setState({ isAdding: true, isManualAdd: true, value: {} });
 	        }
 	    }, {
 	        key: 'onCancelAdd',
 	        value: function onCancelAdd() {
-	            this.setState({ isAdding: false, accessCardNoUsed: undefined });
+	            this.setState({ isAdding: false, accessCardNoUsed: undefined, value: {} });
 	        }
 	    }, {
 	        key: 'componentDidMount',
 	        value: function componentDidMount() {
+	            var _this2 = this;
+
 	            this.onFetch();
+
+	            _Provider2.default.loadCoaches(function (coaches) {
+	                return _this2.setState({ coaches: coaches });
+	            });
+	            _Provider2.default.loadMembers(function (members) {
+	                return _this2.setState({ members: members });
+	            });
 	        }
 	    }, {
 	        key: 'onFetch',
 	        value: function onFetch(filterParameters) {
-	            var _this2 = this;
+	            var _this3 = this;
 
 	            var defaultParameters = {
 	                pageSize: 100,
@@ -75064,7 +75440,7 @@
 	            var parameters = Object.assign({}, defaultParameters, filterParameters);
 
 	            _Fetch2.default.get("timeentry/", parameters, function (items) {
-	                _this2.setState({ items: items });
+	                _this3.setState({ items: items });
 	            });
 	        }
 	    }, {
@@ -75079,14 +75455,14 @@
 	    }, {
 	        key: 'onSubmitTimeEntry',
 	        value: function onSubmitTimeEntry() {
-	            var _this3 = this;
+	            var _this4 = this;
 
 	            var accessCardNoUsed = this.state.accessCardNoUsed;
 
 	            var timeEntryData = { accessCardNoUsed: accessCardNoUsed };
 
 	            _Fetch2.default.post("timeentry/", timeEntryData, function (response) {
-	                _this3.onFetch();
+	                _this4.onFetch();
 	            });
 
 	            this.onCancelAdd();
@@ -75094,7 +75470,7 @@
 	    }, {
 	        key: 'getAddComponent',
 	        value: function getAddComponent() {
-	            var _this4 = this;
+	            var _this5 = this;
 
 	            var accessCardNoUsed = this.state.accessCardNoUsed;
 
@@ -75104,7 +75480,7 @@
 	                _react2.default.createElement(
 	                    'div',
 	                    { className: 'ui label clickable close', onClick: function onClick() {
-	                            return _this4.onCancelAdd();
+	                            return _this5.onCancelAdd();
 	                        } },
 	                    'Close'
 	                ),
@@ -75116,12 +75492,12 @@
 	                        'div',
 	                        { className: 'ui form' },
 	                        _react2.default.createElement(_Input2.default, { ref: function ref(input) {
-	                                _this4.initialInput = input;
+	                                _this5.initialInput = input;
 	                            }, autoFocus: 'true',
 	                            name: 'accessCardNoUsed', label: 'Access Card No.',
 	                            value: accessCardNoUsed, onChange: _get(TimeEntries.prototype.__proto__ || Object.getPrototypeOf(TimeEntries.prototype), 'onChange', this).bind(this),
 	                            onKeyDown: function onKeyDown(e) {
-	                                return _this4.onKeyDown(e);
+	                                return _this5.onKeyDown(e);
 	                            } }),
 	                        _react2.default.createElement(
 	                            'div',
@@ -75134,9 +75510,335 @@
 	            );
 	        }
 	    }, {
+	        key: 'getAddManuallyComponent',
+	        value: function getAddManuallyComponent() {
+	            var _this6 = this;
+
+	            var _state = this.state,
+	                value = _state.value,
+	                coaches = _state.coaches,
+	                members = _state.members,
+	                selectedProductType = _state.selectedProductType,
+	                programAvailments = _state.programAvailments,
+	                packageAvailments = _state.packageAvailments,
+	                hasPrograms = _state.hasPrograms,
+	                hasPackages = _state.hasPackages;
+
+	            value = value || {};
+
+	            var coachOptions = [];
+	            var coachAssigned = value.coachAssigned || {};
+
+	            if (coaches) {
+	                coachOptions = coaches.map(function (item, index) {
+	                    var firstName = item.firstName,
+	                        middleName = item.middleName,
+	                        lastName = item.lastName;
+
+	                    var name = firstName + ' ' + (middleName ? middleName + " " : "") + lastName;
+	                    return { value: item.id, label: name };
+	                });
+	            }
+
+	            var memberOptions = [];
+	            var member = value.member || {};
+
+	            if (members) {
+	                memberOptions = members.map(function (item, index) {
+	                    var firstName = item.firstName,
+	                        middleName = item.middleName,
+	                        lastName = item.lastName,
+	                        type = item.type;
+
+	                    var typeDisplayed = type === "WALKIN" ? " (W)" : " (M)";
+	                    var name = firstName + ' ' + (middleName ? middleName + " " : "") + lastName + typeDisplayed;
+	                    return { value: item.id, label: name };
+	                });
+	            }
+
+	            var programAvailmentOptions = [];
+	            var programAvailment = value.programAvailment || {};
+
+	            if (programAvailments) {
+	                programAvailmentOptions = programAvailments.map(function (item, index) {
+	                    return { value: item.id, label: item.availedProgram.name };
+	                });
+	            }
+
+	            var packageAvailmentOptions = [];
+	            var packageAvailment = value.packageAvailment || {};
+
+	            if (packageAvailments) {
+	                packageAvailmentOptions = packageAvailments.map(function (item, index) {
+	                    return { value: item.id, label: item.availedPackage.name };
+	                });
+	            }
+
+	            var showProductSelection = hasPrograms && hasPackages;
+	            var productSelection = _react2.default.createElement(
+	                'div',
+	                { className: 'inline fields' },
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'field' },
+	                    _react2.default.createElement(
+	                        'div',
+	                        { className: 'ui radio checkbox', onClick: function onClick() {
+	                                return _this6.onSelectedProductTypeChange("PROGRAM");
+	                            } },
+	                        _react2.default.createElement('input', { type: 'radio', name: 'frequency', checked: selectedProductType === "PROGRAM" ? "checked" : undefined }),
+	                        _react2.default.createElement(
+	                            'label',
+	                            { htmlFor: 'frequency' },
+	                            'Program'
+	                        )
+	                    )
+	                ),
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'field' },
+	                    _react2.default.createElement(
+	                        'div',
+	                        { className: 'ui radio checkbox', onClick: function onClick() {
+	                                return _this6.onSelectedProductTypeChange("PACKAGE");
+	                            } },
+	                        _react2.default.createElement('input', { type: 'radio', name: 'frequency', checked: selectedProductType === "PACKAGE" ? "checked" : undefined }),
+	                        _react2.default.createElement(
+	                            'label',
+	                            { htmlFor: 'frequency' },
+	                            'Package'
+	                        )
+	                    )
+	                )
+	            );
+
+	            var commission = null;
+	            var productComponent = _react2.default.createElement(_Input2.default, { label: 'Program/Package', disabled: true, fieldClassName: 'eight' });
+	            if (selectedProductType === "PROGRAM") {
+	                productComponent = _react2.default.createElement(_Dropdown2.default, { name: 'program', label: 'Availed Programs', value: programAvailment.id,
+	                    options: programAvailmentOptions, disabled: programAvailmentOptions.length <= 1,
+	                    onChange: this.onProgramAvailmentChange.bind(this),
+	                    fieldClassName: 'eight' });
+
+	                if (programAvailment.availedProgram) {
+	                    commission = programAvailment.availedProgram.commission;
+	                }
+	            } else if (selectedProductType === "PACKAGE") {
+	                productComponent = _react2.default.createElement(_Dropdown2.default, { name: 'package', label: 'Availed Packages', value: packageAvailment.id,
+	                    options: packageAvailmentOptions, disabled: packageAvailmentOptions.length <= 1,
+	                    onChange: this.onPackageAvailmentChange.bind(this),
+	                    fieldClassName: 'eight' });
+
+	                if (packageAvailment.availedPackage) {
+	                    commission = packageAvailment.availedPackage.commission;
+	                }
+	            }
+
+	            return _react2.default.createElement(
+	                'div',
+	                null,
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'ui form' },
+	                    _react2.default.createElement(
+	                        'div',
+	                        { className: 'fields' },
+	                        _react2.default.createElement(_Input2.default, { ref: function ref(input) {
+	                                _this6.initialInput = input;
+	                            }, autoFocus: 'true',
+	                            name: 'value.date', label: 'Date', value: value.date,
+	                            onChange: _get(TimeEntries.prototype.__proto__ || Object.getPrototypeOf(TimeEntries.prototype), 'onChange', this).bind(this), placeholder: 'MM/dd/yyyy',
+	                            fieldClassName: 'eight' }),
+	                        _react2.default.createElement(_Dropdown2.default, { name: 'member', label: 'Member', value: member.id,
+	                            options: memberOptions, onChange: this.onMemberChange.bind(this),
+	                            fieldClassName: 'eight' })
+	                    ),
+	                    showProductSelection ? productSelection : undefined,
+	                    _react2.default.createElement(
+	                        'div',
+	                        { className: 'fields' },
+	                        productComponent,
+	                        _react2.default.createElement(_Dropdown2.default, { name: 'coachAssigned', label: 'Coach Assigned', value: coachAssigned.id,
+	                            options: coachOptions, onChange: this.onCoachAssignedManualEntryChange.bind(this),
+	                            fieldClassName: 'eight' })
+	                    ),
+	                    _react2.default.createElement(
+	                        'div',
+	                        { className: 'fields' },
+	                        _react2.default.createElement(_Input2.default, { name: 'commission', label: 'Commission', value: _Formatter2.default.formatAmount(commission),
+	                            disabled: true, fieldClassName: 'eight' })
+	                    )
+	                ),
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'actions' },
+	                    _react2.default.createElement(
+	                        _Button2.default,
+	                        { className: 'ui green button', icon: 'save', onClick: function onClick() {
+	                                return _this6.onSaveManualTimeEntry();
+	                            } },
+	                        'Save'
+	                    ),
+	                    _react2.default.createElement(
+	                        _Button2.default,
+	                        { className: 'ui button', icon: 'ban', onClick: function onClick() {
+	                                return _this6.onCancelAdd();
+	                            } },
+	                        'Cancel'
+	                    )
+	                )
+	            );
+	        }
+	    }, {
+	        key: 'onSelectedProductTypeChange',
+	        value: function onSelectedProductTypeChange(productType) {
+	            var _state2 = this.state,
+	                value = _state2.value,
+	                programAvailments = _state2.programAvailments,
+	                packageAvailments = _state2.packageAvailments;
+
+
+	            if (productType === "PROGRAM") {
+	                value.programAvailment = programAvailments[0];
+	                value.packageAvailment = undefined;
+	            } else {
+	                value.packageAvailment = packageAvailments[0];
+	                value.programAvailment = undefined;
+	            }
+
+	            this.setState({ selectedProductType: productType });
+	        }
+	    }, {
+	        key: 'onMemberChange',
+	        value: function onMemberChange(member) {
+	            var _state3 = this.state,
+	                value = _state3.value,
+	                members = _state3.members;
+
+	            value = value || {};
+
+	            if (members) {
+	                value.member = members.find(function (item) {
+	                    return item.id === member.value;
+	                });
+	                var parameters = value.date ? { date: value.date } : {};
+	                this.loadAvailableProgramsForMember(value.member, parameters);
+	                this.loadAvailablePackagesForMember(value.member, parameters);
+	            }
+	            this.setState({ value: value });
+	        }
+	    }, {
+	        key: 'loadAvailableProgramsForMember',
+	        value: function loadAvailableProgramsForMember(member, parameters) {
+	            var _this7 = this;
+
+	            _Fetch2.default.get('program/availment/' + member.id + '/available', parameters, function (programAvailments) {
+	                var _state4 = _this7.state,
+	                    selectedProductType = _state4.selectedProductType,
+	                    value = _state4.value;
+
+	                var hasPrograms = programAvailments && programAvailments.length;
+	                selectedProductType = hasPrograms ? "PROGRAM" : selectedProductType;
+
+	                if (hasPrograms) {
+	                    value.programAvailment = programAvailments[0];
+	                    value.commission = value.programAvailment.availedProgram.commission;
+	                    value.packageAvailment = undefined;
+	                }
+
+	                _this7.setState({ programAvailments: programAvailments, selectedProductType: selectedProductType, hasPrograms: hasPrograms, value: value });
+	            });
+	        }
+	    }, {
+	        key: 'loadAvailablePackagesForMember',
+	        value: function loadAvailablePackagesForMember(member, parameters) {
+	            var _this8 = this;
+
+	            _Fetch2.default.get('package/availment/' + member.id + '/available', parameters, function (packageAvailments) {
+	                var _state5 = _this8.state,
+	                    programAvailments = _state5.programAvailments,
+	                    selectedProductType = _state5.selectedProductType,
+	                    value = _state5.value;
+
+	                var hasPrograms = programAvailments && programAvailments.length;
+	                var hasPackages = packageAvailments && packageAvailments.length;
+	                selectedProductType = hasPackages && !hasPrograms ? "PACKAGE" : selectedProductType;
+
+	                if (hasPackages && !hasPrograms) {
+	                    value.packageAvailment = packageAvailments[0];
+	                    value.commission = value.packageAvailment.availedPackage.commission;
+	                    value.programAvailment = undefined;
+	                }
+
+	                _this8.setState({ packageAvailments: packageAvailments, selectedProductType: selectedProductType, hasPackages: hasPackages, value: value });
+	            });
+	        }
+	    }, {
+	        key: 'onProgramAvailmentChange',
+	        value: function onProgramAvailmentChange(programAvailment) {
+	            var _state6 = this.state,
+	                value = _state6.value,
+	                programAvailments = _state6.programAvailments;
+
+	            value = value || {};
+
+	            if (programAvailment && programAvailments) {
+	                value.programAvailment = programAvailments.find(function (item) {
+	                    return item.id === programAvailment.value;
+	                });
+	                value.commission = value.programAvailment.availedProgram.commission;
+	                value.packageAvailment = undefined;
+	            }
+	            this.setState({ value: value });
+	        }
+	    }, {
+	        key: 'onPackageAvailmentChange',
+	        value: function onPackageAvailmentChange(packageAvailment) {
+	            var _state7 = this.state,
+	                value = _state7.value,
+	                packageAvailments = _state7.packageAvailments;
+
+	            value = value || {};
+
+	            if (packageAvailment && packageAvailments) {
+	                value.packageAvailment = packageAvailments.find(function (item) {
+	                    return item.id === packageAvailment.value;
+	                });
+	                value.commission = value.packageAvailment.availedPackage.commission;
+	                value.programAvailment = undefined;
+	            }
+	            this.setState({ value: value });
+	        }
+	    }, {
+	        key: 'onCoachAssignedManualEntryChange',
+	        value: function onCoachAssignedManualEntryChange(coach) {
+	            var _state8 = this.state,
+	                value = _state8.value,
+	                coaches = _state8.coaches;
+
+	            value = value || {};
+
+	            if (coach && coaches) {
+	                value.coachAssigned = coaches.find(function (item) {
+	                    return item.id === coach.value;
+	                });
+	            }
+	            this.setState({ value: value });
+	        }
+	    }, {
+	        key: 'onSaveManualTimeEntry',
+	        value: function onSaveManualTimeEntry() {
+	            var _this9 = this;
+
+	            _Fetch2.default.post("timeentry/manually", this.state.value, function () {
+	                _this9.onFetch();
+	                _this9.onCancelAdd();
+	            });
+	        }
+	    }, {
 	        key: 'onCoachAssignedChange',
 	        value: function onCoachAssignedChange(rowIndex, selected) {
-	            var _this5 = this;
+	            var _this10 = this;
 
 	            var items = this.state.items;
 
@@ -75149,17 +75851,18 @@
 	            items[rowIndex].coachAssigned = coach;
 
 	            _Fetch2.default.patch("timeentry/", items[rowIndex], function (response) {
-	                _this5.setState({ items: items });
+	                _this10.setState({ items: items });
 	            });
 	        }
 	    }, {
 	        key: 'render',
 	        value: function render() {
-	            var _this6 = this;
+	            var _this11 = this;
 
-	            var _state = this.state,
-	                isAdding = _state.isAdding,
-	                items = _state.items;
+	            var _state9 = this.state,
+	                isAdding = _state9.isAdding,
+	                isManualAdd = _state9.isManualAdd,
+	                items = _state9.items;
 
 
 	            var getMember = function getMember(item) {
@@ -75191,6 +75894,9 @@
 	                }
 	            };
 
+	            var loadTimeEntries = function loadTimeEntries() {
+	                return _this11.onFetch();
+	            };
 	            var renderRow = function renderRow(item, index) {
 	                return _react2.default.createElement(
 	                    'tr',
@@ -75215,7 +75921,7 @@
 	                        null,
 	                        _react2.default.createElement(_Dropdown2.default, { value: item.coachAssigned ? item.coachAssigned.id : null,
 	                            onChange: function onChange(selected) {
-	                                return _this6.onCoachAssignedChange(index, selected);
+	                                return _this11.onCoachAssignedChange(index, selected);
 	                            },
 	                            loadOptions: _Provider2.default.getCoaches })
 	                    ),
@@ -75223,6 +75929,11 @@
 	                        'td',
 	                        null,
 	                        _Formatter2.default.formatAmount(item.commission)
+	                    ),
+	                    _react2.default.createElement(
+	                        'td',
+	                        { className: 'tbl-actions' },
+	                        _react2.default.createElement(_DeleteAction2.default, { id: item.id, path: 'timeentry/', postAction: loadTimeEntries })
 	                    )
 	                );
 	            };
@@ -75262,7 +75973,8 @@
 	                                'th',
 	                                null,
 	                                'Commission'
-	                            )
+	                            ),
+	                            _react2.default.createElement('th', null)
 	                        )
 	                    ),
 	                    _react2.default.createElement(
@@ -75273,20 +75985,48 @@
 	                );
 	            }
 
+	            var defaultActions = _react2.default.createElement(
+	                'div',
+	                null,
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'ui orange label clickable', onClick: function onClick() {
+	                            return _this11.onAdd();
+	                        } },
+	                    _react2.default.createElement('i', { className: 'plus icon' }),
+	                    ' Add Using Acess Card'
+	                ),
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'ui yellow label clickable', onClick: function onClick() {
+	                            return _this11.onAddManually();
+	                        } },
+	                    _react2.default.createElement('i', { className: 'plus icon' }),
+	                    ' Add Manually'
+	                )
+	            );
+
+	            var editingActions = _react2.default.createElement(
+	                'div',
+	                null,
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'ui label clickable', onClick: function onClick() {
+	                            return _this11.onCancelAdd();
+	                        } },
+	                    _react2.default.createElement('i', { className: 'angle left icon' }),
+	                    ' Back'
+	                )
+	            );
+
 	            return _react2.default.createElement(
 	                'div',
 	                { className: 'time-entry' },
 	                _react2.default.createElement(_Header2.default, { location: this.props.location }),
-	                _react2.default.createElement(
-	                    'div',
-	                    { className: 'ui orange label clickable', onClick: function onClick() {
-	                            return _this6.onAdd();
-	                        } },
-	                    _react2.default.createElement('i', { className: 'plus icon' }),
-	                    ' Add Time Entry'
-	                ),
-	                itemsComponent,
-	                isAdding ? this.getAddComponent() : undefined,
+	                isAdding ? editingActions : defaultActions,
+	                _react2.default.createElement('br', null),
+	                isAdding && isManualAdd ? this.getAddManuallyComponent() : itemsComponent,
+	                isAdding && !isManualAdd ? this.getAddComponent() : undefined,
 	                _react2.default.createElement('br', null)
 	            );
 	        }
@@ -75298,7 +76038,7 @@
 	exports.default = TimeEntries;
 
 /***/ }),
-/* 637 */
+/* 638 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -75349,7 +76089,7 @@
 
 	var _Textarea2 = _interopRequireDefault(_Textarea);
 
-	var _Checkbox = __webpack_require__(634);
+	var _Checkbox = __webpack_require__(635);
 
 	var _Checkbox2 = _interopRequireDefault(_Checkbox);
 
@@ -75571,7 +76311,7 @@
 	exports.default = Users;
 
 /***/ }),
-/* 638 */
+/* 639 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -75697,9 +76437,6 @@
 			}
 
 			_createClass(Config, [{
-					key: 'getActions',
-					value: function getActions() {}
-			}, {
 					key: 'render',
 					value: function render() {
 							var _this3 = this;
@@ -75757,7 +76494,6 @@
 											'div',
 											null,
 											_react2.default.createElement(_Audit2.default, { value: value }),
-											this.getActions(),
 											_react2.default.createElement(
 													'div',
 													{ className: 'actions' },
@@ -75774,7 +76510,197 @@
 	exports.default = Configs;
 
 /***/ }),
-/* 639 */
+/* 640 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+			value: true
+	});
+
+	var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(327);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _reactRouter = __webpack_require__(510);
+
+	var _View = __webpack_require__(587);
+
+	var _View2 = _interopRequireDefault(_View);
+
+	var _ListView2 = __webpack_require__(605);
+
+	var _ListView3 = _interopRequireDefault(_ListView2);
+
+	var _DetailView2 = __webpack_require__(606);
+
+	var _DetailView3 = _interopRequireDefault(_DetailView2);
+
+	var _Input = __webpack_require__(602);
+
+	var _Input2 = _interopRequireDefault(_Input);
+
+	var _Audit = __webpack_require__(607);
+
+	var _Audit2 = _interopRequireDefault(_Audit);
+
+	var _Header = __webpack_require__(608);
+
+	var _Header2 = _interopRequireDefault(_Header);
+
+	var _Textarea = __webpack_require__(628);
+
+	var _Textarea2 = _interopRequireDefault(_Textarea);
+
+	var _Checkbox = __webpack_require__(635);
+
+	var _Checkbox2 = _interopRequireDefault(_Checkbox);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var Promos = function (_ListView) {
+			_inherits(Promos, _ListView);
+
+			function Promos(props) {
+					_classCallCheck(this, Promos);
+
+					var _this = _possibleConstructorReturn(this, (Promos.__proto__ || Object.getPrototypeOf(Promos)).call(this, props));
+
+					_this.endpoint = "promo/";
+					_this.orderBy = "code";
+					return _this;
+			}
+
+			_createClass(Promos, [{
+					key: 'render',
+					value: function render() {
+							var _this2 = this;
+
+							var items = [];
+							var _state = this.state,
+							    selectedItem = _state.selectedItem,
+							    selectedIndex = _state.selectedIndex;
+
+
+							if (this.state.items) {
+									items = this.state.items.map(function (item, index) {
+											var className = selectedIndex === index ? "selected" : undefined;
+											return _react2.default.createElement(
+													'li',
+													{ key: index, onClick: _this2.onItemClick.bind(_this2, index), className: className },
+													item.code
+											);
+									});
+							}
+
+							return _react2.default.createElement(
+									'div',
+									null,
+									_react2.default.createElement(_Header2.default, { location: this.props.location }),
+									_react2.default.createElement(
+											'div',
+											{ className: 'ui grid' },
+											_react2.default.createElement(
+													'div',
+													{ className: 'five wide column ui form' },
+													_react2.default.createElement(_Input2.default, { label: 'Search', value: this.state.filter, name: 'filter',
+															onChange: this.onFilter.bind(this), placeholder: 'Type here to search' }),
+													_react2.default.createElement('div', { className: 'ui divider' }),
+													_react2.default.createElement(
+															'div',
+															{ className: 'files' },
+															_react2.default.createElement(
+																	'ul',
+																	{ className: 'ui list' },
+																	items
+															)
+													)
+											),
+											_react2.default.createElement(
+													'div',
+													{ className: 'eleven wide column' },
+													_react2.default.createElement(Promo, { value: selectedItem, onFetch: this.onFetch })
+											)
+									)
+							);
+					}
+			}]);
+
+			return Promos;
+	}(_ListView3.default);
+
+	var Promo = function (_DetailView) {
+			_inherits(Promo, _DetailView);
+
+			function Promo(props) {
+					_classCallCheck(this, Promo);
+
+					var _this3 = _possibleConstructorReturn(this, (Promo.__proto__ || Object.getPrototypeOf(Promo)).call(this, props));
+
+					_this3.endpoint = "promo/";
+					return _this3;
+			}
+
+			_createClass(Promo, [{
+					key: 'render',
+					value: function render() {
+							var _this4 = this;
+
+							var _state2 = this.state,
+							    value = _state2.value,
+							    updateMode = _state2.updateMode;
+
+
+							return _react2.default.createElement(
+									'div',
+									null,
+									_react2.default.createElement(
+											'div',
+											{ className: 'ui form' },
+											_react2.default.createElement(
+													'div',
+													{ className: 'fields' },
+													_react2.default.createElement(_Input2.default, { ref: function ref(input) {
+																	_this4.initialInput = input;
+															}, autoFocus: 'true', label: 'Code',
+															name: 'code', value: value.code, disabled: !updateMode,
+															onChange: _get(Promo.prototype.__proto__ || Object.getPrototypeOf(Promo.prototype), 'onChange', this).bind(this),
+															fieldClassName: 'eight' }),
+													_react2.default.createElement(_Input2.default, { name: 'discountAmount', label: 'Discount Amount',
+															value: value.discountAmount, disabled: !updateMode, onChange: _get(Promo.prototype.__proto__ || Object.getPrototypeOf(Promo.prototype), 'onChange', this).bind(this),
+															fieldClassName: 'eight' })
+											),
+											_react2.default.createElement(_Textarea2.default, { name: 'description', label: 'Description', value: value.description, disabled: !updateMode,
+													onChange: _get(Promo.prototype.__proto__ || Object.getPrototypeOf(Promo.prototype), 'onChange', this).bind(this) })
+									),
+									_react2.default.createElement(
+											'div',
+											null,
+											_react2.default.createElement(_Audit2.default, { value: value }),
+											_get(Promo.prototype.__proto__ || Object.getPrototypeOf(Promo.prototype), 'getAdminOnlyActions', this).call(this)
+									)
+							);
+					}
+			}]);
+
+			return Promo;
+	}(_DetailView3.default);
+
+	exports.default = Promos;
+
+/***/ }),
+/* 641 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -75791,7 +76717,7 @@
 
 	var _reactRouter = __webpack_require__(510);
 
-	var _chart = __webpack_require__(640);
+	var _chart = __webpack_require__(642);
 
 	var _chart2 = _interopRequireDefault(_chart);
 
@@ -75802,6 +76728,10 @@
 	var _Button = __webpack_require__(603);
 
 	var _Button2 = _interopRequireDefault(_Button);
+
+	var _Formatter = __webpack_require__(629);
+
+	var _Formatter2 = _interopRequireDefault(_Formatter);
 
 	var _Fetch = __webpack_require__(592);
 
@@ -75868,9 +76798,28 @@
 							});
 
 							_Fetch2.default.get("member/count/", { type: "WALKIN" }, function (count) {
-									console.warn("walkins count", count);
 									_this4.setState({ walkinsCount: count });
 									_this4.updateEnrolleesChart();
+							});
+					}
+			}, {
+					key: 'fetchSalesReports',
+					value: function fetchSalesReports() {
+							var _this5 = this;
+
+							_Fetch2.default.get("report/sales", null, function (salesReports) {
+									_this5.setState({ salesReports: salesReports });
+									_this5.updateSalesReportChart();
+							});
+					}
+			}, {
+					key: 'fetchCoachEnrollees',
+					value: function fetchCoachEnrollees() {
+							var _this6 = this;
+
+							_Fetch2.default.get("report/coach/enrollees", null, function (coachEnrollees) {
+									_this6.setState({ coachEnrollees: coachEnrollees });
+									_this6.updateCoachEnrolleesChart();
 							});
 					}
 			}, {
@@ -75881,25 +76830,111 @@
 							    walkinsCount = _state.walkinsCount;
 
 							if (membersCount !== undefined && walkinsCount !== undefined) {
-									var enrolleesChartContext = document.getElementById("enrolleesChart");
-									var enrolleesChart = new _chart2.default(enrolleesChartContext, {
-											type: 'bar',
-											data: {
-													labels: ["Walk-Ins", "Memberships"],
-													datasets: [{
-															label: '# of Enrollees',
-															data: [walkinsCount || 0, membersCount || 0],
-															backgroundColor: ['rgba(255, 206, 86, 0.2)', 'rgba(75, 192, 192, 0.2)'],
-															borderColor: ['rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)'],
-															borderWidth: 1
-													}]
-											},
-											options: {
-													responsive: false,
-													legend: { display: false }
-											}
+									this.createBarChart({
+											id: "enrolleesChart",
+											title: "Enrollees",
+											labels: ["Walk-Ins", "Memberships"],
+											values: [walkinsCount || 0, membersCount || 0],
+											fixedStepSize: 1
 									});
 							}
+					}
+			}, {
+					key: 'updateSalesReportChart',
+					value: function updateSalesReportChart() {
+							var salesReports = this.state.salesReports;
+
+
+							var totals = new Map();
+							totals.set("Memberships", 0);
+							totals.set("Program Availments", 0);
+							totals.set("Package Availments", 0);
+							totals.set("Commissions", 0);
+
+							if (salesReports && salesReports.length) {
+									salesReports.forEach(function (item) {
+											var amount = item.amount + totals.get(item.description);
+											totals.set(item.description, amount);
+									});
+
+									this.createBarChart({
+											id: "salesChart",
+											title: "Sales",
+											labels: Array.from(totals.keys()),
+											values: Array.from(totals.values())
+									});
+							}
+					}
+			}, {
+					key: 'updateCoachEnrolleesChart',
+					value: function updateCoachEnrolleesChart() {
+							var coachEnrollees = this.state.coachEnrollees;
+
+
+							if (coachEnrollees && coachEnrollees.length) {
+									var maxDisplayed = 5;
+									var items = coachEnrollees.slice(0, maxDisplayed);
+
+									this.createBarChart({
+											id: "traineesChart",
+											title: "No. of Trainees per Coach",
+											labels: items.map(function (item) {
+													return item.coach.firstName;
+											}),
+											values: items.map(function (item) {
+													return item.count;
+											}),
+											fixedStepSize: 1
+									});
+							}
+					}
+			}, {
+					key: 'createBarChart',
+					value: function createBarChart(_ref) {
+							var id = _ref.id,
+							    title = _ref.title,
+							    labels = _ref.labels,
+							    values = _ref.values,
+							    fixedStepSize = _ref.fixedStepSize;
+
+							var context = document.getElementById(id);
+
+							var backgroundColors = [];
+							var borderColors = [];
+
+							labels.forEach(function () {
+									var r = Math.floor(Math.random() * 255);
+									var g = Math.floor(Math.random() * 255);
+									var b = Math.floor(Math.random() * 255);
+									backgroundColors.push('rgba(' + r + ', ' + g + ', ' + b + ', 0.2)');
+									borderColors.push('rgba(' + r + ', ' + g + ', ' + b + ', 1)');
+							});
+
+							var ticks = { beginAtZero: true };
+							if (fixedStepSize) {
+									ticks.fixedStepSize = fixedStepSize;
+							}
+
+							new _chart2.default(context, {
+									type: 'bar',
+									data: {
+											labels: labels,
+											datasets: [{
+													label: title,
+													data: values,
+													backgroundColor: backgroundColors,
+													borderColor: borderColors,
+													borderWidth: 1
+											}]
+									},
+									options: {
+											responsive: false,
+											legend: { display: false },
+											scales: {
+													yAxes: [{ ticks: ticks }]
+											}
+									}
+							});
 					}
 			}, {
 					key: 'componentDidMount',
@@ -75910,52 +76945,53 @@
 					key: 'reprocessDashboardItems',
 					value: function reprocessDashboardItems() {
 							this.fetchEnrolleesCounts();
-
+							this.fetchCoachEnrollees();
 							this.fetchProgramPurchaseSummaryData();
 							this.fetchPackagePurchaseSummaryData();
+							this.fetchSalesReports();
+					}
+			}, {
+					key: 'createMostPurchasedCard',
+					value: function createMostPurchasedCard(_ref2) {
+							var title = _ref2.title,
+							    value = _ref2.value,
+							    icon = _ref2.icon,
+							    onClick = _ref2.onClick;
 
-							var salesChartContext = document.getElementById("salesChart");
-							var salesChart = new _chart2.default(salesChartContext, {
-									type: 'bar',
-									data: {
-											labels: ["Boxing", "Muay Thai", "Gym", "BJJ"],
-											datasets: [{
-													label: '# of Votes',
-													data: [13, 11, 29, 8],
-													backgroundColor: ['rgba(255, 99, 132, 0.2)', 'rgba(54, 162, 235, 0.2)', 'rgba(255, 206, 86, 0.2)', 'rgba(75, 192, 192, 0.2)'],
-													borderColor: ['rgba(255,99,132,1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)'],
-													borderWidth: 1
-											}]
-									},
-									options: {
-											responsive: false,
-											legend: { display: false }
-									}
-							});
-
-							var traineesContext = document.getElementById("traineesChart");
-							var traineesChart = new _chart2.default(traineesContext, {
-									type: 'bar',
-									data: {
-											labels: ["Mark", "John", "Justin", "Zeke"],
-											datasets: [{
-													label: 'No. of Trainees',
-													data: [2, 8, 3, 14],
-													backgroundColor: ['rgba(255, 99, 132, 0.2)', 'rgba(54, 162, 235, 0.2)', 'rgba(255, 206, 86, 0.2)', 'rgba(75, 192, 192, 0.2)'],
-													borderColor: ['rgba(255,99,132,1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)'],
-													borderWidth: 1
-											}]
-									},
-									options: {
-											responsive: false,
-											legend: { display: false }
-									}
-							});
+							return _react2.default.createElement(
+									'div',
+									{ className: 'ui fluid card' },
+									_react2.default.createElement(
+											'div',
+											{ className: 'content' },
+											_react2.default.createElement(
+													'span',
+													{ className: 'ui basic green label' },
+													title
+											),
+											_react2.default.createElement(
+													'div',
+													{ className: 'description' },
+													_react2.default.createElement(
+															'h4',
+															{ className: 'ui center aligned icon header' },
+															_react2.default.createElement('img', { src: 'resources/images/' + icon + '.png', className: 'ui circular image' }),
+															value
+													)
+											),
+											_react2.default.createElement(
+													'a',
+													{ className: 'ui label', onClick: onClick },
+													_react2.default.createElement('i', { className: 'eye icon' }),
+													' View All'
+											)
+									)
+							);
 					}
 			}, {
 					key: 'getDashboard',
 					value: function getDashboard() {
-							var _this5 = this;
+							var _this7 = this;
 
 							var _state2 = this.state,
 							    mostPurchasedProgram = _state2.mostPurchasedProgram,
@@ -75966,10 +77002,10 @@
 									{ className: 'home' },
 									_react2.default.createElement(
 											'div',
-											{ className: 'ui three column grid' },
+											{ className: 'ui grid' },
 											_react2.default.createElement(
 													'div',
-													{ className: 'column' },
+													{ className: 'ten wide column' },
 													_react2.default.createElement(
 															'div',
 															{ className: 'ui fluid card' },
@@ -75977,27 +77013,37 @@
 																	'div',
 																	{ className: 'content' },
 																	_react2.default.createElement(
-																			'a',
+																			'span',
 																			{ className: 'ui basic green label' },
 																			'Sales Report'
 																	),
 																	_react2.default.createElement(
 																			'div',
-																			{ className: 'description chart-container' },
-																			_react2.default.createElement('canvas', { id: 'salesChart' })
+																			{ className: 'description' },
+																			_react2.default.createElement('canvas', { id: 'salesChart', width: '630', height: '150' })
 																	),
 																	_react2.default.createElement(
 																			'a',
-																			{ className: 'ui label' },
+																			{ className: 'ui label', onClick: function onClick() {
+																							return _this7.onViewSalesReports();
+																					} },
 																			_react2.default.createElement('i', { className: 'eye icon' }),
-																			' Work in Progress'
+																			' View All'
+																	),
+																	_react2.default.createElement(
+																			'a',
+																			{ className: 'ui label', onClick: function onClick() {
+																							return _this7.onPrintSalesReport();
+																					} },
+																			_react2.default.createElement('i', { className: 'download icon' }),
+																			' Download'
 																	)
 															)
 													)
 											),
 											_react2.default.createElement(
 													'div',
-													{ className: 'column' },
+													{ className: 'six wide column' },
 													_react2.default.createElement(
 															'div',
 															{ className: 'ui fluid card' },
@@ -76005,14 +77051,14 @@
 																	'div',
 																	{ className: 'content' },
 																	_react2.default.createElement(
-																			'a',
+																			'span',
 																			{ className: 'ui basic green label' },
 																			'Enrollees'
 																	),
 																	_react2.default.createElement(
 																			'div',
-																			{ className: 'description chart-container' },
-																			_react2.default.createElement('canvas', { id: 'enrolleesChart' })
+																			{ className: 'description' },
+																			_react2.default.createElement('canvas', { id: 'enrolleesChart', width: '350', height: '150' })
 																	),
 																	_react2.default.createElement(
 																			_reactRouter.Link,
@@ -76031,7 +77077,7 @@
 											),
 											_react2.default.createElement(
 													'div',
-													{ className: 'column' },
+													{ className: 'eight wide column' },
 													_react2.default.createElement(
 															'div',
 															{ className: 'ui fluid card' },
@@ -76039,52 +77085,19 @@
 																	'div',
 																	{ className: 'content' },
 																	_react2.default.createElement(
-																			'a',
+																			'span',
 																			{ className: 'ui basic green label' },
 																			'Trainees per Coach'
 																	),
 																	_react2.default.createElement(
 																			'div',
 																			{ className: 'description chart-container' },
-																			_react2.default.createElement('canvas', { id: 'traineesChart' })
-																	),
-																	_react2.default.createElement(
-																			'a',
-																			{ className: 'ui label' },
-																			_react2.default.createElement('i', { className: 'eye icon' }),
-																			' Work in Progress'
-																	)
-															)
-													)
-											),
-											_react2.default.createElement(
-													'div',
-													{ className: 'column' },
-													_react2.default.createElement(
-															'div',
-															{ className: 'ui fluid card' },
-															_react2.default.createElement(
-																	'div',
-																	{ className: 'content' },
-																	_react2.default.createElement(
-																			'a',
-																			{ className: 'ui basic green label' },
-																			'Most purchased Program'
-																	),
-																	_react2.default.createElement(
-																			'div',
-																			{ className: 'description' },
-																			_react2.default.createElement(
-																					'h4',
-																					{ className: 'ui center aligned icon header' },
-																					_react2.default.createElement('img', { src: "resources/images/icon_programs.png", className: 'ui circular image' }),
-																					mostPurchasedProgram
-																			)
+																			_react2.default.createElement('canvas', { id: 'traineesChart', width: '480', height: '150' })
 																	),
 																	_react2.default.createElement(
 																			'a',
 																			{ className: 'ui label', onClick: function onClick() {
-																							return _this5.onViewProgramPurchases();
+																							return _this7.onViewCoachEnrollees();
 																					} },
 																			_react2.default.createElement('i', { className: 'eye icon' }),
 																			' View All'
@@ -76094,50 +77107,54 @@
 											),
 											_react2.default.createElement(
 													'div',
-													{ className: 'column' },
-													_react2.default.createElement(
-															'div',
-															{ className: 'ui fluid card' },
-															_react2.default.createElement(
-																	'div',
-																	{ className: 'content' },
-																	_react2.default.createElement(
-																			'a',
-																			{ className: 'ui basic green label' },
-																			'Most purchased Package'
-																	),
-																	_react2.default.createElement(
-																			'div',
-																			{ className: 'description' },
-																			_react2.default.createElement(
-																					'h4',
-																					{ className: 'ui center aligned icon header' },
-																					_react2.default.createElement('img', { src: "resources/images/icon_packages.png", className: 'ui circular image' }),
-																					mostPurchasedPackage
-																			)
-																	),
-																	_react2.default.createElement(
-																			'a',
-																			{ className: 'ui label', onClick: function onClick() {
-																							return _this5.onViewPackagePurchases();
-																					} },
-																			_react2.default.createElement('i', { className: 'eye icon' }),
-																			' View All'
-																	)
-															)
-													)
+													{ className: 'four wide column' },
+													this.createMostPurchasedCard({
+															onClick: function onClick() {
+																	return _this7.onViewProgramPurchases();
+															},
+															title: "Most purchased Program",
+															value: mostPurchasedProgram,
+															icon: "icon_programs"
+													})
+											),
+											_react2.default.createElement(
+													'div',
+													{ className: 'four wide column' },
+													this.createMostPurchasedCard({
+															onClick: function onClick() {
+																	return _this7.onViewPackagePurchases();
+															},
+															title: "Most purchased Package",
+															value: mostPurchasedPackage,
+															icon: "icon_packages"
+													})
 											)
 									)
 							);
 					}
 			}, {
+					key: 'onPrintSalesReport',
+					value: function onPrintSalesReport() {
+							console.warn("printing..");
+					}
+			}, {
 					key: 'onViewDashboard',
 					value: function onViewDashboard() {
-							var _this6 = this;
+							var _this8 = this;
 
 							this.setState({ currentPage: null }, function () {
-									return _this6.reprocessDashboardItems();
+									return _this8.reprocessDashboardItems();
 							});
+					}
+			}, {
+					key: 'onViewSalesReports',
+					value: function onViewSalesReports() {
+							this.setState({ currentPage: "view.sales.reports" });
+					}
+			}, {
+					key: 'onViewCoachEnrollees',
+					value: function onViewCoachEnrollees() {
+							this.setState({ currentPage: "view.coach.enrollees" });
 					}
 			}, {
 					key: 'onViewProgramPurchases',
@@ -76152,16 +77169,251 @@
 			}, {
 					key: 'getBackToDashboardComponent',
 					value: function getBackToDashboardComponent() {
-							var _this7 = this;
+							var _this9 = this;
 
 							return _react2.default.createElement(
 									'div',
 									{ className: 'ui label clickable padbot back-to-dashboard', onClick: function onClick() {
-													return _this7.onViewDashboard();
+													return _this9.onViewDashboard();
 											} },
 									_react2.default.createElement('i', { className: 'angle left icon' }),
 									' Back'
 							);
+					}
+			}, {
+					key: 'getSalesReportsComponent',
+					value: function getSalesReportsComponent() {
+							var salesReports = this.state.salesReports;
+
+
+							var renderRow = function renderRow(item, index) {
+									return _react2.default.createElement(
+											'tr',
+											{ key: item.id },
+											_react2.default.createElement(
+													'td',
+													null,
+													item.date
+											),
+											_react2.default.createElement(
+													'td',
+													null,
+													item.person
+											),
+											_react2.default.createElement(
+													'td',
+													null,
+													item.description
+											),
+											_react2.default.createElement(
+													'td',
+													{ className: 'right aligned' },
+													_Formatter2.default.formatAmount(item.amount)
+											)
+									);
+							};
+
+							var component = _react2.default.createElement(
+									'div',
+									null,
+									_react2.default.createElement(
+											'h4',
+											null,
+											'No data to show.'
+									)
+							);
+
+							if (salesReports && salesReports.length) {
+									var totalAmount = 0;
+									salesReports.forEach(function (item) {
+											totalAmount += item.description === "Commissions" ? -item.amount : item.amount;
+									});
+
+									component = _react2.default.createElement(
+											'div',
+											null,
+											_react2.default.createElement(
+													'h4',
+													null,
+													'Sales Reports'
+											),
+											_react2.default.createElement(
+													'div',
+													{ className: 'ui grid' },
+													_react2.default.createElement(
+															'div',
+															{ className: 'twelve wide column' },
+															_react2.default.createElement(
+																	'table',
+																	{ className: 'ui green small table ' },
+																	_react2.default.createElement(
+																			'thead',
+																			null,
+																			_react2.default.createElement(
+																					'tr',
+																					null,
+																					_react2.default.createElement(
+																							'th',
+																							null,
+																							'Date'
+																					),
+																					_react2.default.createElement(
+																							'th',
+																							null,
+																							'Name'
+																					),
+																					_react2.default.createElement(
+																							'th',
+																							null,
+																							'Type'
+																					),
+																					_react2.default.createElement(
+																							'th',
+																							null,
+																							'Amount'
+																					)
+																			)
+																	),
+																	_react2.default.createElement(
+																			'tbody',
+																			null,
+																			salesReports.map(renderRow)
+																	),
+																	_react2.default.createElement(
+																			'tfoot',
+																			{ className: 'full-width footer-total' },
+																			_react2.default.createElement(
+																					'tr',
+																					null,
+																					_react2.default.createElement(
+																							'th',
+																							{ colSpan: '4' },
+																							_react2.default.createElement(
+																									'div',
+																									{ className: 'ui blue basic label' },
+																									_react2.default.createElement('i', { className: 'check icon' }),
+																									' Total Sales: ',
+																									_Formatter2.default.formatAmount(totalAmount)
+																							)
+																					)
+																			)
+																	)
+															)
+													)
+											)
+									);
+							}
+							return component;
+					}
+			}, {
+					key: 'getCoachEnrolleesComponent',
+					value: function getCoachEnrolleesComponent() {
+							var coachEnrollees = this.state.coachEnrollees;
+
+
+							var renderRow = function renderRow(item, index) {
+									var _item$coach = item.coach,
+									    firstName = _item$coach.firstName,
+									    middleName = _item$coach.middleName,
+									    lastName = _item$coach.lastName;
+
+									return _react2.default.createElement(
+											'tr',
+											{ key: item.id },
+											_react2.default.createElement(
+													'td',
+													null,
+													firstName + ' ' + (middleName ? middleName + " " : "") + lastName
+											),
+											_react2.default.createElement(
+													'td',
+													null,
+													item.count
+											)
+									);
+							};
+
+							var component = _react2.default.createElement(
+									'div',
+									null,
+									_react2.default.createElement(
+											'h4',
+											null,
+											'No data to show.'
+									)
+							);
+
+							if (coachEnrollees && coachEnrollees.length) {
+									var totalCount = 0;
+									coachEnrollees.forEach(function (item) {
+											return totalCount += item.count;
+									});
+
+									component = _react2.default.createElement(
+											'div',
+											null,
+											_react2.default.createElement(
+													'h4',
+													null,
+													'Coach Enrollees'
+											),
+											_react2.default.createElement(
+													'div',
+													{ className: 'ui grid' },
+													_react2.default.createElement(
+															'div',
+															{ className: 'eight wide column' },
+															_react2.default.createElement(
+																	'table',
+																	{ className: 'ui green small table ' },
+																	_react2.default.createElement(
+																			'thead',
+																			null,
+																			_react2.default.createElement(
+																					'tr',
+																					null,
+																					_react2.default.createElement(
+																							'th',
+																							null,
+																							'Coach'
+																					),
+																					_react2.default.createElement(
+																							'th',
+																							null,
+																							'Count'
+																					)
+																			)
+																	),
+																	_react2.default.createElement(
+																			'tbody',
+																			null,
+																			coachEnrollees.map(renderRow)
+																	),
+																	_react2.default.createElement(
+																			'tfoot',
+																			{ className: 'full-width footer-total' },
+																			_react2.default.createElement(
+																					'tr',
+																					null,
+																					_react2.default.createElement(
+																							'th',
+																							{ colSpan: '2' },
+																							_react2.default.createElement(
+																									'div',
+																									{ className: 'ui blue basic label' },
+																									_react2.default.createElement('i', { className: 'check icon' }),
+																									' Total Enrollees: ',
+																									totalCount
+																							)
+																					)
+																			)
+																	)
+															)
+													)
+											)
+									);
+							}
+							return component;
 					}
 			}, {
 					key: 'getProgramPurchasesComponent',
@@ -76213,46 +77465,54 @@
 													'Program Purchases'
 											),
 											_react2.default.createElement(
-													'table',
-													{ className: 'ui green small table' },
+													'div',
+													{ className: 'ui grid' },
 													_react2.default.createElement(
-															'thead',
-															null,
+															'div',
+															{ className: 'eight wide column' },
 															_react2.default.createElement(
-																	'tr',
-																	null,
+																	'table',
+																	{ className: 'ui green small table ' },
 																	_react2.default.createElement(
-																			'th',
+																			'thead',
 																			null,
-																			'Program'
+																			_react2.default.createElement(
+																					'tr',
+																					null,
+																					_react2.default.createElement(
+																							'th',
+																							null,
+																							'Program'
+																					),
+																					_react2.default.createElement(
+																							'th',
+																							null,
+																							'Count'
+																					)
+																			)
 																	),
 																	_react2.default.createElement(
-																			'th',
+																			'tbody',
 																			null,
-																			'Count'
-																	)
-															)
-													),
-													_react2.default.createElement(
-															'tbody',
-															null,
-															programPurchaseSummaries.map(renderRow)
-													),
-													_react2.default.createElement(
-															'tfoot',
-															{ className: 'full-width footer-total' },
-															_react2.default.createElement(
-																	'tr',
-																	null,
+																			programPurchaseSummaries.map(renderRow)
+																	),
 																	_react2.default.createElement(
-																			'th',
-																			{ colSpan: '2' },
+																			'tfoot',
+																			{ className: 'full-width footer-total' },
 																			_react2.default.createElement(
-																					'div',
-																					{ className: 'ui blue basic label' },
-																					_react2.default.createElement('i', { className: 'check icon' }),
-																					' Total Purchases: ',
-																					totalCount
+																					'tr',
+																					null,
+																					_react2.default.createElement(
+																							'th',
+																							{ colSpan: '2' },
+																							_react2.default.createElement(
+																									'div',
+																									{ className: 'ui blue basic label' },
+																									_react2.default.createElement('i', { className: 'check icon' }),
+																									' Total Purchases: ',
+																									totalCount
+																							)
+																					)
 																			)
 																	)
 															)
@@ -76312,46 +77572,54 @@
 													'Package Purchases'
 											),
 											_react2.default.createElement(
-													'table',
-													{ className: 'ui green small table' },
+													'div',
+													{ className: 'ui grid' },
 													_react2.default.createElement(
-															'thead',
-															null,
+															'div',
+															{ className: 'eight wide column' },
 															_react2.default.createElement(
-																	'tr',
-																	null,
+																	'table',
+																	{ className: 'ui green small table' },
 																	_react2.default.createElement(
-																			'th',
+																			'thead',
 																			null,
-																			'Package'
+																			_react2.default.createElement(
+																					'tr',
+																					null,
+																					_react2.default.createElement(
+																							'th',
+																							null,
+																							'Package'
+																					),
+																					_react2.default.createElement(
+																							'th',
+																							null,
+																							'Count'
+																					)
+																			)
 																	),
 																	_react2.default.createElement(
-																			'th',
+																			'tbody',
 																			null,
-																			'Count'
-																	)
-															)
-													),
-													_react2.default.createElement(
-															'tbody',
-															null,
-															packagePurchaseSummaries.map(renderRow)
-													),
-													_react2.default.createElement(
-															'tfoot',
-															{ className: 'full-width footer-total' },
-															_react2.default.createElement(
-																	'tr',
-																	null,
+																			packagePurchaseSummaries.map(renderRow)
+																	),
 																	_react2.default.createElement(
-																			'th',
-																			{ colSpan: '2' },
+																			'tfoot',
+																			{ className: 'full-width footer-total' },
 																			_react2.default.createElement(
-																					'div',
-																					{ className: 'ui blue basic label' },
-																					_react2.default.createElement('i', { className: 'check icon' }),
-																					' Total Purchases: ',
-																					totalCount
+																					'tr',
+																					null,
+																					_react2.default.createElement(
+																							'th',
+																							{ colSpan: '2' },
+																							_react2.default.createElement(
+																									'div',
+																									{ className: 'ui blue basic label' },
+																									_react2.default.createElement('i', { className: 'check icon' }),
+																									' Total Purchases: ',
+																									totalCount
+																							)
+																					)
 																			)
 																	)
 															)
@@ -76366,6 +77634,12 @@
 					value: function render() {
 							var component = this.getDashboard();
 							switch (this.state.currentPage) {
+									case "view.sales.reports":
+											component = this.getSalesReportsComponent();
+											break;
+									case "view.coach.enrollees":
+											component = this.getCoachEnrolleesComponent();
+											break;
 									case "view.program.purchases":
 											component = this.getProgramPurchasesComponent();
 											break;
@@ -76389,62 +77663,62 @@
 	exports.default = Home;
 
 /***/ }),
-/* 640 */
+/* 642 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * @namespace Chart
 	 */
-	var Chart = __webpack_require__(641)();
+	var Chart = __webpack_require__(643)();
 
-	Chart.helpers = __webpack_require__(643);
+	Chart.helpers = __webpack_require__(645);
 
 	// @todo dispatch these helpers into appropriated helpers/helpers.* file and write unit tests!
-	__webpack_require__(648)(Chart);
+	__webpack_require__(650)(Chart);
 
-	Chart.defaults = __webpack_require__(642);
-	Chart.Element = __webpack_require__(654);
-	Chart.elements = __webpack_require__(655);
-	Chart.Interaction = __webpack_require__(660);
-	Chart.layouts = __webpack_require__(661);
-	Chart.platform = __webpack_require__(662);
-	Chart.plugins = __webpack_require__(665);
-	Chart.Ticks = __webpack_require__(666);
+	Chart.defaults = __webpack_require__(644);
+	Chart.Element = __webpack_require__(656);
+	Chart.elements = __webpack_require__(657);
+	Chart.Interaction = __webpack_require__(662);
+	Chart.layouts = __webpack_require__(663);
+	Chart.platform = __webpack_require__(664);
+	Chart.plugins = __webpack_require__(667);
+	Chart.Ticks = __webpack_require__(668);
 
-	__webpack_require__(667)(Chart);
-	__webpack_require__(668)(Chart);
 	__webpack_require__(669)(Chart);
 	__webpack_require__(670)(Chart);
 	__webpack_require__(671)(Chart);
 	__webpack_require__(672)(Chart);
-
 	__webpack_require__(673)(Chart);
 	__webpack_require__(674)(Chart);
+
 	__webpack_require__(675)(Chart);
 	__webpack_require__(676)(Chart);
 	__webpack_require__(677)(Chart);
 	__webpack_require__(678)(Chart);
+	__webpack_require__(679)(Chart);
+	__webpack_require__(680)(Chart);
 
 	// Controllers must be loaded after elements
 	// See Chart.core.datasetController.dataElementType
-	__webpack_require__(804)(Chart);
-	__webpack_require__(805)(Chart);
 	__webpack_require__(806)(Chart);
 	__webpack_require__(807)(Chart);
 	__webpack_require__(808)(Chart);
 	__webpack_require__(809)(Chart);
 	__webpack_require__(810)(Chart);
-
 	__webpack_require__(811)(Chart);
 	__webpack_require__(812)(Chart);
+
 	__webpack_require__(813)(Chart);
 	__webpack_require__(814)(Chart);
 	__webpack_require__(815)(Chart);
 	__webpack_require__(816)(Chart);
 	__webpack_require__(817)(Chart);
+	__webpack_require__(818)(Chart);
+	__webpack_require__(819)(Chart);
 
 	// Loading built-it plugins
-	var plugins = __webpack_require__(818);
+	var plugins = __webpack_require__(820);
 	for (var k in plugins) {
 		if (plugins.hasOwnProperty(k)) {
 			Chart.plugins.register(plugins[k]);
@@ -76517,12 +77791,12 @@
 
 
 /***/ }),
-/* 641 */
+/* 643 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var defaults = __webpack_require__(642);
+	var defaults = __webpack_require__(644);
 
 	defaults._set('global', {
 		responsive: true,
@@ -76572,12 +77846,12 @@
 
 
 /***/ }),
-/* 642 */
+/* 644 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var helpers = __webpack_require__(643);
+	var helpers = __webpack_require__(645);
 
 	module.exports = {
 		/**
@@ -76590,19 +77864,19 @@
 
 
 /***/ }),
-/* 643 */
+/* 645 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	module.exports = __webpack_require__(644);
-	module.exports.easing = __webpack_require__(645);
-	module.exports.canvas = __webpack_require__(646);
-	module.exports.options = __webpack_require__(647);
+	module.exports = __webpack_require__(646);
+	module.exports.easing = __webpack_require__(647);
+	module.exports.canvas = __webpack_require__(648);
+	module.exports.options = __webpack_require__(649);
 
 
 /***/ }),
-/* 644 */
+/* 646 */
 /***/ (function(module, exports) {
 
 	'use strict';
@@ -76947,12 +78221,12 @@
 
 
 /***/ }),
-/* 645 */
+/* 647 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var helpers = __webpack_require__(644);
+	var helpers = __webpack_require__(646);
 
 	/**
 	 * Easing functions adapted from Robert Penner's easing equations.
@@ -77203,12 +78477,12 @@
 
 
 /***/ }),
-/* 646 */
+/* 648 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var helpers = __webpack_require__(644);
+	var helpers = __webpack_require__(646);
 
 	/**
 	 * @namespace Chart.helpers.canvas
@@ -77423,12 +78697,12 @@
 
 
 /***/ }),
-/* 647 */
+/* 649 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var helpers = __webpack_require__(644);
+	var helpers = __webpack_require__(646);
 
 	/**
 	 * @alias Chart.helpers.options
@@ -77525,16 +78799,16 @@
 
 
 /***/ }),
-/* 648 */
+/* 650 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* global window: false */
 	/* global document: false */
 	'use strict';
 
-	var color = __webpack_require__(649);
-	var defaults = __webpack_require__(642);
-	var helpers = __webpack_require__(643);
+	var color = __webpack_require__(651);
+	var defaults = __webpack_require__(644);
+	var helpers = __webpack_require__(645);
 
 	module.exports = function(Chart) {
 
@@ -78142,12 +79416,12 @@
 
 
 /***/ }),
-/* 649 */
+/* 651 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* MIT license */
-	var convert = __webpack_require__(650);
-	var string = __webpack_require__(652);
+	var convert = __webpack_require__(652);
+	var string = __webpack_require__(654);
 
 	var Color = function (obj) {
 		if (obj instanceof Color) {
@@ -78633,10 +79907,10 @@
 
 
 /***/ }),
-/* 650 */
+/* 652 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var conversions = __webpack_require__(651);
+	var conversions = __webpack_require__(653);
 
 	var convert = function() {
 	   return new Converter();
@@ -78730,7 +80004,7 @@
 	module.exports = convert;
 
 /***/ }),
-/* 651 */
+/* 653 */
 /***/ (function(module, exports) {
 
 	/* MIT license */
@@ -79434,11 +80708,11 @@
 
 
 /***/ }),
-/* 652 */
+/* 654 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* MIT license */
-	var colorNames = __webpack_require__(653);
+	var colorNames = __webpack_require__(655);
 
 	module.exports = {
 	   getRgba: getRgba,
@@ -79661,7 +80935,7 @@
 
 
 /***/ }),
-/* 653 */
+/* 655 */
 /***/ (function(module, exports) {
 
 	module.exports = {
@@ -79816,13 +81090,13 @@
 	};
 
 /***/ }),
-/* 654 */
+/* 656 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var color = __webpack_require__(649);
-	var helpers = __webpack_require__(643);
+	var color = __webpack_require__(651);
+	var helpers = __webpack_require__(645);
 
 	function interpolate(start, view, model, ease) {
 		var keys = Object.keys(model);
@@ -79937,27 +81211,27 @@
 
 
 /***/ }),
-/* 655 */
+/* 657 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	module.exports = {};
-	module.exports.Arc = __webpack_require__(656);
-	module.exports.Line = __webpack_require__(657);
-	module.exports.Point = __webpack_require__(658);
-	module.exports.Rectangle = __webpack_require__(659);
+	module.exports.Arc = __webpack_require__(658);
+	module.exports.Line = __webpack_require__(659);
+	module.exports.Point = __webpack_require__(660);
+	module.exports.Rectangle = __webpack_require__(661);
 
 
 /***/ }),
-/* 656 */
+/* 658 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var defaults = __webpack_require__(642);
-	var Element = __webpack_require__(654);
-	var helpers = __webpack_require__(643);
+	var defaults = __webpack_require__(644);
+	var Element = __webpack_require__(656);
+	var helpers = __webpack_require__(645);
 
 	defaults._set('global', {
 		elements: {
@@ -80063,14 +81337,14 @@
 
 
 /***/ }),
-/* 657 */
+/* 659 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var defaults = __webpack_require__(642);
-	var Element = __webpack_require__(654);
-	var helpers = __webpack_require__(643);
+	var defaults = __webpack_require__(644);
+	var Element = __webpack_require__(656);
+	var helpers = __webpack_require__(645);
 
 	var globalDefaults = defaults.global;
 
@@ -80160,14 +81434,14 @@
 
 
 /***/ }),
-/* 658 */
+/* 660 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var defaults = __webpack_require__(642);
-	var Element = __webpack_require__(654);
-	var helpers = __webpack_require__(643);
+	var defaults = __webpack_require__(644);
+	var Element = __webpack_require__(656);
+	var helpers = __webpack_require__(645);
 
 	var defaultColor = defaults.global.defaultColor;
 
@@ -80272,13 +81546,13 @@
 
 
 /***/ }),
-/* 659 */
+/* 661 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var defaults = __webpack_require__(642);
-	var Element = __webpack_require__(654);
+	var defaults = __webpack_require__(644);
+	var Element = __webpack_require__(656);
 
 	defaults._set('global', {
 		elements: {
@@ -80495,12 +81769,12 @@
 
 
 /***/ }),
-/* 660 */
+/* 662 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var helpers = __webpack_require__(643);
+	var helpers = __webpack_require__(645);
 
 	/**
 	 * Helper function to get relative position for an event
@@ -80831,12 +82105,12 @@
 
 
 /***/ }),
-/* 661 */
+/* 663 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var helpers = __webpack_require__(643);
+	var helpers = __webpack_require__(645);
 
 	function filterByPosition(array, position) {
 		return helpers.where(array, function(v) {
@@ -81256,14 +82530,14 @@
 
 
 /***/ }),
-/* 662 */
+/* 664 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var helpers = __webpack_require__(643);
-	var basic = __webpack_require__(663);
-	var dom = __webpack_require__(664);
+	var helpers = __webpack_require__(645);
+	var basic = __webpack_require__(665);
+	var dom = __webpack_require__(666);
 
 	// @TODO Make possible to select another platform at build time.
 	var implementation = dom._enabled ? dom : basic;
@@ -81336,7 +82610,7 @@
 
 
 /***/ }),
-/* 663 */
+/* 665 */
 /***/ (function(module, exports) {
 
 	/**
@@ -81357,7 +82631,7 @@
 
 
 /***/ }),
-/* 664 */
+/* 666 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -81366,7 +82640,7 @@
 
 	'use strict';
 
-	var helpers = __webpack_require__(643);
+	var helpers = __webpack_require__(645);
 
 	var EXPANDO_KEY = '$chartjs';
 	var CSS_PREFIX = 'chartjs-';
@@ -81820,13 +83094,13 @@
 
 
 /***/ }),
-/* 665 */
+/* 667 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var defaults = __webpack_require__(642);
-	var helpers = __webpack_require__(643);
+	var defaults = __webpack_require__(644);
+	var helpers = __webpack_require__(645);
 
 	defaults._set('global', {
 		plugins: {}
@@ -82208,12 +83482,12 @@
 
 
 /***/ }),
-/* 666 */
+/* 668 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var helpers = __webpack_require__(643);
+	var helpers = __webpack_require__(645);
 
 	/**
 	 * Namespace to hold static tick generation functions
@@ -82284,15 +83558,15 @@
 
 
 /***/ }),
-/* 667 */
+/* 669 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* global window: false */
 	'use strict';
 
-	var defaults = __webpack_require__(642);
-	var Element = __webpack_require__(654);
-	var helpers = __webpack_require__(643);
+	var defaults = __webpack_require__(644);
+	var Element = __webpack_require__(656);
+	var helpers = __webpack_require__(645);
 
 	defaults._set('global', {
 		animation: {
@@ -82462,17 +83736,17 @@
 
 
 /***/ }),
-/* 668 */
+/* 670 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var defaults = __webpack_require__(642);
-	var helpers = __webpack_require__(643);
-	var Interaction = __webpack_require__(660);
-	var layouts = __webpack_require__(661);
-	var platform = __webpack_require__(662);
-	var plugins = __webpack_require__(665);
+	var defaults = __webpack_require__(644);
+	var helpers = __webpack_require__(645);
+	var Interaction = __webpack_require__(662);
+	var layouts = __webpack_require__(663);
+	var platform = __webpack_require__(664);
+	var plugins = __webpack_require__(667);
 
 	module.exports = function(Chart) {
 
@@ -83415,12 +84689,12 @@
 
 
 /***/ }),
-/* 669 */
+/* 671 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var helpers = __webpack_require__(643);
+	var helpers = __webpack_require__(645);
 
 	module.exports = function(Chart) {
 
@@ -83751,14 +85025,14 @@
 
 
 /***/ }),
-/* 670 */
+/* 672 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var defaults = __webpack_require__(642);
-	var helpers = __webpack_require__(643);
-	var layouts = __webpack_require__(661);
+	var defaults = __webpack_require__(644);
+	var helpers = __webpack_require__(645);
+	var layouts = __webpack_require__(663);
 
 	module.exports = function(Chart) {
 
@@ -83803,15 +85077,15 @@
 
 
 /***/ }),
-/* 671 */
+/* 673 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var defaults = __webpack_require__(642);
-	var Element = __webpack_require__(654);
-	var helpers = __webpack_require__(643);
-	var Ticks = __webpack_require__(666);
+	var defaults = __webpack_require__(644);
+	var Element = __webpack_require__(656);
+	var helpers = __webpack_require__(645);
+	var Ticks = __webpack_require__(668);
 
 	defaults._set('scale', {
 		display: true,
@@ -84745,14 +86019,14 @@
 
 
 /***/ }),
-/* 672 */
+/* 674 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var defaults = __webpack_require__(642);
-	var Element = __webpack_require__(654);
-	var helpers = __webpack_require__(643);
+	var defaults = __webpack_require__(644);
+	var Element = __webpack_require__(656);
+	var helpers = __webpack_require__(645);
 
 	defaults._set('global', {
 		tooltips: {
@@ -85699,12 +86973,12 @@
 
 
 /***/ }),
-/* 673 */
+/* 675 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var helpers = __webpack_require__(643);
+	var helpers = __webpack_require__(645);
 
 	/**
 	 * Generate a set of linear ticks
@@ -85891,7 +87165,7 @@
 
 
 /***/ }),
-/* 674 */
+/* 676 */
 /***/ (function(module, exports) {
 
 	'use strict';
@@ -86030,14 +87304,14 @@
 
 
 /***/ }),
-/* 675 */
+/* 677 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var defaults = __webpack_require__(642);
-	var helpers = __webpack_require__(643);
-	var Ticks = __webpack_require__(666);
+	var defaults = __webpack_require__(644);
+	var helpers = __webpack_require__(645);
+	var Ticks = __webpack_require__(668);
 
 	module.exports = function(Chart) {
 
@@ -86227,13 +87501,13 @@
 
 
 /***/ }),
-/* 676 */
+/* 678 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var helpers = __webpack_require__(643);
-	var Ticks = __webpack_require__(666);
+	var helpers = __webpack_require__(645);
+	var Ticks = __webpack_require__(668);
 
 	/**
 	 * Generate a set of logarithmic ticks
@@ -86580,14 +87854,14 @@
 
 
 /***/ }),
-/* 677 */
+/* 679 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var defaults = __webpack_require__(642);
-	var helpers = __webpack_require__(643);
-	var Ticks = __webpack_require__(666);
+	var defaults = __webpack_require__(644);
+	var helpers = __webpack_require__(645);
+	var Ticks = __webpack_require__(668);
 
 	module.exports = function(Chart) {
 
@@ -87115,17 +88389,17 @@
 
 
 /***/ }),
-/* 678 */
+/* 680 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* global window: false */
 	'use strict';
 
-	var moment = __webpack_require__(679);
+	var moment = __webpack_require__(681);
 	moment = typeof moment === 'function' ? moment : window.moment;
 
-	var defaults = __webpack_require__(642);
-	var helpers = __webpack_require__(643);
+	var defaults = __webpack_require__(644);
+	var helpers = __webpack_require__(645);
 
 	// Integer constants are from the ES6 spec.
 	var MIN_INTEGER = Number.MIN_SAFE_INTEGER || -9007199254740991;
@@ -87904,7 +89178,7 @@
 
 
 /***/ }),
-/* 679 */
+/* 681 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var require;/* WEBPACK VAR INJECTION */(function(module) {//! moment.js
@@ -89742,7 +91016,7 @@
 	            try {
 	                oldLocale = globalLocale._abbr;
 	                var aliasedRequire = require;
-	                __webpack_require__(680)("./" + name);
+	                __webpack_require__(682)("./" + name);
 	                getSetGlobalLocale(oldLocale);
 	            } catch (e) {}
 	        }
@@ -92417,256 +93691,256 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(589)(module)))
 
 /***/ }),
-/* 680 */
+/* 682 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var map = {
-		"./af": 681,
-		"./af.js": 681,
-		"./ar": 682,
-		"./ar-dz": 683,
-		"./ar-dz.js": 683,
-		"./ar-kw": 684,
-		"./ar-kw.js": 684,
-		"./ar-ly": 685,
-		"./ar-ly.js": 685,
-		"./ar-ma": 686,
-		"./ar-ma.js": 686,
-		"./ar-sa": 687,
-		"./ar-sa.js": 687,
-		"./ar-tn": 688,
-		"./ar-tn.js": 688,
-		"./ar.js": 682,
-		"./az": 689,
-		"./az.js": 689,
-		"./be": 690,
-		"./be.js": 690,
-		"./bg": 691,
-		"./bg.js": 691,
-		"./bm": 692,
-		"./bm.js": 692,
-		"./bn": 693,
-		"./bn.js": 693,
-		"./bo": 694,
-		"./bo.js": 694,
-		"./br": 695,
-		"./br.js": 695,
-		"./bs": 696,
-		"./bs.js": 696,
-		"./ca": 697,
-		"./ca.js": 697,
-		"./cs": 698,
-		"./cs.js": 698,
-		"./cv": 699,
-		"./cv.js": 699,
-		"./cy": 700,
-		"./cy.js": 700,
-		"./da": 701,
-		"./da.js": 701,
-		"./de": 702,
-		"./de-at": 703,
-		"./de-at.js": 703,
-		"./de-ch": 704,
-		"./de-ch.js": 704,
-		"./de.js": 702,
-		"./dv": 705,
-		"./dv.js": 705,
-		"./el": 706,
-		"./el.js": 706,
-		"./en-au": 707,
-		"./en-au.js": 707,
-		"./en-ca": 708,
-		"./en-ca.js": 708,
-		"./en-gb": 709,
-		"./en-gb.js": 709,
-		"./en-ie": 710,
-		"./en-ie.js": 710,
-		"./en-il": 711,
-		"./en-il.js": 711,
-		"./en-nz": 712,
-		"./en-nz.js": 712,
-		"./eo": 713,
-		"./eo.js": 713,
-		"./es": 714,
-		"./es-do": 715,
-		"./es-do.js": 715,
-		"./es-us": 716,
-		"./es-us.js": 716,
-		"./es.js": 714,
-		"./et": 717,
-		"./et.js": 717,
-		"./eu": 718,
-		"./eu.js": 718,
-		"./fa": 719,
-		"./fa.js": 719,
-		"./fi": 720,
-		"./fi.js": 720,
-		"./fo": 721,
-		"./fo.js": 721,
-		"./fr": 722,
-		"./fr-ca": 723,
-		"./fr-ca.js": 723,
-		"./fr-ch": 724,
-		"./fr-ch.js": 724,
-		"./fr.js": 722,
-		"./fy": 725,
-		"./fy.js": 725,
-		"./gd": 726,
-		"./gd.js": 726,
-		"./gl": 727,
-		"./gl.js": 727,
-		"./gom-latn": 728,
-		"./gom-latn.js": 728,
-		"./gu": 729,
-		"./gu.js": 729,
-		"./he": 730,
-		"./he.js": 730,
-		"./hi": 731,
-		"./hi.js": 731,
-		"./hr": 732,
-		"./hr.js": 732,
-		"./hu": 733,
-		"./hu.js": 733,
-		"./hy-am": 734,
-		"./hy-am.js": 734,
-		"./id": 735,
-		"./id.js": 735,
-		"./is": 736,
-		"./is.js": 736,
-		"./it": 737,
-		"./it.js": 737,
-		"./ja": 738,
-		"./ja.js": 738,
-		"./jv": 739,
-		"./jv.js": 739,
-		"./ka": 740,
-		"./ka.js": 740,
-		"./kk": 741,
-		"./kk.js": 741,
-		"./km": 742,
-		"./km.js": 742,
-		"./kn": 743,
-		"./kn.js": 743,
-		"./ko": 744,
-		"./ko.js": 744,
-		"./ky": 745,
-		"./ky.js": 745,
-		"./lb": 746,
-		"./lb.js": 746,
-		"./lo": 747,
-		"./lo.js": 747,
-		"./lt": 748,
-		"./lt.js": 748,
-		"./lv": 749,
-		"./lv.js": 749,
-		"./me": 750,
-		"./me.js": 750,
-		"./mi": 751,
-		"./mi.js": 751,
-		"./mk": 752,
-		"./mk.js": 752,
-		"./ml": 753,
-		"./ml.js": 753,
-		"./mn": 754,
-		"./mn.js": 754,
-		"./mr": 755,
-		"./mr.js": 755,
-		"./ms": 756,
-		"./ms-my": 757,
-		"./ms-my.js": 757,
-		"./ms.js": 756,
-		"./mt": 758,
-		"./mt.js": 758,
-		"./my": 759,
-		"./my.js": 759,
-		"./nb": 760,
-		"./nb.js": 760,
-		"./ne": 761,
-		"./ne.js": 761,
-		"./nl": 762,
-		"./nl-be": 763,
-		"./nl-be.js": 763,
-		"./nl.js": 762,
-		"./nn": 764,
-		"./nn.js": 764,
-		"./pa-in": 765,
-		"./pa-in.js": 765,
-		"./pl": 766,
-		"./pl.js": 766,
-		"./pt": 767,
-		"./pt-br": 768,
-		"./pt-br.js": 768,
-		"./pt.js": 767,
-		"./ro": 769,
-		"./ro.js": 769,
-		"./ru": 770,
-		"./ru.js": 770,
-		"./sd": 771,
-		"./sd.js": 771,
-		"./se": 772,
-		"./se.js": 772,
-		"./si": 773,
-		"./si.js": 773,
-		"./sk": 774,
-		"./sk.js": 774,
-		"./sl": 775,
-		"./sl.js": 775,
-		"./sq": 776,
-		"./sq.js": 776,
-		"./sr": 777,
-		"./sr-cyrl": 778,
-		"./sr-cyrl.js": 778,
-		"./sr.js": 777,
-		"./ss": 779,
-		"./ss.js": 779,
-		"./sv": 780,
-		"./sv.js": 780,
-		"./sw": 781,
-		"./sw.js": 781,
-		"./ta": 782,
-		"./ta.js": 782,
-		"./te": 783,
-		"./te.js": 783,
-		"./tet": 784,
-		"./tet.js": 784,
-		"./tg": 785,
-		"./tg.js": 785,
-		"./th": 786,
-		"./th.js": 786,
-		"./tl-ph": 787,
-		"./tl-ph.js": 787,
-		"./tlh": 788,
-		"./tlh.js": 788,
-		"./tr": 789,
-		"./tr.js": 789,
-		"./tzl": 790,
-		"./tzl.js": 790,
-		"./tzm": 791,
-		"./tzm-latn": 792,
-		"./tzm-latn.js": 792,
-		"./tzm.js": 791,
-		"./ug-cn": 793,
-		"./ug-cn.js": 793,
-		"./uk": 794,
-		"./uk.js": 794,
-		"./ur": 795,
-		"./ur.js": 795,
-		"./uz": 796,
-		"./uz-latn": 797,
-		"./uz-latn.js": 797,
-		"./uz.js": 796,
-		"./vi": 798,
-		"./vi.js": 798,
-		"./x-pseudo": 799,
-		"./x-pseudo.js": 799,
-		"./yo": 800,
-		"./yo.js": 800,
-		"./zh-cn": 801,
-		"./zh-cn.js": 801,
-		"./zh-hk": 802,
-		"./zh-hk.js": 802,
-		"./zh-tw": 803,
-		"./zh-tw.js": 803
+		"./af": 683,
+		"./af.js": 683,
+		"./ar": 684,
+		"./ar-dz": 685,
+		"./ar-dz.js": 685,
+		"./ar-kw": 686,
+		"./ar-kw.js": 686,
+		"./ar-ly": 687,
+		"./ar-ly.js": 687,
+		"./ar-ma": 688,
+		"./ar-ma.js": 688,
+		"./ar-sa": 689,
+		"./ar-sa.js": 689,
+		"./ar-tn": 690,
+		"./ar-tn.js": 690,
+		"./ar.js": 684,
+		"./az": 691,
+		"./az.js": 691,
+		"./be": 692,
+		"./be.js": 692,
+		"./bg": 693,
+		"./bg.js": 693,
+		"./bm": 694,
+		"./bm.js": 694,
+		"./bn": 695,
+		"./bn.js": 695,
+		"./bo": 696,
+		"./bo.js": 696,
+		"./br": 697,
+		"./br.js": 697,
+		"./bs": 698,
+		"./bs.js": 698,
+		"./ca": 699,
+		"./ca.js": 699,
+		"./cs": 700,
+		"./cs.js": 700,
+		"./cv": 701,
+		"./cv.js": 701,
+		"./cy": 702,
+		"./cy.js": 702,
+		"./da": 703,
+		"./da.js": 703,
+		"./de": 704,
+		"./de-at": 705,
+		"./de-at.js": 705,
+		"./de-ch": 706,
+		"./de-ch.js": 706,
+		"./de.js": 704,
+		"./dv": 707,
+		"./dv.js": 707,
+		"./el": 708,
+		"./el.js": 708,
+		"./en-au": 709,
+		"./en-au.js": 709,
+		"./en-ca": 710,
+		"./en-ca.js": 710,
+		"./en-gb": 711,
+		"./en-gb.js": 711,
+		"./en-ie": 712,
+		"./en-ie.js": 712,
+		"./en-il": 713,
+		"./en-il.js": 713,
+		"./en-nz": 714,
+		"./en-nz.js": 714,
+		"./eo": 715,
+		"./eo.js": 715,
+		"./es": 716,
+		"./es-do": 717,
+		"./es-do.js": 717,
+		"./es-us": 718,
+		"./es-us.js": 718,
+		"./es.js": 716,
+		"./et": 719,
+		"./et.js": 719,
+		"./eu": 720,
+		"./eu.js": 720,
+		"./fa": 721,
+		"./fa.js": 721,
+		"./fi": 722,
+		"./fi.js": 722,
+		"./fo": 723,
+		"./fo.js": 723,
+		"./fr": 724,
+		"./fr-ca": 725,
+		"./fr-ca.js": 725,
+		"./fr-ch": 726,
+		"./fr-ch.js": 726,
+		"./fr.js": 724,
+		"./fy": 727,
+		"./fy.js": 727,
+		"./gd": 728,
+		"./gd.js": 728,
+		"./gl": 729,
+		"./gl.js": 729,
+		"./gom-latn": 730,
+		"./gom-latn.js": 730,
+		"./gu": 731,
+		"./gu.js": 731,
+		"./he": 732,
+		"./he.js": 732,
+		"./hi": 733,
+		"./hi.js": 733,
+		"./hr": 734,
+		"./hr.js": 734,
+		"./hu": 735,
+		"./hu.js": 735,
+		"./hy-am": 736,
+		"./hy-am.js": 736,
+		"./id": 737,
+		"./id.js": 737,
+		"./is": 738,
+		"./is.js": 738,
+		"./it": 739,
+		"./it.js": 739,
+		"./ja": 740,
+		"./ja.js": 740,
+		"./jv": 741,
+		"./jv.js": 741,
+		"./ka": 742,
+		"./ka.js": 742,
+		"./kk": 743,
+		"./kk.js": 743,
+		"./km": 744,
+		"./km.js": 744,
+		"./kn": 745,
+		"./kn.js": 745,
+		"./ko": 746,
+		"./ko.js": 746,
+		"./ky": 747,
+		"./ky.js": 747,
+		"./lb": 748,
+		"./lb.js": 748,
+		"./lo": 749,
+		"./lo.js": 749,
+		"./lt": 750,
+		"./lt.js": 750,
+		"./lv": 751,
+		"./lv.js": 751,
+		"./me": 752,
+		"./me.js": 752,
+		"./mi": 753,
+		"./mi.js": 753,
+		"./mk": 754,
+		"./mk.js": 754,
+		"./ml": 755,
+		"./ml.js": 755,
+		"./mn": 756,
+		"./mn.js": 756,
+		"./mr": 757,
+		"./mr.js": 757,
+		"./ms": 758,
+		"./ms-my": 759,
+		"./ms-my.js": 759,
+		"./ms.js": 758,
+		"./mt": 760,
+		"./mt.js": 760,
+		"./my": 761,
+		"./my.js": 761,
+		"./nb": 762,
+		"./nb.js": 762,
+		"./ne": 763,
+		"./ne.js": 763,
+		"./nl": 764,
+		"./nl-be": 765,
+		"./nl-be.js": 765,
+		"./nl.js": 764,
+		"./nn": 766,
+		"./nn.js": 766,
+		"./pa-in": 767,
+		"./pa-in.js": 767,
+		"./pl": 768,
+		"./pl.js": 768,
+		"./pt": 769,
+		"./pt-br": 770,
+		"./pt-br.js": 770,
+		"./pt.js": 769,
+		"./ro": 771,
+		"./ro.js": 771,
+		"./ru": 772,
+		"./ru.js": 772,
+		"./sd": 773,
+		"./sd.js": 773,
+		"./se": 774,
+		"./se.js": 774,
+		"./si": 775,
+		"./si.js": 775,
+		"./sk": 776,
+		"./sk.js": 776,
+		"./sl": 777,
+		"./sl.js": 777,
+		"./sq": 778,
+		"./sq.js": 778,
+		"./sr": 779,
+		"./sr-cyrl": 780,
+		"./sr-cyrl.js": 780,
+		"./sr.js": 779,
+		"./ss": 781,
+		"./ss.js": 781,
+		"./sv": 782,
+		"./sv.js": 782,
+		"./sw": 783,
+		"./sw.js": 783,
+		"./ta": 784,
+		"./ta.js": 784,
+		"./te": 785,
+		"./te.js": 785,
+		"./tet": 786,
+		"./tet.js": 786,
+		"./tg": 787,
+		"./tg.js": 787,
+		"./th": 788,
+		"./th.js": 788,
+		"./tl-ph": 789,
+		"./tl-ph.js": 789,
+		"./tlh": 790,
+		"./tlh.js": 790,
+		"./tr": 791,
+		"./tr.js": 791,
+		"./tzl": 792,
+		"./tzl.js": 792,
+		"./tzm": 793,
+		"./tzm-latn": 794,
+		"./tzm-latn.js": 794,
+		"./tzm.js": 793,
+		"./ug-cn": 795,
+		"./ug-cn.js": 795,
+		"./uk": 796,
+		"./uk.js": 796,
+		"./ur": 797,
+		"./ur.js": 797,
+		"./uz": 798,
+		"./uz-latn": 799,
+		"./uz-latn.js": 799,
+		"./uz.js": 798,
+		"./vi": 800,
+		"./vi.js": 800,
+		"./x-pseudo": 801,
+		"./x-pseudo.js": 801,
+		"./yo": 802,
+		"./yo.js": 802,
+		"./zh-cn": 803,
+		"./zh-cn.js": 803,
+		"./zh-hk": 804,
+		"./zh-hk.js": 804,
+		"./zh-tw": 805,
+		"./zh-tw.js": 805
 	};
 	function webpackContext(req) {
 		return __webpack_require__(webpackContextResolve(req));
@@ -92679,17 +93953,17 @@
 	};
 	webpackContext.resolve = webpackContextResolve;
 	module.exports = webpackContext;
-	webpackContext.id = 680;
+	webpackContext.id = 682;
 
 
 /***/ }),
-/* 681 */
+/* 683 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -92760,13 +94034,13 @@
 
 
 /***/ }),
-/* 682 */
+/* 684 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -92899,13 +94173,13 @@
 
 
 /***/ }),
-/* 683 */
+/* 685 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -92962,13 +94236,13 @@
 
 
 /***/ }),
-/* 684 */
+/* 686 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -93025,13 +94299,13 @@
 
 
 /***/ }),
-/* 685 */
+/* 687 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -93151,13 +94425,13 @@
 
 
 /***/ }),
-/* 686 */
+/* 688 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -93214,13 +94488,13 @@
 
 
 /***/ }),
-/* 687 */
+/* 689 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -93322,13 +94596,13 @@
 
 
 /***/ }),
-/* 688 */
+/* 690 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -93385,13 +94659,13 @@
 
 
 /***/ }),
-/* 689 */
+/* 691 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -93494,13 +94768,13 @@
 
 
 /***/ }),
-/* 690 */
+/* 692 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -93630,13 +94904,13 @@
 
 
 /***/ }),
-/* 691 */
+/* 693 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -93724,13 +94998,13 @@
 
 
 /***/ }),
-/* 692 */
+/* 694 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -93786,13 +95060,13 @@
 
 
 /***/ }),
-/* 693 */
+/* 695 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -93909,13 +95183,13 @@
 
 
 /***/ }),
-/* 694 */
+/* 696 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -94032,13 +95306,13 @@
 
 
 /***/ }),
-/* 695 */
+/* 697 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -94144,13 +95418,13 @@
 
 
 /***/ }),
-/* 696 */
+/* 698 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -94299,13 +95573,13 @@
 
 
 /***/ }),
-/* 697 */
+/* 699 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -94391,13 +95665,13 @@
 
 
 /***/ }),
-/* 698 */
+/* 700 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -94574,13 +95848,13 @@
 
 
 /***/ }),
-/* 699 */
+/* 701 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -94641,13 +95915,13 @@
 
 
 /***/ }),
-/* 700 */
+/* 702 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -94725,13 +95999,13 @@
 
 
 /***/ }),
-/* 701 */
+/* 703 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -94789,13 +96063,13 @@
 
 
 /***/ }),
-/* 702 */
+/* 704 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -94869,13 +96143,13 @@
 
 
 /***/ }),
-/* 703 */
+/* 705 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -94949,13 +96223,13 @@
 
 
 /***/ }),
-/* 704 */
+/* 706 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -95029,13 +96303,13 @@
 
 
 /***/ }),
-/* 705 */
+/* 707 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -95132,13 +96406,13 @@
 
 
 /***/ }),
-/* 706 */
+/* 708 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -95236,13 +96510,13 @@
 
 
 /***/ }),
-/* 707 */
+/* 709 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -95307,13 +96581,13 @@
 
 
 /***/ }),
-/* 708 */
+/* 710 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -95374,13 +96648,13 @@
 
 
 /***/ }),
-/* 709 */
+/* 711 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -95445,13 +96719,13 @@
 
 
 /***/ }),
-/* 710 */
+/* 712 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -95516,13 +96790,13 @@
 
 
 /***/ }),
-/* 711 */
+/* 713 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -95582,13 +96856,13 @@
 
 
 /***/ }),
-/* 712 */
+/* 714 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -95653,13 +96927,13 @@
 
 
 /***/ }),
-/* 713 */
+/* 715 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -95728,13 +97002,13 @@
 
 
 /***/ }),
-/* 714 */
+/* 716 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -95824,13 +97098,13 @@
 
 
 /***/ }),
-/* 715 */
+/* 717 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -95920,13 +97194,13 @@
 
 
 /***/ }),
-/* 716 */
+/* 718 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -96007,13 +97281,13 @@
 
 
 /***/ }),
-/* 717 */
+/* 719 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -96091,13 +97365,13 @@
 
 
 /***/ }),
-/* 718 */
+/* 720 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -96161,13 +97435,13 @@
 
 
 /***/ }),
-/* 719 */
+/* 721 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -96271,13 +97545,13 @@
 
 
 /***/ }),
-/* 720 */
+/* 722 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -96384,13 +97658,13 @@
 
 
 /***/ }),
-/* 721 */
+/* 723 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -96448,13 +97722,13 @@
 
 
 /***/ }),
-/* 722 */
+/* 724 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -96535,13 +97809,13 @@
 
 
 /***/ }),
-/* 723 */
+/* 725 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -96613,13 +97887,13 @@
 
 
 /***/ }),
-/* 724 */
+/* 726 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -96695,13 +97969,13 @@
 
 
 /***/ }),
-/* 725 */
+/* 727 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -96774,13 +98048,13 @@
 
 
 /***/ }),
-/* 726 */
+/* 728 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -96854,13 +98128,13 @@
 
 
 /***/ }),
-/* 727 */
+/* 729 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -96935,13 +98209,13 @@
 
 
 /***/ }),
-/* 728 */
+/* 730 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -97062,13 +98336,13 @@
 
 
 /***/ }),
-/* 729 */
+/* 731 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -97190,13 +98464,13 @@
 
 
 /***/ }),
-/* 730 */
+/* 732 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -97291,13 +98565,13 @@
 
 
 /***/ }),
-/* 731 */
+/* 733 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -97419,13 +98693,13 @@
 
 
 /***/ }),
-/* 732 */
+/* 734 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -97577,13 +98851,13 @@
 
 
 /***/ }),
-/* 733 */
+/* 735 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -97691,13 +98965,13 @@
 
 
 /***/ }),
-/* 734 */
+/* 736 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -97790,13 +99064,13 @@
 
 
 /***/ }),
-/* 735 */
+/* 737 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -97876,13 +99150,13 @@
 
 
 /***/ }),
-/* 736 */
+/* 738 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -98012,13 +99286,13 @@
 
 
 /***/ }),
-/* 737 */
+/* 739 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -98085,13 +99359,13 @@
 
 
 /***/ }),
-/* 738 */
+/* 740 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -98181,13 +99455,13 @@
 
 
 /***/ }),
-/* 739 */
+/* 741 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -98267,13 +99541,13 @@
 
 
 /***/ }),
-/* 740 */
+/* 742 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -98360,13 +99634,13 @@
 
 
 /***/ }),
-/* 741 */
+/* 743 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -98451,13 +99725,13 @@
 
 
 /***/ }),
-/* 742 */
+/* 744 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -98565,13 +99839,13 @@
 
 
 /***/ }),
-/* 743 */
+/* 745 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -98695,13 +99969,13 @@
 
 
 /***/ }),
-/* 744 */
+/* 746 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -98780,13 +100054,13 @@
 
 
 /***/ }),
-/* 745 */
+/* 747 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -98871,13 +100145,13 @@
 
 
 /***/ }),
-/* 746 */
+/* 748 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -99011,13 +100285,13 @@
 
 
 /***/ }),
-/* 747 */
+/* 749 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -99085,13 +100359,13 @@
 
 
 /***/ }),
-/* 748 */
+/* 750 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -99207,13 +100481,13 @@
 
 
 /***/ }),
-/* 749 */
+/* 751 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -99308,13 +100582,13 @@
 
 
 /***/ }),
-/* 750 */
+/* 752 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -99424,13 +100698,13 @@
 
 
 /***/ }),
-/* 751 */
+/* 753 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -99492,13 +100766,13 @@
 
 
 /***/ }),
-/* 752 */
+/* 754 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -99586,13 +100860,13 @@
 
 
 /***/ }),
-/* 753 */
+/* 755 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -99671,13 +100945,13 @@
 
 
 /***/ }),
-/* 754 */
+/* 756 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -99779,13 +101053,13 @@
 
 
 /***/ }),
-/* 755 */
+/* 757 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -99943,13 +101217,13 @@
 
 
 /***/ }),
-/* 756 */
+/* 758 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -100029,13 +101303,13 @@
 
 
 /***/ }),
-/* 757 */
+/* 759 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -100115,13 +101389,13 @@
 
 
 /***/ }),
-/* 758 */
+/* 760 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -100179,13 +101453,13 @@
 
 
 /***/ }),
-/* 759 */
+/* 761 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -100276,13 +101550,13 @@
 
 
 /***/ }),
-/* 760 */
+/* 762 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -100342,13 +101616,13 @@
 
 
 /***/ }),
-/* 761 */
+/* 763 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -100469,13 +101743,13 @@
 
 
 /***/ }),
-/* 762 */
+/* 764 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -100560,13 +101834,13 @@
 
 
 /***/ }),
-/* 763 */
+/* 765 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -100651,13 +101925,13 @@
 
 
 /***/ }),
-/* 764 */
+/* 766 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -100715,13 +101989,13 @@
 
 
 /***/ }),
-/* 765 */
+/* 767 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -100843,13 +102117,13 @@
 
 
 /***/ }),
-/* 766 */
+/* 768 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -100973,13 +102247,13 @@
 
 
 /***/ }),
-/* 767 */
+/* 769 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -101042,13 +102316,13 @@
 
 
 /***/ }),
-/* 768 */
+/* 770 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -101107,13 +102381,13 @@
 
 
 /***/ }),
-/* 769 */
+/* 771 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -101186,13 +102460,13 @@
 
 
 /***/ }),
-/* 770 */
+/* 772 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -101372,13 +102646,13 @@
 
 
 /***/ }),
-/* 771 */
+/* 773 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -101474,13 +102748,13 @@
 
 
 /***/ }),
-/* 772 */
+/* 774 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -101538,13 +102812,13 @@
 
 
 /***/ }),
-/* 773 */
+/* 775 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -101613,13 +102887,13 @@
 
 
 /***/ }),
-/* 774 */
+/* 776 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -101773,13 +103047,13 @@
 
 
 /***/ }),
-/* 775 */
+/* 777 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -101950,13 +103224,13 @@
 
 
 /***/ }),
-/* 776 */
+/* 778 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -102022,13 +103296,13 @@
 
 
 /***/ }),
-/* 777 */
+/* 779 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -102137,13 +103411,13 @@
 
 
 /***/ }),
-/* 778 */
+/* 780 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -102252,13 +103526,13 @@
 
 
 /***/ }),
-/* 779 */
+/* 781 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -102344,13 +103618,13 @@
 
 
 /***/ }),
-/* 780 */
+/* 782 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -102417,13 +103691,13 @@
 
 
 /***/ }),
-/* 781 */
+/* 783 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -102480,13 +103754,13 @@
 
 
 /***/ }),
-/* 782 */
+/* 784 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -102613,13 +103887,13 @@
 
 
 /***/ }),
-/* 783 */
+/* 785 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -102706,13 +103980,13 @@
 
 
 /***/ }),
-/* 784 */
+/* 786 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -102777,13 +104051,13 @@
 
 
 /***/ }),
-/* 785 */
+/* 787 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -102897,13 +104171,13 @@
 
 
 /***/ }),
-/* 786 */
+/* 788 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -102968,13 +104242,13 @@
 
 
 /***/ }),
-/* 787 */
+/* 789 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -103034,13 +104308,13 @@
 
 
 /***/ }),
-/* 788 */
+/* 790 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -103160,12 +104434,12 @@
 
 
 /***/ }),
-/* 789 */
+/* 791 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -103258,13 +104532,13 @@
 
 
 /***/ }),
-/* 790 */
+/* 792 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -103353,13 +104627,13 @@
 
 
 /***/ }),
-/* 791 */
+/* 793 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -103415,13 +104689,13 @@
 
 
 /***/ }),
-/* 792 */
+/* 794 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -103477,13 +104751,13 @@
 
 
 /***/ }),
-/* 793 */
+/* 795 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js language configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -103600,13 +104874,13 @@
 
 
 /***/ }),
-/* 794 */
+/* 796 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -103755,13 +105029,13 @@
 
 
 /***/ }),
-/* 795 */
+/* 797 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -103857,13 +105131,13 @@
 
 
 /***/ }),
-/* 796 */
+/* 798 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -103919,13 +105193,13 @@
 
 
 /***/ }),
-/* 797 */
+/* 799 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -103981,13 +105255,13 @@
 
 
 /***/ }),
-/* 798 */
+/* 800 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -104064,13 +105338,13 @@
 
 
 /***/ }),
-/* 799 */
+/* 801 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -104136,13 +105410,13 @@
 
 
 /***/ }),
-/* 800 */
+/* 802 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -104200,13 +105474,13 @@
 
 
 /***/ }),
-/* 801 */
+/* 803 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -104314,13 +105588,13 @@
 
 
 /***/ }),
-/* 802 */
+/* 804 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -104421,13 +105695,13 @@
 
 
 /***/ }),
-/* 803 */
+/* 805 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	//! moment.js locale configuration
 
 	;(function (global, factory) {
-	    true ? factory(__webpack_require__(679)) :
+	    true ? factory(__webpack_require__(681)) :
 	   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
 	   factory(global.moment)
 	}(this, (function (moment) { 'use strict';
@@ -104528,14 +105802,14 @@
 
 
 /***/ }),
-/* 804 */
+/* 806 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var defaults = __webpack_require__(642);
-	var elements = __webpack_require__(655);
-	var helpers = __webpack_require__(643);
+	var defaults = __webpack_require__(644);
+	var elements = __webpack_require__(657);
+	var helpers = __webpack_require__(645);
 
 	defaults._set('bar', {
 		hover: {
@@ -105038,14 +106312,14 @@
 
 
 /***/ }),
-/* 805 */
+/* 807 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var defaults = __webpack_require__(642);
-	var elements = __webpack_require__(655);
-	var helpers = __webpack_require__(643);
+	var defaults = __webpack_require__(644);
+	var elements = __webpack_require__(657);
+	var helpers = __webpack_require__(645);
 
 	defaults._set('bubble', {
 		hover: {
@@ -105224,14 +106498,14 @@
 
 
 /***/ }),
-/* 806 */
+/* 808 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var defaults = __webpack_require__(642);
-	var elements = __webpack_require__(655);
-	var helpers = __webpack_require__(643);
+	var defaults = __webpack_require__(644);
+	var elements = __webpack_require__(657);
+	var helpers = __webpack_require__(645);
 
 	defaults._set('doughnut', {
 		animation: {
@@ -105529,14 +106803,14 @@
 
 
 /***/ }),
-/* 807 */
+/* 809 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var defaults = __webpack_require__(642);
-	var elements = __webpack_require__(655);
-	var helpers = __webpack_require__(643);
+	var defaults = __webpack_require__(644);
+	var elements = __webpack_require__(657);
+	var helpers = __webpack_require__(645);
 
 	defaults._set('line', {
 		showLines: true,
@@ -105868,14 +107142,14 @@
 
 
 /***/ }),
-/* 808 */
+/* 810 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var defaults = __webpack_require__(642);
-	var elements = __webpack_require__(655);
-	var helpers = __webpack_require__(643);
+	var defaults = __webpack_require__(644);
+	var elements = __webpack_require__(657);
+	var helpers = __webpack_require__(645);
 
 	defaults._set('polarArea', {
 		scale: {
@@ -106096,14 +107370,14 @@
 
 
 /***/ }),
-/* 809 */
+/* 811 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var defaults = __webpack_require__(642);
-	var elements = __webpack_require__(655);
-	var helpers = __webpack_require__(643);
+	var defaults = __webpack_require__(644);
+	var elements = __webpack_require__(657);
+	var helpers = __webpack_require__(645);
 
 	defaults._set('radar', {
 		scale: {
@@ -106270,12 +107544,12 @@
 
 
 /***/ }),
-/* 810 */
+/* 812 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var defaults = __webpack_require__(642);
+	var defaults = __webpack_require__(644);
 
 	defaults._set('scatter', {
 		hover: {
@@ -106318,7 +107592,7 @@
 
 
 /***/ }),
-/* 811 */
+/* 813 */
 /***/ (function(module, exports) {
 
 	'use strict';
@@ -106335,7 +107609,7 @@
 
 
 /***/ }),
-/* 812 */
+/* 814 */
 /***/ (function(module, exports) {
 
 	'use strict';
@@ -106351,7 +107625,7 @@
 
 
 /***/ }),
-/* 813 */
+/* 815 */
 /***/ (function(module, exports) {
 
 	'use strict';
@@ -106368,7 +107642,7 @@
 
 
 /***/ }),
-/* 814 */
+/* 816 */
 /***/ (function(module, exports) {
 
 	'use strict';
@@ -106385,7 +107659,7 @@
 
 
 /***/ }),
-/* 815 */
+/* 817 */
 /***/ (function(module, exports) {
 
 	'use strict';
@@ -106402,7 +107676,7 @@
 
 
 /***/ }),
-/* 816 */
+/* 818 */
 /***/ (function(module, exports) {
 
 	'use strict';
@@ -106419,7 +107693,7 @@
 
 
 /***/ }),
-/* 817 */
+/* 819 */
 /***/ (function(module, exports) {
 
 	'use strict';
@@ -106433,19 +107707,19 @@
 
 
 /***/ }),
-/* 818 */
+/* 820 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	module.exports = {};
-	module.exports.filler = __webpack_require__(819);
-	module.exports.legend = __webpack_require__(820);
-	module.exports.title = __webpack_require__(821);
+	module.exports.filler = __webpack_require__(821);
+	module.exports.legend = __webpack_require__(822);
+	module.exports.title = __webpack_require__(823);
 
 
 /***/ }),
-/* 819 */
+/* 821 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -106456,9 +107730,9 @@
 
 	'use strict';
 
-	var defaults = __webpack_require__(642);
-	var elements = __webpack_require__(655);
-	var helpers = __webpack_require__(643);
+	var defaults = __webpack_require__(644);
+	var elements = __webpack_require__(657);
+	var helpers = __webpack_require__(645);
 
 	defaults._set('global', {
 		plugins: {
@@ -106769,15 +108043,15 @@
 
 
 /***/ }),
-/* 820 */
+/* 822 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var defaults = __webpack_require__(642);
-	var Element = __webpack_require__(654);
-	var helpers = __webpack_require__(643);
-	var layouts = __webpack_require__(661);
+	var defaults = __webpack_require__(644);
+	var Element = __webpack_require__(656);
+	var helpers = __webpack_require__(645);
+	var layouts = __webpack_require__(663);
 
 	var noop = helpers.noop;
 
@@ -107351,15 +108625,15 @@
 
 
 /***/ }),
-/* 821 */
+/* 823 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var defaults = __webpack_require__(642);
-	var Element = __webpack_require__(654);
-	var helpers = __webpack_require__(643);
-	var layouts = __webpack_require__(661);
+	var defaults = __webpack_require__(644);
+	var Element = __webpack_require__(656);
+	var helpers = __webpack_require__(645);
+	var layouts = __webpack_require__(663);
 
 	var noop = helpers.noop;
 
@@ -107609,7 +108883,7 @@
 
 
 /***/ }),
-/* 822 */
+/* 824 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';

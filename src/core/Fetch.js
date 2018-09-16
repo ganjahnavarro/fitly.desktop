@@ -1,5 +1,6 @@
 import Store from 'store'
 import { Base64 } from 'js-base64'
+import download from 'downloadjs';
 
 import { DEPLOYMENT_URL } from './Constants'
 import Alert from './Alert'
@@ -12,6 +13,19 @@ Fetch.get = function(resource, urlParameters, successCallback, errorCallback) {
 
     fetch(url, getDefaultHeaders())
         .then((response) => handleResponse(successCallback, errorCallback, response))
+        .catch((error) => handleError(errorCallback, error));
+};
+
+Fetch.download = function(resource, urlParameters, fileName) {
+    preFetch();
+    let url = DEPLOYMENT_URL + resource + parseQuery(urlParameters);
+
+    fetch(url, getDefaultHeaders())
+        .then((response) => response.blob())
+        .then((blob) => {
+            download(blob, fileName);
+            postFetch();
+        })
         .catch((error) => handleError(errorCallback, error));
 };
 
