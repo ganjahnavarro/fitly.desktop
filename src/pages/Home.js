@@ -1,9 +1,10 @@
 import React from 'react'
 import { Link } from 'react-router'
-import Chart from 'chart.js';
-import moment from 'moment';
+import Chart from 'chart.js'
+import moment from 'moment'
 
 import View from './abstract/View'
+import Input from '../components/Input'
 import Button from '../components/Button'
 
 import Formatter from '../core/Formatter'
@@ -14,9 +15,30 @@ class Home extends View {
 		constructor(props) {
 				super(props);
 
+				const today = moment().format("MM/DD/YYYY");
+				this.state.todayAsDateRange = {
+						startDate: today,
+						endDate: today
+				};
+
+				this.state.salesReportStartDate = today;
+				this.state.salesReportEndDate = today;
+				this.state.coachEnrolleesStartDate = today;
+				this.state.coachEnrolleesEndDate = today;
+
 				const placeholderValue = "...";
 				this.state.mostPurchasedProgram = placeholderValue;
 				this.state.mostPurchasedPackage = placeholderValue;
+		}
+
+		resetDateFilters(callback) {
+				const today = moment().format("MM/DD/YYYY");
+				this.setState({
+						salesReportStartDate: today,
+						salesReportEndDate: today,
+						coachEnrolleesStartDate: today,
+						coachEnrolleesEndDate: today
+				}, callback);
 		}
 
 		fetchProgramPurchaseSummaryData() {
@@ -42,49 +64,67 @@ class Home extends View {
 		}
 
 		fetchEnrolleesCounts() {
-				Fetch.get("member/count/", undefined, (count) => {
+				Fetch.get("member/count/", this.state.todayAsDateRange, (count) => {
 						this.setState({ membersCount: count });
 						this.updateEnrolleesChart();
 				});
 
-				Fetch.get("member/count/", { type: "WALKIN" }, (count) => {
+				const params = Object.assign({ type: "WALKIN" }, this.state.todayAsDateRange);
+				Fetch.get("member/count/", params, (count) => {
 						this.setState({ walkinsCount: count });
 						this.updateEnrolleesChart();
 				});
 		}
 
 		fetchSalesReports() {
-				Fetch.get("report/sales", null, (salesReports) => {
+				const { salesReportStartDate, salesReportEndDate } = this.state;
+				const params = {
+						startDate: salesReportStartDate,
+						endDate: salesReportEndDate
+				};
+				Fetch.get("report/sales", params, (salesReports) => {
 						this.setState({ salesReports });
 						this.updateSalesReportChart();
 				});
 		}
 
 		fetchCoachEnrollees() {
-				Fetch.get("report/coach/enrollees", null, (coachEnrollees) => {
+				const { coachEnrolleesStartDate, coachEnrolleesEndDate } = this.state;
+				const params = {
+						startDate: coachEnrolleesStartDate,
+						endDate: coachEnrolleesEndDate
+				};
+				Fetch.get("report/coach/enrollees", params, (coachEnrollees) => {
 						this.setState({ coachEnrollees });
 						this.updateCoachEnrolleesChart();
 				});
 		}
 
 		updateEnrolleesChart() {
-				const { membersCount, walkinsCount } = this.state;
+				let { membersCount, walkinsCount, currentPage } = this.state;
 				if (membersCount !== undefined && walkinsCount !== undefined) {
-						this.createBarChart({
-								id: "enrolleesChart",
-								title: "Enrollees",
-								labels: ["Walk-Ins", "Memberships"],
-								values: [
-										walkinsCount || 0,
-										membersCount || 0
-								],
-								fixedStepSize: 1
-						});
+						walkinsCount = walkinsCount || 0;
+						membersCount = membersCount || 0;
+
+						if (walkinsCount || membersCount) {
+								if (!currentPage) {
+										this.createBarChart({
+												id: "enrolleesChart",
+												title: "Enrollees",
+												labels: ["Walk-Ins", "Memberships"],
+												values: [walkinsCount, membersCount],
+												fixedStepSize: 1
+										});
+								}
+								this.setState({ noEnrolleesData: false });
+						} else {
+								this.setState({ noEnrolleesData: true });
+						}
 				}
 		}
 
 		updateSalesReportChart() {
-				const { salesReports } = this.state;
+				const { salesReports, currentPage } = this.state;
 
 				let totals = new Map();
 				totals.set("Memberships", 0);
@@ -93,34 +133,44 @@ class Home extends View {
 				totals.set("Commissions", 0);
 
 				if (salesReports && salesReports.length) {
-						salesReports.forEach(item => {
-								const amount = item.amount + totals.get(item.description);
-								totals.set(item.description, amount);
-						});
+						if (!currentPage) {
+								salesReports.forEach(item => {
+										const amount = item.amount + totals.get(item.description);
+										totals.set(item.description, amount);
+								});
 
-						this.createBarChart({
-								id: "salesChart",
-								title: "Sales",
-								labels: Array.from(totals.keys()),
-								values: Array.from(totals.values())
-						});
+								this.createBarChart({
+										id: "salesChart",
+										title: "Sales",
+										labels: Array.from(totals.keys()),
+										values: Array.from(totals.values())
+								});
+						}
+						this.setState({ noSalesReportData: false });
+				} else {
+						this.setState({ noSalesReportData: true });
 				}
 		}
 
 		updateCoachEnrolleesChart() {
-				const { coachEnrollees } = this.state;
+				const { coachEnrollees, currentPage } = this.state;
 
 				if (coachEnrollees && coachEnrollees.length) {
-						const maxDisplayed = 5;
-						const items = coachEnrollees.slice(0, maxDisplayed);
+						if (!currentPage) {
+								const maxDisplayed = 5;
+								const items = coachEnrollees.slice(0, maxDisplayed);
 
-						this.createBarChart({
-								id: "traineesChart",
-								title: "No. of Trainees per Coach",
-								labels: items.map(item => item.coach.firstName),
-								values: items.map(item => item.count),
-								fixedStepSize: 1
-						});
+								this.createBarChart({
+										id: "traineesChart",
+										title: "No. of Trainees per Coach",
+										labels: items.map(item => item.coach.firstName),
+										values: items.map(item => item.count),
+										fixedStepSize: 1
+								});
+						}
+						this.setState({ noCoachTraineesData: false });
+				} else {
+						this.setState({ noCoachTraineesData: true });
 				}
 		}
 
@@ -170,11 +220,15 @@ class Home extends View {
 		}
 
 		reprocessDashboardItems() {
-				this.fetchEnrolleesCounts();
-				this.fetchCoachEnrollees();
-				this.fetchProgramPurchaseSummaryData();
-				this.fetchPackagePurchaseSummaryData();
-				this.fetchSalesReports();
+				const callback = () => {
+						this.fetchEnrolleesCounts();
+						this.fetchCoachEnrollees();
+						this.fetchProgramPurchaseSummaryData();
+						this.fetchPackagePurchaseSummaryData();
+						this.fetchSalesReports()
+				};
+
+				this.resetDateFilters(callback);
 		}
 
 		createMostPurchasedCard({ title, value, icon, onClick }) {
@@ -194,7 +248,13 @@ class Home extends View {
 		}
 
 		getDashboard() {
-				const { mostPurchasedProgram, mostPurchasedPackage } = this.state;
+				const { mostPurchasedProgram, mostPurchasedPackage,
+						noSalesReportData, noCoachTraineesData, noEnrolleesData } = this.state;
+
+				const downloadSalesReportAction = <a className="ui label"	onClick={() => this.onPrintTodaySalesReport()}>
+						<i className="download icon"></i> Download
+				</a>;
+
 				return <div className="home">
 						<div className="ui grid">
 								<div className="ten wide column">
@@ -202,14 +262,13 @@ class Home extends View {
 												<div className="content">
 														<span className="ui basic green label">Sales Report</span>
 														<div className="description">
-																<canvas id="salesChart" width="630" height="150" />
+																{noSalesReportData ? undefined : <canvas id="salesChart" width="630" height="150" />}
+																{noSalesReportData ? <p className="no-data-message">No data yet for today.</p> : undefined}
 														</div>
 														<a className="ui label"	onClick={() => this.onViewSalesReports()}>
 																<i className="eye icon"></i> View All
 														</a>
-														<a className="ui label"	onClick={() => this.onPrintSalesReport()}>
-																<i className="download icon"></i> Download
-														</a>
+														{noSalesReportData ? undefined : downloadSalesReportAction}
 												</div>
 										</div>
 								</div>
@@ -219,7 +278,8 @@ class Home extends View {
 												<div className="content">
 														<span className="ui basic green label">Enrollees</span>
 														<div className="description">
-																<canvas id="enrolleesChart" width="350" height="150" />
+																{noEnrolleesData ? undefined : <canvas id="enrolleesChart" width="350" height="150" />}
+																{noEnrolleesData ? <p className="no-data-message">No data yet for today.</p> : undefined}
 														</div>
 														<Link className="ui label" to="/walkins">
 																<i className="eye icon"></i> Walk-Ins
@@ -236,7 +296,8 @@ class Home extends View {
 												<div className="content">
 														<span className="ui basic green label">Trainees per Coach</span>
 														<div className="description chart-container">
-																<canvas id="traineesChart" width="480" height="150" />
+																{noCoachTraineesData ? undefined : <canvas id="traineesChart" width="480" height="150" />}
+																{noCoachTraineesData ? <p className="no-data-message">No data yet for today.</p> : undefined}
 														</div>
 														<a className="ui label"	onClick={() => this.onViewCoachEnrollees()}>
 																<i className="eye icon"></i> View All
@@ -266,9 +327,22 @@ class Home extends View {
 				</div>;
 		}
 
-		onPrintSalesReport() {
+		onPrintTodaySalesReport() {
+				this.onPrintSalesReport(this.state.todayAsDateRange);
+		}
+
+		onPrintFilteredSalesReport() {
+				const { salesReportStartDate, salesReportEndDate } = this.state;
+				const params = {
+						startDate: salesReportStartDate,
+						endDate: salesReportEndDate
+				};
+				this.onPrintSalesReport(params);
+		}
+
+		onPrintSalesReport(dateFilter) {
 				const dateTime = moment().format('MM_DD_YYYY_hh_mm_ss');
-				Fetch.download("report/sales/download", null, `Sales Report (${dateTime}).xls`);
+				Fetch.download("report/sales/download", dateFilter, `Sales Report (${dateTime}).xls`);
 		}
 
 		onViewDashboard() {
@@ -298,10 +372,10 @@ class Home extends View {
 		}
 
 		getSalesReportsComponent() {
-				const { salesReports } = this.state;
+				const { salesReports, salesReportStartDate, salesReportEndDate, noSalesReportData } = this.state;
 
 				const renderRow = (item, index) => {
-						return <tr key={item.id}>
+						return <tr key={index}>
 								<td>{item.date}</td>
 								<td>{item.person}</td>
 								<td>{item.description}</td>
@@ -309,99 +383,125 @@ class Home extends View {
 						</tr>;
 				};
 
-				let component = <div>
-						<h4>No data to show.</h4>
-				</div>;
-
+				let component = <p>No data, try adjusting start date and end date filter.</p>;
 				if (salesReports && salesReports.length) {
 						let totalAmount = 0;
 						salesReports.forEach(item => {
 								totalAmount += (item.description === "Commissions" ? -item.amount : item.amount);
 						});
 
-						component = <div>
-								<h4>Sales Reports</h4>
-								<div className="ui grid">
-										<div className="twelve wide column">
-												<table className="ui green small table ">
-														<thead>
-																<tr>
-																		<th>Date</th>
-																		<th>Name</th>
-																		<th>Type</th>
-																		<th>Amount</th>
-																</tr>
-														</thead>
-														<tbody>
-																{salesReports.map(renderRow)}
-														</tbody>
+						component = <div className="ui grid">
+								<div className="twelve wide column">
+										<table className="ui green small table ">
+												<thead>
+														<tr>
+																<th>Date</th>
+																<th>Name</th>
+																<th>Type</th>
+																<th>Amount</th>
+														</tr>
+												</thead>
+												<tbody>
+														{salesReports.map(renderRow)}
+												</tbody>
 
-														<tfoot className="full-width footer-total">
-																<tr>
-																		<th colSpan="4">
-																				<div className="ui blue basic label">
-																						<i className="check icon"></i> Total Sales: {Formatter.formatAmount(totalAmount)}
-																				</div>
-																		</th>
-																</tr>
-														</tfoot>
-												</table>
-										</div>
+												<tfoot className="full-width footer-total">
+														<tr>
+																<th colSpan="4">
+																		<div className="ui blue basic label">
+																				<i className="check icon"></i> Total Sales: {Formatter.formatAmount(totalAmount)}
+																		</div>
+																</th>
+														</tr>
+												</tfoot>
+										</table>
 								</div>
 						</div>;
 				}
-				return component;
+
+				const downloadSalesReportAction = <Button className="ui mini button" icon="download" onClick={() => this.onPrintFilteredSalesReport()}>Download</Button>
+
+				return <div>
+						<h4>Sales Reports</h4>
+						<div className="ui filter form">
+								<div className="fields">
+										<Input ref={(input) => {this.initialInput = input}} autoFocus="true"
+												name="salesReportStartDate" inlineLabel="Start Date" value={salesReportStartDate}
+												onChange={super.onChange.bind(this)} placeholder="MM/dd/yyyy"
+												fieldClassName="five" inputClassName="mini" />
+
+										<Input name="salesReportEndDate" inlineLabel="End Date" value={salesReportEndDate}
+												onChange={super.onChange.bind(this)} placeholder="MM/dd/yyyy"
+												fieldClassName="five" inputClassName="mini" />
+
+										<Button className="ui mini orange button" icon="search" onClick={() => this.fetchSalesReports()}>Filter</Button>
+										{noSalesReportData ? undefined : downloadSalesReportAction}
+								</div>
+						</div>
+						{component}
+				</div>;
 		}
 
 		getCoachEnrolleesComponent() {
-				const { coachEnrollees } = this.state;
+				const { coachEnrollees, coachEnrolleesStartDate, coachEnrolleesEndDate } = this.state;
 
 				const renderRow = (item, index) => {
 						const { firstName, middleName, lastName } = item.coach;
-						return <tr key={item.id}>
+						return <tr key={index}>
 								<td>{`${firstName} ${middleName ? middleName + " " : ""}${lastName}`}</td>
 								<td>{item.count}</td>
 						</tr>;
 				};
 
-				let component = <div>
-						<h4>No data to show.</h4>
-				</div>;
-
+				let component = <p>No data, try adjusting start date and end date filter.</p>;
 				if (coachEnrollees && coachEnrollees.length) {
 						let totalCount = 0;
 						coachEnrollees.forEach(item => totalCount += item.count);
 
-						component = <div>
-								<h4>Coach Enrollees</h4>
-								<div className="ui grid">
-										<div className="eight wide column">
-												<table className="ui green small table ">
-														<thead>
-																<tr>
-																		<th>Coach</th>
-																		<th>Count</th>
-																</tr>
-														</thead>
-														<tbody>
-																{coachEnrollees.map(renderRow)}
-														</tbody>
+						component = <div className="ui grid">
+								<div className="eight wide column">
+										<table className="ui green small table ">
+												<thead>
+														<tr>
+																<th>Coach</th>
+																<th>Count</th>
+														</tr>
+												</thead>
+												<tbody>
+														{coachEnrollees.map(renderRow)}
+												</tbody>
 
-														<tfoot className="full-width footer-total">
-																<tr>
-																		<th colSpan="2">
-																				<div className="ui blue basic label">
-																						<i className="check icon"></i> Total Enrollees: {totalCount}
-																				</div>
-																		</th>
-																</tr>
-														</tfoot>
-												</table>
-										</div>
+												<tfoot className="full-width footer-total">
+														<tr>
+																<th colSpan="2">
+																		<div className="ui blue basic label">
+																				<i className="check icon"></i> Total Enrollees: {totalCount}
+																		</div>
+																</th>
+														</tr>
+												</tfoot>
+										</table>
 								</div>
 						</div>;
 				}
-				return component;
+				return <div>
+						<h4>Coach Enrollees</h4>
+						<div className="ui filter form">
+								<div className="fields">
+										<Input ref={(input) => {this.initialInput = input}} autoFocus="true"
+												name="coachEnrolleesStartDate" inlineLabel="Start Date" value={coachEnrolleesStartDate}
+												onChange={super.onChange.bind(this)} placeholder="MM/dd/yyyy"
+												fieldClassName="five" inputClassName="mini" />
+
+										<Input name="coachEnrolleesEndDate" inlineLabel="End Date" value={coachEnrolleesEndDate}
+												onChange={super.onChange.bind(this)} placeholder="MM/dd/yyyy"
+												fieldClassName="five" inputClassName="mini" />
+
+										<Button className="ui mini orange button" icon="search" onClick={() => this.fetchCoachEnrollees()}>Filter</Button>
+								</div>
+						</div>
+						{component}
+				</div>;
 		}
 
 		getProgramPurchasesComponent() {

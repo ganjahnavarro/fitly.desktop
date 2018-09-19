@@ -1,11 +1,13 @@
 import React from 'react'
 import { Link } from 'react-router'
+import moment from 'moment'
 
 import View from './abstract/View'
 import ListView from './abstract/ListView'
 import DetailView from './abstract/DetailView'
 
 import Input from '../components/Input'
+import Button from '../components/Button'
 import Audit from '../components/Audit'
 import Header from '../components/Header'
 import Dropdown from '../components/Dropdown'
@@ -64,6 +66,10 @@ class Coach extends DetailView {
 		constructor(props) {
 		    super(props);
         this.endpoint = "coach/";
+
+				const today = moment().format("MM/DD/YYYY");
+				this.state.filterStartDate = today;
+				this.state.filterEndDate = today;
     }
 
 		onGenderChange(gender) {
@@ -73,11 +79,13 @@ class Coach extends DetailView {
 		}
 
 		loadCommissions() {
-				let { value } = this.state;
+				let { value, filterStartDate, filterEndDate } = this.state;
 				let defaultParameters = {
 						coachId: value.id,
 						pageSize: 100,
 						pageOffset: 0,
+						startDate: filterStartDate,
+						endDate: filterEndDate
 				};
 
 				let parameters = Object.assign({}, defaultParameters);
@@ -97,7 +105,7 @@ class Coach extends DetailView {
 		}
 
 		getCommissionsPage() {
-				const { timeEntries } = this.state;
+				const { timeEntries, filterStartDate, filterEndDate } = this.state;
 
 				const getMember = (item) => {
 						const { firstName, middleName, lastName } = item.member;
@@ -121,9 +129,7 @@ class Coach extends DetailView {
 						</tr>;
 				};
 
-				let timeEntriesComponent = <div>
-						<h4>No commissions.</h4>
-				</div>;
+				let timeEntriesComponent = <p>No data, try adjusting start date and end date filter.</p>;
 
 				if (timeEntries && timeEntries.length) {
 						let totalCommissions = 0;
@@ -134,7 +140,6 @@ class Coach extends DetailView {
 						});
 
 						timeEntriesComponent = <div>
-								<h4>Commissions</h4>
 								<table className="ui orange small table">
 										<thead>
 												<tr>
@@ -165,7 +170,26 @@ class Coach extends DetailView {
 						<div className="ui label clickable padbot" onClick={() => this.onViewDetailPage()}>
 								<i className="angle left icon"></i> Back
 						</div>
-						{timeEntriesComponent}
+
+						<div>
+								<h4>Commissions</h4>
+								<div className="ui filter form">
+										<div className="fields">
+												<Input ref={(input) => {this.initialInput = input}} autoFocus="true"
+														name="filterStartDate" inlineLabel="Start Date" value={filterStartDate}
+														onChange={super.onChange.bind(this)} placeholder="MM/dd/yyyy"
+														fieldClassName="five" inputClassName="mini" />
+
+												<Input name="filterEndDate" inlineLabel="End Date" value={filterEndDate}
+														onChange={super.onChange.bind(this)} placeholder="MM/dd/yyyy"
+														fieldClassName="five" inputClassName="mini" />
+
+												<Button className="ui mini orange button" icon="search" onClick={() => this.loadCommissions()}>Filter</Button>
+										</div>
+								</div>
+
+								{timeEntriesComponent}
+						</div>
 				</div>;
 		}
 

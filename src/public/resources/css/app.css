@@ -160,6 +160,10 @@ span.transaction-placeholder {
     margin-bottom: 1rem;
 }
 
+.home p.no-data-message {
+    height: 150px;
+}
+
 .app .ui.header > .image:not(.icon),
 .app .ui.header > img {
     margin-top: 0.25rem;
@@ -244,4 +248,9 @@ span.transaction-placeholder {
 
 .ui.label.back-to-dashboard {
     margin-top: 2rem;
+}
+
+.ui.filter.form {
+    margin-bottom: 1.5rem;
+    margin-top: 1.5rem;
 }

@@ -18,6 +18,7 @@
     font-size: 16px;
 }
 
+.ui.form .mini input:not([type]),
 .ui.table .Select {
     font-size: inherit;
 }

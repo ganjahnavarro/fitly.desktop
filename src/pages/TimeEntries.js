@@ -1,5 +1,7 @@
 import React from 'react'
 import { hashHistory } from 'react-router'
+import moment from 'moment'
+
 import View from './abstract/View'
 
 import Fetch from '../core/Fetch'
@@ -22,6 +24,10 @@ class TimeEntries extends View {
     constructor(props) {
         super(props);
         this.state.isAdding = false;
+
+				const today = moment().format("MM/DD/YYYY");
+				this.state.filterStartDate = today;
+				this.state.filterEndDate = today;
     }
 
     onAdd() {
@@ -44,10 +50,13 @@ class TimeEntries extends View {
     }
 
     onFetch(filterParameters) {
+        let { filterStartDate, filterEndDate } = this.state;
         let defaultParameters = {
             pageSize: 100,
-            pageOffset: 0
-        };
+            pageOffset: 0,
+						startDate: filterStartDate,
+						endDate: filterEndDate
+				};
 
         let parameters = Object.assign({}, defaultParameters, filterParameters);
 
@@ -331,6 +340,24 @@ class TimeEntries extends View {
         });
 		}
 
+    getFilterComponent() {
+        const { filterStartDate, filterEndDate } = this.state;
+        return <div className="ui filter form">
+            <div className="fields">
+                <Input ref={(input) => {this.initialInput = input}} autoFocus="true"
+                    name="filterStartDate" inlineLabel="Start Date" value={filterStartDate}
+                    onChange={super.onChange.bind(this)} placeholder="MM/dd/yyyy"
+                    fieldClassName="five" inputClassName="mini" />
+
+                <Input name="filterEndDate" inlineLabel="End Date" value={filterEndDate}
+                    onChange={super.onChange.bind(this)} placeholder="MM/dd/yyyy"
+                    fieldClassName="five" inputClassName="mini" />
+
+                <Button className="ui mini orange button" icon="search" onClick={() => this.onFetch()}>Filter</Button>
+            </div>
+        </div>;
+    }
+
 		render() {
         const { isAdding, isManualAdd, items } = this.state;
 
@@ -373,7 +400,7 @@ class TimeEntries extends View {
             </tr>;
         };
 
-        let itemsComponent = null;
+        let itemsComponent = <p>No data, try adjusting start date and end date filter.</p>;
 				if (items && items.length) {
             itemsComponent = <table className="ui orange small table">
 								<thead>
@@ -412,7 +439,7 @@ class TimeEntries extends View {
 						<Header location={this.props.location} />
 
             {isAdding ? editingActions : defaultActions}
-            <br />
+            {this.getFilterComponent()}
 
             {isAdding && isManualAdd ? this.getAddManuallyComponent() : itemsComponent}
             {isAdding && !isManualAdd ? this.getAddComponent() : undefined}

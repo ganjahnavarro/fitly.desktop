@@ -24,8 +24,12 @@ class Input extends React.Component {
 		}
 
 		render() {
-				let { icon, label, fieldClassName } = this.props;
+				let { icon, label, fieldClassName, inputClassName, inlineLabel } = this.props;
 				fieldClassName = fieldClassName ? fieldClassName + " wide field" : "field";
+
+				const propsInputClassName = inputClassName ? " " + inputClassName : "";
+				const iconInputClassName = this.props.icon ? " icon" : "";
+				inputClassName = `ui left labeled input${propsInputClassName}${iconInputClassName}`;
 
 				let props = Object.assign({}, this.props);
 				if (typeof props.defaultValue == "undefined") {
@@ -34,16 +38,17 @@ class Input extends React.Component {
 				delete props.label;
 				delete props.icon;
 				delete props.fieldClassName;
+				delete props.inputClassName;
+				delete props.inlineLabel;
 
 				let htmlInput = <input ref={(input) => {this.selectedInput = input}} {...props} />;
 				let component = htmlInput;
 
-				if (this.props.icon) {
-						component = <div className="ui left icon input">
-								<i className={"icon " + icon}></i>
-								{htmlInput}
-						</div>
-				}
+				component = <div className={inputClassName}>
+						{inlineLabel ? <div className="ui label">{inlineLabel}</div> : undefined}
+						{this.props.icon ? <i className={"icon " + icon} /> : undefined}
+						{htmlInput}
+				</div>
 
 		    return <div className={fieldClassName}>
 						{label ? <label>{label}</label> : null}
